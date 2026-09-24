@@ -17,11 +17,12 @@ func _initialize():
 		{"key": "subzero", "prompt": "Sub-Zero Lin Kuei Cryomancer ice ninja kori blade"},
 		{"key": "pain", "prompt": "Pain Nagato Akatsuki Rinnegan Shinra Tensei"},
 		{"key": "luffy", "prompt": "Monkey D. Luffy Strohhut Gum-Gum One Piece Mugiwara"},
-		{"key": "sonic", "prompt": "Sonic the Hedgehog Blue Blur Super Spin Dash Sega"}
+		{"key": "sonic", "prompt": "Sonic the Hedgehog Blue Blur Super Spin Dash Sega"},
+		{"key": "akaza", "prompt": "Akaza Upper Rank 3 Hakai Satsu Compass Needle Kimetsu"}
 	]
 	
 	print("==================================================")
-	print("TESTING ALL 12 CHARACTERS (PROMPT -> SIM -> VIEW)")
+	print("TESTING ALL 13 CHARACTERS (PROMPT -> SIM -> VIEW)")
 	print("==================================================")
 	
 	var all_ok := true
@@ -54,7 +55,7 @@ func _initialize():
 		
 	print("==================================================")
 	if all_ok:
-		print("ALL 11 CHARACTERS ARE FULLY PLAYABLE!")
+		print("ALL 13 CHARACTERS ARE FULLY PLAYABLE!")
 	else:
 		print("SOME CHARACTERS FAILED VALIDATION!")
 	print("==================================================")

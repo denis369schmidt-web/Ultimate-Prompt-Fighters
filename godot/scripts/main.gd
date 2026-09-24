@@ -16,6 +16,7 @@ const PORTRAITS = {
     "toxic": preload("res://assets/textures/ui/portrait_toxic.png"),
     "cyber": preload("res://assets/textures/ui/portrait_cyber.png"),
     "sonic": preload("res://assets/textures/ui/portrait_sonic.png"),
+    "akaza": preload("res://assets/textures/ui/portrait_akaza.png"),
     "goku": preload("res://assets/textures/characters/thumbs/thumb_goku.png"),
     "subzero": preload("res://assets/textures/characters/thumbs/thumb_subzero.png"),
     "pain": preload("res://assets/textures/characters/thumbs/thumb_pain.png"),
@@ -794,7 +795,7 @@ func setup_ui() -> void:
     var mk_title := label("CHOOSE YOUR FIGHTER", 22, Color("f7c844"))
     mk_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     header_box.add_child(mk_title)
-    var mk_sub := label("MORTAL KOMBAT AUSWAHL · 12 KÄMPFER BEREIT · LINKSKLICK: P1 · RECHTSKLICK: P2", 11, Color("e55050"))
+    var mk_sub := label("MORTAL KOMBAT AUSWAHL · 13 KÄMPFER BEREIT · LINKSKLICK: P1 · RECHTSKLICK: P2", 11, Color("e55050"))
     mk_sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     header_box.add_child(mk_sub)
 
@@ -818,7 +819,7 @@ func setup_ui() -> void:
         toggle_h.add_child(tbtn)
         mk_toggle_buttons.append(tbtn)
 
-    # 3. 12-FIGHTER PRESETS (ALL 12 PLAYABLE CHARACTERS)
+    # 3. 13-FIGHTER PRESETS (ALL 13 PLAYABLE CHARACTERS)
     mk_presets = [
         {"id": "ninja", "name": "VOLT NINJA", "prompt": "Blitzschneller Schattenninja mit elektrischen Klingen"},
         {"id": "golem", "name": "LAVA GOLEM", "prompt": "Gepanzerter Lavagolem mit brennenden Fäusten"},
@@ -829,15 +830,16 @@ func setup_ui() -> void:
         {"id": "pain", "name": "PAIN", "prompt": "Pain Nagato Akatsuki Rinnegan Shinra Tensei"},
         {"id": "luffy", "name": "RUFFY", "prompt": "Monkey D. Luffy Strohhut Gum-Gum One Piece Mugiwara"},
         {"id": "sonic", "name": "SONIC", "prompt": "Sonic the Hedgehog Blue Blur Super Spin Dash Sega"},
+        {"id": "akaza", "name": "AKAZA", "prompt": "Akaza Upper Rank 3 Hakai Satsu Compass Needle Kimetsu"},
         {"id": "anubis", "name": "ANUBIS", "prompt": "Jackal God Anubis wielding dual Khopesh"},
         {"id": "specter", "name": "SPECTER", "prompt": "Void Specter crystal phantom warrior with void lance"},
         {"id": "phoenix", "name": "PHOENIX", "prompt": "Phoenix Empress with feather armor and phoenix glaive"}
     ]
 
-    # 4. MORTAL KOMBAT 6x2 GRID
+    # 4. MORTAL KOMBAT 7x2 GRID
     var mk_grid := GridContainer.new()
-    mk_grid.columns = 6
-    mk_grid.add_theme_constant_override("h_separation", 8)
+    mk_grid.columns = 7
+    mk_grid.add_theme_constant_override("h_separation", 6)
     mk_grid.add_theme_constant_override("v_separation", 6)
     select_box.add_child(mk_grid)
 
@@ -845,7 +847,7 @@ func setup_ui() -> void:
     for idx in range(mk_presets.size()):
         var preset: Dictionary = mk_presets[idx]
         var card := Button.new()
-        card.custom_minimum_size = Vector2(152, 74)
+        card.custom_minimum_size = Vector2(132, 74)
         card.focus_mode = Control.FOCUS_NONE
 
         # Layout inside card button
@@ -890,7 +892,7 @@ func setup_ui() -> void:
         badge_p2.text = "P2"
         badge_p2.add_theme_font_size_override("font_size", 10)
         badge_p2.add_theme_color_override("font_color", ORANGE)
-        badge_p2.position = Vector2(128, 4)
+        badge_p2.position = Vector2(108, 4)
         badge_p2.visible = false
         card.add_child(badge_p2)
 

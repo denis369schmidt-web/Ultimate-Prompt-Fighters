@@ -115,6 +115,16 @@ const SONIC_SHOE_NORMAL = preload("res://assets/textures/skins/sonic_shoe_normal
 const SONIC_BUCKLE_EMISSION = preload("res://assets/textures/skins/sonic_buckle_emission.png")
 const SONIC_SKIN_ALBEDO = preload("res://assets/textures/skins/sonic_skin_albedo.png")
 
+# --- AKAZA TEXTURES ---
+const AKAZA_SKIN_ALBEDO = preload("res://assets/textures/skins/akaza_skin_albedo.png")
+const AKAZA_SKIN_NORMAL = preload("res://assets/textures/skins/akaza_skin_normal.png")
+const AKAZA_HAORI_ALBEDO = preload("res://assets/textures/skins/akaza_haori_albedo.png")
+const AKAZA_HAORI_NORMAL = preload("res://assets/textures/skins/akaza_haori_normal.png")
+const AKAZA_HAKAMA_ALBEDO = preload("res://assets/textures/skins/akaza_hakama_albedo.png")
+const AKAZA_HAKAMA_NORMAL = preload("res://assets/textures/skins/akaza_hakama_normal.png")
+const AKAZA_COMPASS_ALBEDO = preload("res://assets/textures/skins/akaza_compass_albedo.png")
+const AKAZA_COMPASS_EMISSION = preload("res://assets/textures/skins/akaza_compass_emission.png")
+
 # --- VFX PARTICLES ---
 const LAVA_EMBER_TEX = preload("res://assets/textures/vfx/lava_ember.png")
 const ELECTRIC_SPARK_TEX = preload("res://assets/textures/vfx/electric_spark.png")
@@ -131,6 +141,7 @@ var pulse_time := 0.0
 
 var shield: MeshInstance3D
 var sonic_spin_sphere: Node3D = null
+var akaza_compass_nodes: Array = []
 
 func setup(p: Dictionary) -> void:
 	profile = p
@@ -262,6 +273,11 @@ func setup(p: Dictionary) -> void:
 		skin_glow_color = Color("00a2ff")
 		skin_metallic = 0.08
 		skin_roughness = 0.35
+	elif p.family == "akaza":
+		triplanar_scale = Vector3(0.018, 0.018, 0.018)
+		skin_glow_color = Color("00e5ff")
+		skin_metallic = 0.05
+		skin_roughness = 0.45
 	else: # Ninja
 		triplanar_scale = Vector3(0.016, 0.016, 0.016)
 		if "fire" in p_text or "feuer" in p_text or "flam" in p_text or "lava" in p_text or element == "fire":
@@ -820,6 +836,83 @@ func setup(p: Dictionary) -> void:
 					mat.albedo_texture = SONIC_FUR_ALBEDO
 					mat.albedo_color = Color("1060ee")
 					mat.roughness = 0.45
+			elif p.family == "akaza":
+				if "Compass" in mesh.name:
+					mat.albedo_texture = AKAZA_COMPASS_ALBEDO
+					mat.emission_enabled = true
+					mat.emission_texture = AKAZA_COMPASS_EMISSION
+					mat.emission = Color("00ffff")
+					mat.emission_energy_multiplier = 4.5
+					mat.roughness = 0.12
+					mat.metallic = 0.20
+					glow_materials.append(mat)
+					base_emissions.append(4.5)
+					akaza_compass_nodes.append(mesh)
+					mesh.visible = false
+				elif "Hair" in mesh.name:
+					mat.albedo_color = Color("e6005c")
+					mat.roughness = 0.35
+					mat.metallic = 0.05
+					mat.rim_enabled = true
+					mat.rim = 0.85
+					mat.rim_tint = 0.50
+				elif "Eye" in mesh.name:
+					mat.albedo_color = Color("ffea00")
+					mat.emission_enabled = true
+					mat.emission = Color("ffea00")
+					mat.emission_energy_multiplier = 3.5
+					mat.roughness = 0.08
+					glow_materials.append(mat)
+					base_emissions.append(3.5)
+				elif "Tattoo" in mesh.name:
+					mat.albedo_color = Color("0088cc")
+					mat.roughness = 0.30
+					mat.metallic = 0.10
+					mat.emission_enabled = true
+					mat.emission = Color("00b4d8")
+					mat.emission_energy_multiplier = 2.2
+					glow_materials.append(mat)
+					base_emissions.append(2.2)
+				elif "Haori" in mesh.name:
+					mat.albedo_texture = AKAZA_HAORI_ALBEDO
+					mat.normal_enabled = true
+					mat.normal_texture = AKAZA_HAORI_NORMAL
+					mat.normal_scale = 1.8
+					mat.albedo_color = Color("ffffff")
+					mat.roughness = 0.65
+					mat.metallic = 0.02
+				elif "FurCollar" in mesh.name or "Fur" in mesh.name:
+					mat.albedo_color = Color("f5f5fa")
+					mat.roughness = 0.85
+					mat.metallic = 0.0
+					mat.rim_enabled = true
+					mat.rim = 0.75
+				elif "Hakama" in mesh.name or "Pelvis" in mesh.name:
+					mat.albedo_texture = AKAZA_HAKAMA_ALBEDO
+					mat.normal_enabled = true
+					mat.normal_texture = AKAZA_HAKAMA_NORMAL
+					mat.normal_scale = 1.6
+					mat.albedo_color = Color("ffffff")
+					mat.roughness = 0.75
+					mat.metallic = 0.02
+				elif "Rope" in mesh.name or "Bead" in mesh.name:
+					mat.albedo_color = Color("cc1122")
+					mat.roughness = 0.60
+					mat.metallic = 0.05
+				elif "Anklet" in mesh.name:
+					mat.albedo_color = Color("0077b6")
+					mat.roughness = 0.25
+					mat.metallic = 0.40
+				else:
+					mat.albedo_texture = AKAZA_SKIN_ALBEDO
+					mat.normal_enabled = true
+					mat.normal_texture = AKAZA_SKIN_NORMAL
+					mat.normal_scale = 1.5
+					mat.albedo_color = Color("ffffff")
+					mat.roughness = 0.48
+					mat.metallic = 0.0
+					mat.rim_enabled = true
+					mat.rim = 0.45
 			else: # Ninja
 				if "Eye" in mesh.name or "Visor" in mesh.name or "Conduit" in mesh.name or "PowerPort" in mesh.name or "GreaveGlow" in mesh.name or "BackNode" in mesh.name or "Center" in mesh.name:
 					# Sharp glowing cyber-shinobi energy nodes & assassin eye slits
@@ -1017,6 +1110,8 @@ func update_state(state: Dictionary, delta: float) -> void:
 	var pose: String = state.pose
 	if sonic_spin_sphere:
 		sonic_spin_sphere.visible = (pose == "SpecialAttack")
+	for cnode in akaza_compass_nodes:
+		cnode.visible = (pose == "SpecialAttack")
 	if pose != current_pose and animation and clip_map.has(pose):
 		animation.play(clip_map[pose], 0.09)
 		current_pose = pose
