@@ -22,18 +22,18 @@ const MAX_SUPER := 100.0
 const INITIAL_LIVES := 3
 
 # ── Platform Fighter Stage Geometry ──────────────────────────────────────────
-const STAGE_LEFT := -4.75
-const STAGE_RIGHT := 4.75
-const BLAST_ZONE_LEFT := -8.5
-const BLAST_ZONE_RIGHT := 8.5
-const BLAST_ZONE_BOTTOM := -3.8
-const BLAST_ZONE_TOP := 8.5
+const STAGE_LEFT := -5.15
+const STAGE_RIGHT := 5.15
+const BLAST_ZONE_LEFT := -9.5
+const BLAST_ZONE_RIGHT := 9.5
+const BLAST_ZONE_BOTTOM := -4.2
+const BLAST_ZONE_TOP := 9.5
 
 # 3 Floating pass-through platforms in Battlefield layout
 const PLATFORMS: Array = [
-	{"name": "plat_left",  "x1": -3.4, "x2": -1.2, "y": 1.45, "width": 2.2},
-	{"name": "plat_right", "x1":  1.2, "x2":  3.4, "y": 1.45, "width": 2.2},
-	{"name": "plat_top",   "x1": -1.1, "x2":  1.1, "y": 2.65, "width": 2.2},
+	{"name": "plat_left",  "x1": -3.8, "x2": -1.4, "y": 1.50, "width": 2.4},
+	{"name": "plat_right", "x1":  1.4, "x2":  3.8, "y": 1.50, "width": 2.4},
+	{"name": "plat_top",   "x1": -1.2, "x2":  1.2, "y": 2.80, "width": 2.4},
 ]
 
 # Combo multiplier: 1.0 → 1.08 → 1.18 → 1.30 → 1.45
@@ -43,27 +43,39 @@ const COMBO_MULT: Array = [1.0, 1.08, 1.18, 1.30, 1.45]
 const DEFAULT_ITEMS: Array = [
 	{
 		"id": 0, "type": "light_crate", "name": "Leichte Kiste",
-		"start_x": -2.3, "start_y": 1.55, "x": -2.3, "y": 1.55,
+		"start_x": -2.6, "start_y": 1.60, "x": -2.6, "y": 1.60,
 		"vx": 0.0, "vy": 0.0, "weight": 0.60,
 		"state": "resting", # resting, carried, thrown, destroyed
 		"carrier": -1, "thrower": -1, "respawn": 0.0,
-		"damage": 12.0, "push": 0.65, "angle": 32.0, "fragile": true
+		"damage": 12.0, "push": 0.65, "angle": 32.0, "fragile": true,
+		"explosive": false
 	},
 	{
 		"id": 1, "type": "heavy_rock", "name": "Schwerer Stein",
-		"start_x": 0.0, "start_y": 2.75, "x": 0.0, "y": 2.75,
+		"start_x": -0.8, "start_y": 2.95, "x": -0.8, "y": 2.95,
 		"vx": 0.0, "vy": 0.0, "weight": 1.40,
 		"state": "resting",
 		"carrier": -1, "thrower": -1, "respawn": 0.0,
-		"damage": 22.0, "push": 1.10, "angle": 45.0, "fragile": false
+		"damage": 22.0, "push": 1.10, "angle": 45.0, "fragile": false,
+		"explosive": false
 	},
 	{
 		"id": 2, "type": "barrel", "name": "Holzfass",
-		"start_x": 2.3, "start_y": 1.55, "x": 2.3, "y": 1.55,
+		"start_x": 2.6, "start_y": 1.60, "x": 2.6, "y": 1.60,
 		"vx": 0.0, "vy": 0.0, "weight": 0.90,
 		"state": "resting",
 		"carrier": -1, "thrower": -1, "respawn": 0.0,
-		"damage": 16.0, "push": 0.85, "angle": 36.0, "fragile": false
+		"damage": 16.0, "push": 0.85, "angle": 36.0, "fragile": false,
+		"explosive": false
+	},
+	{
+		"id": 3, "type": "explosive_barrel", "name": "Explosiv-Fass",
+		"start_x": 0.8, "start_y": 2.95, "x": 0.8, "y": 2.95,
+		"vx": 0.0, "vy": 0.0, "weight": 0.88,
+		"state": "resting",
+		"carrier": -1, "thrower": -1, "respawn": 0.0,
+		"damage": 34.0, "push": 1.40, "angle": 52.0, "fragile": true,
+		"explosive": true, "explosion_radius": 2.6
 	}
 ]
 
@@ -208,6 +220,62 @@ func throw_carried_item(i: int) -> void:
 	f.pose_time = 0.22
 	events.append({"type": "item_throw", "actor": i, "item_id": item_idx, "item_name": it.name})
 
+func explode_item(it_idx: int) -> void:
+	if it_idx < 0 or it_idx >= items.size(): return
+	var it: Dictionary = items[it_idx]
+	if it.state == "destroyed": return
+	it.state = "destroyed"
+	it.respawn = 8.0 # Respawns after 8 seconds
+	var exp_x: float = it.x
+	var exp_y: float = it.y
+	var radius: float = float(it.get("explosion_radius", 2.6))
+	var base_dmg: float = float(it.get("damage", 34.0))
+	var base_push: float = float(it.get("push", 1.40))
+	var thrower_id: int = it.thrower
+
+	events.append({
+		"type": "item_explode",
+		"item_id": it_idx,
+		"item_name": it.name,
+		"x": exp_x,
+		"y": exp_y,
+		"radius": radius,
+		"thrower": thrower_id
+	})
+
+	for fi in range(2):
+		var f: Dictionary = fighters[fi]
+		if f.invulnerable > 0: continue
+		var f_center := Vector2(f.x, f.y + 0.75)
+		var dist := Vector2(exp_x, exp_y).distance_to(f_center)
+		if dist <= radius:
+			var falloff: float = clampf(1.0 - (dist / radius), 0.35, 1.0)
+			var dmg: float = base_dmg * falloff * clampf(1.0 - f.profile.stats.defense * 0.01, 0.55, 0.90)
+			f.hp = maxf(0.0, f.hp - dmg)
+
+			var max_hp: float = maxf(1.0, f.profile.health)
+			var missing_hp_ratio: float = clampf(1.0 - (f.hp / max_hp), 0.0, 1.0)
+			var weight: float = clampf(float(f.profile.get("weight", 1.0)), 0.85, 1.35)
+			var launch_scale: float = 1.0 + (missing_hp_ratio * 2.4)
+			var impulse: float = (base_push * 26.0 * falloff * launch_scale) / weight
+
+			var diff: Vector2 = f_center - Vector2(exp_x, exp_y)
+			var dir_x: float = sign(diff.x) if abs(diff.x) > 0.05 else (1.0 if fi == 0 else -1.0)
+			f.vx = dir_x * impulse * 0.80
+			f.vy = maxf(impulse * 0.65, 4.5)
+			f.is_grounded = false
+			f.drop_through = 0.15
+			f.stun = clampf(0.40 + missing_hp_ratio * 0.35, 0.25, 0.70)
+			f.air_control_lock = f.stun * 0.75
+			f.state = "HitStun"
+			f.pose = "HitReact"
+			f.pose_time = f.stun
+			events.append({
+				"type": "hit", "actor": thrower_id if thrower_id >= 0 else 1 - fi, "target": fi,
+				"damage": dmg, "special": true, "super_hit": true,
+				"launch_impulse": impulse, "missing_hp_ratio": missing_hp_ratio
+			})
+
 func execute_throw(attacker_idx: int, throw_type: String) -> void:
 	var attacker: Dictionary = fighters[attacker_idx]
 	var target_idx: int = attacker.grab_target
@@ -301,7 +369,7 @@ func agent_commands() -> Array:
 					nearby_item = true
 					break
 
-			if nearby_item and f.state == "Ready":
+			if nearby_item and f.state == "Ready" and distance_x > f.profile.standard.range * 0.9:
 				want_grab = true
 			elif f.state == "Carrying" and f.carried_item >= 0:
 				# Throw item at opponent when in alignment
@@ -647,6 +715,15 @@ func tick(commands: Array, dt: float = STEP) -> void:
 			if dx <= attack.ability.range and dy <= 1.4:
 				contacts.append({"from": i, "to": 1-i, "attack": attack})
 
+			# Check if attack strikes an explosive item
+			for it_k in range(items.size()):
+				var it_obj: Dictionary = items[it_k]
+				if it_obj.state != "destroyed" and it_obj.get("explosive", false):
+					var it_dx: float = abs(it_obj.x - f.x)
+					var it_dy: float = abs(it_obj.y - f.y)
+					if it_dx <= attack.ability.range + 0.35 and it_dy <= 1.3:
+						explode_item(it_k)
+
 	for contact in contacts:
 		var attacker: Dictionary = fighters[contact.from]
 		var target: Dictionary = fighters[contact.to]
@@ -832,6 +909,10 @@ func tick(commands: Array, dt: float = STEP) -> void:
 					it.state = "resting"
 					item_landed = true
 
+			if item_landed and it.get("explosive", false) and (it.state == "thrown" or abs(it.vx) > 2.0):
+				explode_item(it_idx)
+				continue
+
 			# Check hit against fighters while thrown
 			if it.state == "thrown":
 				for fi in range(2):
@@ -844,7 +925,11 @@ func tick(commands: Array, dt: float = STEP) -> void:
 					var dx: float = abs(it.x - f_target.x)
 					var dy: float = abs(it.y - target_center_y)
 					if dx < 1.15 and dy < 1.25:
-						# Direct item hit!
+						if it.get("explosive", false):
+							explode_item(it_idx)
+							break
+
+						# Direct non-explosive item hit!
 						var dmg: float = it.damage * clampf(1.0 - f_target.profile.stats.defense * 0.01, 0.6, 0.92)
 						f_target.hp = maxf(0.0, f_target.hp - dmg)
 

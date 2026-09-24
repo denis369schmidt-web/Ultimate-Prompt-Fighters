@@ -56,14 +56,55 @@ const NINJA_CRIMSON_VISOR_EM = preload("res://assets/textures/skins/ninja_crimso
 # --- SUBZERO TEXTURES ---
 const SUBZERO_ARMOR_ALBEDO = preload("res://assets/textures/skins/subzero_armor_albedo.png")
 const SUBZERO_ICE_EM = preload("res://assets/textures/skins/subzero_ice_emission.png")
+const SUBZERO_KORI_ALBEDO = preload("res://assets/textures/skins/subzero_kori_albedo.png")
+const SUBZERO_KORI_NORMAL = preload("res://assets/textures/skins/subzero_kori_normal.png")
+const SUBZERO_KORI_EMISSION = preload("res://assets/textures/skins/subzero_kori_emission.png")
 
 # --- PAIN TEXTURES ---
 const PAIN_CLOAK_ALBEDO = preload("res://assets/textures/skins/pain_cloak_albedo.png")
 const PAIN_RINNEGAN_EM = preload("res://assets/textures/skins/pain_rinnegan_emission.png")
+const PAIN_CLOAK_MASTER_ALBEDO = preload("res://assets/textures/skins/pain_cloak_master_albedo.png")
+const PAIN_CLOAK_MASTER_NORMAL = preload("res://assets/textures/skins/pain_cloak_master_normal.png")
+const PAIN_RINNEGAN_MASTER_EMISSION = preload("res://assets/textures/skins/pain_rinnegan_master_emission.png")
 
 # --- GOKU TEXTURES ---
 const GOKU_GI_ALBEDO = preload("res://assets/textures/skins/goku_gi_albedo.png")
 const GOKU_UNDERSHIRT_ALBEDO = preload("res://assets/textures/skins/goku_undershirt_albedo.png")
+const GOKU_GI_MASTER_ALBEDO = preload("res://assets/textures/skins/goku_gi_master_albedo.png")
+const GOKU_KI_MASTER_EMISSION = preload("res://assets/textures/skins/goku_ki_master_emission.png")
+
+# --- VALKYRIE TEXTURES ---
+const VALKYRIE_PLATE_ALBEDO = preload("res://assets/textures/skins/valkyrie_plate_albedo.png")
+const VALKYRIE_PLATE_NORMAL = preload("res://assets/textures/skins/valkyrie_plate_normal.png")
+const VALKYRIE_WINGS_EMISSION = preload("res://assets/textures/skins/valkyrie_wings_emission.png")
+
+# --- DRAGON TEXTURES ---
+const DRAGON_SCALE_ALBEDO = preload("res://assets/textures/skins/dragon_scale_albedo.png")
+const DRAGON_SCALE_NORMAL = preload("res://assets/textures/skins/dragon_scale_normal.png")
+const DRAGON_SCALE_EMISSION = preload("res://assets/textures/skins/dragon_scale_emission.png")
+
+# --- ANUBIS TEXTURES ---
+const ANUBIS_OBSIDIAN_ALBEDO = preload("res://assets/textures/skins/anubis_obsidian_albedo.png")
+const ANUBIS_OBSIDIAN_NORMAL = preload("res://assets/textures/skins/anubis_obsidian_normal.png")
+const ANUBIS_OBSIDIAN_EMISSION = preload("res://assets/textures/skins/anubis_obsidian_emission.png")
+
+# --- SPECTER TEXTURES ---
+const SPECTER_CRYSTAL_ALBEDO = preload("res://assets/textures/skins/specter_crystal_albedo.png")
+const SPECTER_CRYSTAL_NORMAL = preload("res://assets/textures/skins/specter_crystal_normal.png")
+const SPECTER_CRYSTAL_EMISSION = preload("res://assets/textures/skins/specter_crystal_emission.png")
+
+# --- PHOENIX TEXTURES ---
+const PHOENIX_FEATHER_ALBEDO = preload("res://assets/textures/skins/phoenix_feather_albedo.png")
+const PHOENIX_FEATHER_NORMAL = preload("res://assets/textures/skins/phoenix_feather_normal.png")
+const PHOENIX_FEATHER_EMISSION = preload("res://assets/textures/skins/phoenix_feather_emission.png")
+
+# --- LUFFY TEXTURES ---
+const LUFFY_STRAW_ALBEDO = preload("res://assets/textures/skins/luffy_straw_albedo.png")
+const LUFFY_STRAW_NORMAL = preload("res://assets/textures/skins/luffy_straw_normal.png")
+const LUFFY_VEST_ALBEDO = preload("res://assets/textures/skins/luffy_vest_albedo.png")
+const LUFFY_VEST_NORMAL = preload("res://assets/textures/skins/luffy_vest_normal.png")
+const LUFFY_DENIM_ALBEDO = preload("res://assets/textures/skins/luffy_denim_albedo.png")
+const LUFFY_DENIM_NORMAL = preload("res://assets/textures/skins/luffy_denim_normal.png")
 
 # --- VFX PARTICLES ---
 const LAVA_EMBER_TEX = preload("res://assets/textures/vfx/lava_ember.png")
@@ -324,6 +365,7 @@ func setup(p: Dictionary) -> void:
 					# Radiant ethereal light wings, jewels and holy rapier edge
 					mat.albedo_color = Color(1.8, 1.8, 1.8)
 					mat.emission_enabled = true
+					mat.emission_texture = VALKYRIE_WINGS_EMISSION
 					mat.emission = Color("ffe57f") if ("Gem" in mesh.name or "Edge" in mesh.name or "Tip" in mesh.name) else Color("8fe4ff")
 					mat.emission_energy_multiplier = 4.6
 					mat.roughness = 0.06
@@ -359,8 +401,12 @@ func setup(p: Dictionary) -> void:
 					mat.metallic = 0.96
 					mat.roughness = 0.10
 				else:
-					# Pearlescent white paladin plate armor
+					# Pearlescent white paladin plate armor with high-res PBR normal relief
+					mat.albedo_texture = VALKYRIE_PLATE_ALBEDO
 					mat.albedo_color = Color("f2f5fb")
+					mat.normal_enabled = true
+					mat.normal_texture = VALKYRIE_PLATE_NORMAL
+					mat.normal_scale = 1.6
 					mat.roughness = 0.22
 					mat.metallic = 0.65
 					mat.rim_enabled = true
@@ -371,6 +417,7 @@ func setup(p: Dictionary) -> void:
 					var mult: float = 8.0 if "Eye" in mesh.name else (7.2 if ("Edge" in mesh.name or "BladeTip" in mesh.name or "RuneChannel" in mesh.name) else 6.0)
 					mat.albedo_color = Color(2.5, 1.8, 1.4)
 					mat.emission_enabled = true
+					mat.emission_texture = DRAGON_SCALE_EMISSION
 					mat.emission = skin_glow_color
 					mat.emission_energy_multiplier = mult
 					mat.roughness = 0.04
@@ -394,11 +441,11 @@ func setup(p: Dictionary) -> void:
 					mat.rim_tint = 0.65
 				elif "Scale" in mesh.name or "Horn" in mesh.name or "TailSeg" in mesh.name or "Pauldron" in mesh.name or "Vambrace" in mesh.name or "ThighPlate" in mesh.name or "Foot" in mesh.name or "Carapace" in mesh.name:
 					# Obsidian dragon scales with micro-normal relief
-					mat.albedo_texture = skin_rock_albedo
+					mat.albedo_texture = DRAGON_SCALE_ALBEDO
 					mat.albedo_color = Color(0.24, 0.25, 0.28)
 					mat.normal_enabled = true
-					mat.normal_texture = skin_rock_norm
-					mat.normal_scale = 2.2
+					mat.normal_texture = DRAGON_SCALE_NORMAL
+					mat.normal_scale = 2.4
 					mat.metallic = 0.55
 					mat.roughness = 0.28
 					mat.rim_enabled = true
@@ -421,11 +468,12 @@ func setup(p: Dictionary) -> void:
 					mat.rim = 1.0
 					mat.rim_tint = 0.85
 					mat.emission_enabled = true
+					mat.emission_texture = GOKU_KI_MASTER_EMISSION
 					mat.emission = Color("8a2be2")
 					mat.emission_energy_multiplier = 0.85
 				elif "Gi" in mesh.name or "Pants" in mesh.name or "Tunic" in mesh.name:
 					# Authentic Turtle School Orange Martial Arts Gi
-					mat.albedo_texture = GOKU_GI_ALBEDO
+					mat.albedo_texture = GOKU_GI_MASTER_ALBEDO
 					mat.albedo_color = Color("ffffff")
 					mat.roughness = 0.82
 					mat.metallic = 0.02
@@ -450,6 +498,7 @@ func setup(p: Dictionary) -> void:
 				elif "Aura" in mesh.name or "Ki" in mesh.name or "Core" in mesh.name:
 					mat.albedo_color = Color(2.0, 1.0, 2.5)
 					mat.emission_enabled = true
+					mat.emission_texture = GOKU_KI_MASTER_EMISSION
 					mat.emission = Color("b347ff")
 					mat.emission_energy_multiplier = 5.5
 					glow_materials.append(mat)
@@ -459,7 +508,11 @@ func setup(p: Dictionary) -> void:
 					mat.roughness = 0.85
 			elif p.family == "phoenix":
 				if "Feather" in mesh.name or "Wing" in mesh.name or "Paul" in mesh.name or "Chest" in mesh.name or "Crown" in mesh.name:
+					mat.albedo_texture = PHOENIX_FEATHER_ALBEDO
 					mat.albedo_color = Color("d83212")
+					mat.normal_enabled = true
+					mat.normal_texture = PHOENIX_FEATHER_NORMAL
+					mat.normal_scale = 1.8
 					mat.roughness = 0.22
 					mat.metallic = 0.35
 					mat.rim_enabled = true
@@ -471,6 +524,7 @@ func setup(p: Dictionary) -> void:
 				elif "Fire" in mesh.name or "Gem" in mesh.name or "Lava" in mesh.name or "Core" in mesh.name or "Glaive" in mesh.name:
 					mat.albedo_color = Color(2.5, 1.5, 0.5)
 					mat.emission_enabled = true
+					mat.emission_texture = PHOENIX_FEATHER_EMISSION
 					mat.emission = Color("ff6d2b")
 					mat.emission_energy_multiplier = 5.0
 					glow_materials.append(mat)
@@ -490,16 +544,25 @@ func setup(p: Dictionary) -> void:
 				elif "Emerald" in mesh.name or "Glow" in mesh.name:
 					mat.albedo_color = Color(0.8, 2.5, 1.5)
 					mat.emission_enabled = true
+					mat.emission_texture = ANUBIS_OBSIDIAN_EMISSION
 					mat.emission = Color("2be58f")
 					mat.emission_energy_multiplier = 4.8
 					glow_materials.append(mat)
 					base_emissions.append(4.8)
 				else:
+					mat.albedo_texture = ANUBIS_OBSIDIAN_ALBEDO
+					mat.normal_enabled = true
+					mat.normal_texture = ANUBIS_OBSIDIAN_NORMAL
+					mat.normal_scale = 2.0
 					mat.albedo_color = Color("1a1c22")
 					mat.metallic = 0.70
 					mat.roughness = 0.25
 			elif p.family == "specter":
 				if "Crystal" in mesh.name or "Lance" in mesh.name or "Prism" in mesh.name or "Spike" in mesh.name:
+					mat.albedo_texture = SPECTER_CRYSTAL_ALBEDO
+					mat.normal_enabled = true
+					mat.normal_texture = SPECTER_CRYSTAL_NORMAL
+					mat.normal_scale = 1.8
 					mat.albedo_color = Color("c088ff")
 					mat.metallic = 0.80
 					mat.roughness = 0.08
@@ -508,6 +571,7 @@ func setup(p: Dictionary) -> void:
 				elif "Void" in mesh.name or "Glow" in mesh.name or "Eye" in mesh.name or "Core" in mesh.name:
 					mat.albedo_color = Color(2.0, 1.2, 3.0)
 					mat.emission_enabled = true
+					mat.emission_texture = SPECTER_CRYSTAL_EMISSION
 					mat.emission = Color("9b30ff")
 					mat.emission_energy_multiplier = 5.2
 					glow_materials.append(mat)
@@ -518,11 +582,15 @@ func setup(p: Dictionary) -> void:
 					mat.roughness = 0.22
 			elif p.family == "subzero":
 				if "Eye" in mesh.name or "Ice" in mesh.name or "Kori" in mesh.name or "Spike" in mesh.name:
+					mat.albedo_texture = SUBZERO_KORI_ALBEDO
+					mat.normal_enabled = true
+					mat.normal_texture = SUBZERO_KORI_NORMAL
+					mat.normal_scale = 2.0
 					mat.albedo_color = Color("8ae8ff")
 					mat.metallic = 0.20
 					mat.roughness = 0.06
 					mat.emission_enabled = true
-					mat.emission_texture = SUBZERO_ICE_EM
+					mat.emission_texture = SUBZERO_KORI_EMISSION
 					mat.emission = Color("4ad4ff")
 					mat.emission_energy_multiplier = 3.5
 					glow_materials.append(mat)
@@ -568,7 +636,7 @@ func setup(p: Dictionary) -> void:
 					mat.metallic = 0.15
 					mat.roughness = 0.08
 					mat.emission_enabled = true
-					mat.emission_texture = PAIN_RINNEGAN_EM
+					mat.emission_texture = PAIN_RINNEGAN_MASTER_EMISSION
 					mat.emission = Color("9900ee")
 					mat.emission_energy_multiplier = 4.0
 					glow_materials.append(mat)
@@ -578,7 +646,10 @@ func setup(p: Dictionary) -> void:
 					mat.roughness = 0.68
 					mat.metallic = 0.04
 				elif "Cloak" in mesh.name:
-					mat.albedo_texture = PAIN_CLOAK_ALBEDO
+					mat.albedo_texture = PAIN_CLOAK_MASTER_ALBEDO
+					mat.normal_enabled = true
+					mat.normal_texture = PAIN_CLOAK_MASTER_NORMAL
+					mat.normal_scale = 1.8
 					mat.albedo_color = Color("ffffff")
 					mat.roughness = 0.75
 					mat.metallic = 0.02
@@ -613,18 +684,30 @@ func setup(p: Dictionary) -> void:
 					mat.roughness = 0.70
 			elif p.family == "luffy":
 				if "Vest" in mesh.name:
-					mat.albedo_color = Color("dc1412")
+					mat.albedo_texture = LUFFY_VEST_ALBEDO
+					mat.normal_enabled = true
+					mat.normal_texture = LUFFY_VEST_NORMAL
+					mat.normal_scale = 2.0
+					mat.albedo_color = Color("ffffff")
 					mat.roughness = 0.72
 					mat.metallic = 0.0
 				elif "Shorts" in mesh.name:
-					mat.albedo_color = Color("153888")
+					mat.albedo_texture = LUFFY_DENIM_ALBEDO
+					mat.normal_enabled = true
+					mat.normal_texture = LUFFY_DENIM_NORMAL
+					mat.normal_scale = 2.0
+					mat.albedo_color = Color("ffffff")
 					mat.roughness = 0.78
 					mat.metallic = 0.0
 				elif "Cuff" in mesh.name:
 					mat.albedo_color = Color("eeeeee")
 					mat.roughness = 0.85
 				elif "StrawHat" in mesh.name or "Hat" in mesh.name:
-					mat.albedo_color = Color("dfbf52")
+					mat.albedo_texture = LUFFY_STRAW_ALBEDO
+					mat.normal_enabled = true
+					mat.normal_texture = LUFFY_STRAW_NORMAL
+					mat.normal_scale = 2.2
+					mat.albedo_color = Color("ffffff")
 					mat.roughness = 0.68
 				elif "Ribbon" in mesh.name:
 					mat.albedo_color = Color("cc1010")

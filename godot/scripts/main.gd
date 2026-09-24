@@ -347,6 +347,55 @@ func setup_items() -> void:
                 hoop.material_override = hoop_mat
                 root_item.add_child(hoop)
 
+        elif it_data.type == "explosive_barrel":
+            var cyl := CylinderMesh.new()
+            cyl.top_radius = 0.28
+            cyl.bottom_radius = 0.28
+            cyl.height = 0.64
+            mesh_inst.mesh = cyl
+            var mat := StandardMaterial3D.new()
+            mat.albedo_color = Color("c62828") # High-hazard Danger Red
+            mat.roughness = 0.45
+            mat.metallic = 0.35
+            mat.rim_enabled = true
+            mat.rim = 0.85
+            mat.rim_tint = 0.60
+            mesh_inst.material_override = mat
+
+            for y_off in [-0.20, 0.0, 0.20]:
+                var hoop := MeshInstance3D.new()
+                var hoop_cyl := CylinderMesh.new()
+                hoop_cyl.top_radius = 0.29
+                hoop_cyl.bottom_radius = 0.29
+                hoop_cyl.height = 0.05
+                hoop.mesh = hoop_cyl
+                hoop.position.y = y_off
+                var hoop_mat := StandardMaterial3D.new()
+                hoop_mat.albedo_color = Color("1a1c20") if y_off != 0.0 else Color("ffd600")
+                hoop_mat.metallic = 0.90
+                hoop_mat.roughness = 0.20
+                if y_off == 0.0:
+                    hoop_mat.emission_enabled = true
+                    hoop_mat.emission = Color("ffaa00")
+                    hoop_mat.emission_energy_multiplier = 1.8
+                hoop.material_override = hoop_mat
+                root_item.add_child(hoop)
+
+            # Glowing detonator fuse cap on top
+            var cap := MeshInstance3D.new()
+            var cap_sph := SphereMesh.new()
+            cap_sph.radius = 0.12
+            cap_sph.height = 0.18
+            cap.mesh = cap_sph
+            cap.position.y = 0.34
+            var cap_mat := StandardMaterial3D.new()
+            cap_mat.albedo_color = Color(2.5, 0.8, 0.2)
+            cap_mat.emission_enabled = true
+            cap_mat.emission = Color("ff3d00")
+            cap_mat.emission_energy_multiplier = 4.2
+            cap.material_override = cap_mat
+            root_item.add_child(cap)
+
         root_item.add_child(mesh_inst)
 
 func setup_platforms() -> void:
@@ -358,9 +407,9 @@ func setup_platforms() -> void:
     var stone_norm: Texture2D = preload("res://assets/textures/characters/golem_rock_normal.png")
 
     var plats: Array = [
-        {"pos": Vector3(-2.3, 1.45, 0.0), "size": Vector3(2.2, 0.14, 1.1)},
-        {"pos": Vector3( 2.3, 1.45, 0.0), "size": Vector3(2.2, 0.14, 1.1)},
-        {"pos": Vector3( 0.0, 2.65, 0.0), "size": Vector3(2.2, 0.14, 1.1)},
+        {"pos": Vector3(-2.6, 1.50, 0.0), "size": Vector3(2.4, 0.15, 1.2)},
+        {"pos": Vector3( 2.6, 1.50, 0.0), "size": Vector3(2.4, 0.15, 1.2)},
+        {"pos": Vector3( 0.0, 2.80, 0.0), "size": Vector3(2.4, 0.15, 1.2)},
     ]
 
     for p in plats:
@@ -499,15 +548,15 @@ func setup_citadel_scenery(enable: bool) -> void:
     mat.uv1_scale = Vector3(2, 2, 2)
     mat.uv1_triplanar = true
 
-    # 1. Background: Monumental Colosseum Colonnade (Z = -5.5)
-    for col_x in [-5.8, -3.2, 3.2, 5.8]:
+    # 1. Background: Monumental Colosseum Colonnade (Z = -5.8)
+    for col_x in [-7.2, -4.6, -2.0, 2.0, 4.6, 7.2]:
         var col := MeshInstance3D.new()
         var cyl := CylinderMesh.new()
-        cyl.top_radius = 0.42
-        cyl.bottom_radius = 0.48
-        cyl.height = 6.2
+        cyl.top_radius = 0.44
+        cyl.bottom_radius = 0.52
+        cyl.height = 7.0
         col.mesh = cyl
-        col.position = Vector3(col_x, 2.6, -5.5)
+        col.position = Vector3(col_x, 3.0, -5.8)
         col.material_override = mat
         col.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
         citadel_scenery_node.add_child(col)
@@ -515,42 +564,68 @@ func setup_citadel_scenery(enable: bool) -> void:
         # Capital on top
         var cap := MeshInstance3D.new()
         var box := BoxMesh.new()
-        box.size = Vector3(1.1, 0.35, 1.1)
+        box.size = Vector3(1.15, 0.38, 1.15)
         cap.mesh = box
-        cap.position = Vector3(col_x, 5.7, -5.5)
+        cap.position = Vector3(col_x, 6.6, -5.8)
         cap.material_override = mat
         citadel_scenery_node.add_child(cap)
 
     # Architrave / Beam across pillars
     var architrave := MeshInstance3D.new()
     var beam_mesh := BoxMesh.new()
-    beam_mesh.size = Vector3(14.0, 0.55, 1.2)
+    beam_mesh.size = Vector3(17.5, 0.60, 1.3)
     architrave.mesh = beam_mesh
-    architrave.position = Vector3(0, 6.0, -5.5)
+    architrave.position = Vector3(0, 6.9, -5.8)
     architrave.material_override = mat
     citadel_scenery_node.add_child(architrave)
 
-    # 2. Distant Ruined Wall with Archways (Z = -8.0)
+    # 2. Distant Ruined Wall with Battlements (Z = -8.5)
     var rear_wall := MeshInstance3D.new()
     var wall_box := BoxMesh.new()
-    wall_box.size = Vector3(22.0, 9.0, 0.8)
+    wall_box.size = Vector3(26.0, 10.5, 1.0)
     rear_wall.mesh = wall_box
-    rear_wall.position = Vector3(0, 4.0, -8.0)
+    rear_wall.position = Vector3(0, 4.8, -8.5)
     var wall_mat := StandardMaterial3D.new()
-    wall_mat.albedo_color = Color("2d2b33")
+    wall_mat.albedo_color = Color("28262e")
     wall_mat.roughness = 0.95
     rear_wall.material_override = wall_mat
     citadel_scenery_node.add_child(rear_wall)
 
-    # 3. Foreground Framing (Sides only, Z = +1.5, X = ±6.8, never obstructing fighters)
+    # 3. Flanking Braziers / War Torches (Z = -0.5, X = ±5.8)
+    for side in [-1, 1]:
+        var brazier := MeshInstance3D.new()
+        var b_cyl := CylinderMesh.new()
+        b_cyl.top_radius = 0.42
+        b_cyl.bottom_radius = 0.32
+        b_cyl.height = 1.1
+        brazier.mesh = b_cyl
+        brazier.position = Vector3(side * 5.8, 0.55, -0.6)
+        brazier.material_override = mat
+        citadel_scenery_node.add_child(brazier)
+
+        var flame := MeshInstance3D.new()
+        var f_sph := SphereMesh.new()
+        f_sph.radius = 0.24
+        f_sph.height = 0.36
+        flame.mesh = f_sph
+        flame.position = Vector3(side * 5.8, 1.25, -0.6)
+        var f_mat := StandardMaterial3D.new()
+        f_mat.albedo_color = Color(2.5, 1.2, 0.3)
+        f_mat.emission_enabled = true
+        f_mat.emission = Color("ff6d2b")
+        f_mat.emission_energy_multiplier = 4.5
+        flame.material_override = f_mat
+        citadel_scenery_node.add_child(flame)
+
+    # 4. Foreground Framing (Sides only, Z = +1.6, X = ±7.4, never obstructing fighters)
     for side in [-1, 1]:
         var stump := MeshInstance3D.new()
         var s_cyl := CylinderMesh.new()
-        s_cyl.top_radius = 0.38
-        s_cyl.bottom_radius = 0.45
-        s_cyl.height = 1.4
+        s_cyl.top_radius = 0.40
+        s_cyl.bottom_radius = 0.48
+        s_cyl.height = 1.6
         stump.mesh = s_cyl
-        stump.position = Vector3(side * 6.8, 0.7, 1.5)
+        stump.position = Vector3(side * 7.4, 0.8, 1.6)
         stump.material_override = mat
         citadel_scenery_node.add_child(stump)
 
@@ -935,6 +1010,18 @@ func _physics_process(delta: float) -> void:
                 hit_effect(event.target, true, false)
                 sound("hit")
                 status.text = "%s WURDE GETROFFEN VON %s!" % [sim.fighters[event.target].profile.name, event.item_name]
+            elif event.type == "item_explode":
+                camera_shake = 1.35
+                for fi in range(views.size()):
+                    var f_data: Dictionary = sim.fighters[fi]
+                    var f_center := Vector2(f_data.x, f_data.y + 0.75)
+                    var dist := Vector2(event.x, event.y).distance_to(f_center)
+                    if dist <= float(event.radius) + 0.5:
+                        views[fi].flash()
+                        hit_effect(fi, true, true)
+                sound("lava")
+                sound("hit")
+                status.text = "EXPLOSION! %s DETONIERT MIT GEWALTIGEM FLÄCHENSCHADEN!" % [event.item_name]
             elif event.type == "ring_out":
                 camera_shake = 0.95
                 hit_effect(event.actor, true, true)
