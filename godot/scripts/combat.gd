@@ -257,7 +257,7 @@ func explode_item(it_idx: int) -> void:
 			var missing_hp_ratio: float = clampf(1.0 - (f.hp / max_hp), 0.0, 1.0)
 			var weight: float = clampf(float(f.profile.get("weight", 1.0)), 0.85, 1.35)
 			var launch_scale: float = 1.0 + (missing_hp_ratio * 2.4)
-			var impulse: float = (base_push * 26.0 * falloff * launch_scale) / weight
+			var impulse: float = (base_push * 13.0 * falloff * launch_scale) / weight
 
 			var diff: Vector2 = f_center - Vector2(exp_x, exp_y)
 			var dir_x: float = sign(diff.x) if abs(diff.x) > 0.05 else (1.0 if fi == 0 else -1.0)
@@ -292,21 +292,21 @@ func execute_throw(attacker_idx: int, throw_type: String) -> void:
 	var launch_mult: float = 1.0 + (missing_hp_ratio * 2.2) + pow(missing_hp_ratio, 2.0) * 1.5
 
 	if throw_type == "forward":
-		var base_impulse := 17.5 * launch_mult / weight
+		var base_impulse := 8.75 * launch_mult / weight
 		target.vx = attacker.facing * base_impulse
-		target.vy = 6.0 * (1.0 + missing_hp_ratio * 0.7)
+		target.vy = 3.6 * (1.0 + missing_hp_ratio * 0.7)
 	elif throw_type == "back":
-		var base_impulse := 19.5 * launch_mult / weight
+		var base_impulse := 9.75 * launch_mult / weight
 		target.vx = -attacker.facing * base_impulse
-		target.vy = 6.8 * (1.0 + missing_hp_ratio * 0.7)
+		target.vy = 3.8 * (1.0 + missing_hp_ratio * 0.7)
 	elif throw_type == "up":
-		var base_impulse := 18.0 * launch_mult / weight
-		target.vx = attacker.facing * 2.0
+		var base_impulse := 9.0 * launch_mult / weight
+		target.vx = attacker.facing * 1.5
 		target.vy = base_impulse
 	else:
 		# Down throw / Neutral slam
-		target.vx = attacker.facing * 9.0 * launch_mult / weight
-		target.vy = 4.0
+		target.vx = attacker.facing * 4.5 * launch_mult / weight
+		target.vy = 2.4
 
 	target.is_grounded = false
 	target.drop_through = 0.15
@@ -803,8 +803,8 @@ func tick(commands: Array, dt: float = STEP) -> void:
 			var angle_rad: float = deg_to_rad(clampf(angle_deg, 15.0, 75.0))
 
 			var base_push: float = float(a.get("push", 0.25))
-			var total_impulse: float = (base_push * 26.0 * launch_scale * (1.35 if super_bonus > 1.0 else (1.15 if is_special else 1.0))) / weight
-			total_impulse = clampf(total_impulse, 3.0, 36.0)
+			var total_impulse: float = (base_push * 13.0 * launch_scale * (1.35 if super_bonus > 1.0 else (1.15 if is_special else 1.0))) / weight
+			total_impulse = clampf(total_impulse, 1.5, 18.0)
 
 			target.vx = attacker.facing * cos(angle_rad) * total_impulse
 			target.vy = sin(angle_rad) * total_impulse
@@ -937,7 +937,7 @@ func tick(commands: Array, dt: float = STEP) -> void:
 						var missing_hp_ratio: float = clampf(1.0 - (f_target.hp / max_hp), 0.0, 1.0)
 						var weight: float = clampf(float(f_target.profile.get("weight", 1.0)), 0.85, 1.35)
 						var launch_scale: float = 1.0 + (missing_hp_ratio * 2.0)
-						var launch_impulse: float = (it.push * 24.0 * launch_scale) / weight
+						var launch_impulse: float = (it.push * 12.0 * launch_scale) / weight
 
 						var hit_dir: float = sign(it.vx) if abs(it.vx) > 0.1 else 1.0
 						f_target.vx = hit_dir * launch_impulse * cos(deg_to_rad(it.angle))

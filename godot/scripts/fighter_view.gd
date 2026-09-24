@@ -106,6 +106,15 @@ const LUFFY_VEST_NORMAL = preload("res://assets/textures/skins/luffy_vest_normal
 const LUFFY_DENIM_ALBEDO = preload("res://assets/textures/skins/luffy_denim_albedo.png")
 const LUFFY_DENIM_NORMAL = preload("res://assets/textures/skins/luffy_denim_normal.png")
 
+# --- SONIC TEXTURES ---
+const SONIC_FUR_ALBEDO = preload("res://assets/textures/skins/sonic_fur_albedo.png")
+const SONIC_FUR_NORMAL = preload("res://assets/textures/skins/sonic_fur_normal.png")
+const SONIC_QUILL_EMISSION = preload("res://assets/textures/skins/sonic_quill_emission.png")
+const SONIC_SHOE_ALBEDO = preload("res://assets/textures/skins/sonic_shoe_albedo.png")
+const SONIC_SHOE_NORMAL = preload("res://assets/textures/skins/sonic_shoe_normal.png")
+const SONIC_BUCKLE_EMISSION = preload("res://assets/textures/skins/sonic_buckle_emission.png")
+const SONIC_SKIN_ALBEDO = preload("res://assets/textures/skins/sonic_skin_albedo.png")
+
 # --- VFX PARTICLES ---
 const LAVA_EMBER_TEX = preload("res://assets/textures/vfx/lava_ember.png")
 const ELECTRIC_SPARK_TEX = preload("res://assets/textures/vfx/electric_spark.png")
@@ -121,12 +130,13 @@ var aura_particles: CPUParticles3D
 var pulse_time := 0.0
 
 var shield: MeshInstance3D
+var sonic_spin_sphere: Node3D = null
 
 func setup(p: Dictionary) -> void:
 	profile = p
 	model = load("res://assets/models/%s.glb" % p.family).instantiate()
 	add_child(model)
-	if p.family in ["subzero", "pain", "luffy"]:
+	if p.family in ["subzero", "pain", "luffy", "sonic"]:
 		model.scale = Vector3.ONE * 1.05
 	elif p.family == "goku":
 		model.scale = Vector3.ONE * 0.01
@@ -247,6 +257,11 @@ func setup(p: Dictionary) -> void:
 		skin_glow_color = Color("ff2b2b")
 		skin_metallic = 0.05
 		skin_roughness = 0.55
+	elif p.family == "sonic":
+		triplanar_scale = Vector3(0.018, 0.018, 0.018)
+		skin_glow_color = Color("00a2ff")
+		skin_metallic = 0.08
+		skin_roughness = 0.35
 	else: # Ninja
 		triplanar_scale = Vector3(0.016, 0.016, 0.016)
 		if "fire" in p_text or "feuer" in p_text or "flam" in p_text or "lava" in p_text or element == "fire":
@@ -303,7 +318,7 @@ func setup(p: Dictionary) -> void:
 			var mat: StandardMaterial3D
 			if original is StandardMaterial3D:
 				mat = original.duplicate()
-			elif p.family in ["subzero", "pain", "goku", "luffy"]:
+			elif p.family in ["subzero", "pain", "goku", "luffy", "sonic"]:
 				# GLB imported materials may be BaseMaterial3D or null – create fresh one
 				mat = StandardMaterial3D.new()
 			else:
@@ -321,7 +336,7 @@ func setup(p: Dictionary) -> void:
 				mesh.set_surface_override_material(surface, mat)
 				continue
 
-			if p.family in ["subzero", "pain", "goku", "luffy"]:
+			if p.family in ["subzero", "pain", "goku", "luffy", "sonic"]:
 				mat.uv1_triplanar = false
 				mat.rim_enabled = true
 				mat.rim = 0.35
@@ -734,6 +749,77 @@ func setup(p: Dictionary) -> void:
 				else:
 					mat.albedo_color = Color("e01515")
 					mat.roughness = 0.65
+			elif p.family == "sonic":
+				if "Fur" in mesh.name or "Quill" in mesh.name or "Head" in mesh.name or "Torso" in mesh.name or "Spine" in mesh.name or "Tail" in mesh.name or "Leg" in mesh.name or "Ear_L" in mesh.name or "Ear_R" in mesh.name:
+					mat.albedo_texture = SONIC_FUR_ALBEDO
+					mat.normal_enabled = true
+					mat.normal_texture = SONIC_FUR_NORMAL
+					mat.normal_scale = 1.6
+					mat.albedo_color = Color("ffffff")
+					mat.roughness = 0.42
+					mat.metallic = 0.05
+					mat.rim_enabled = true
+					mat.rim = 0.75
+					mat.rim_tint = 0.60
+				elif "Shoe" in mesh.name:
+					mat.albedo_texture = SONIC_SHOE_ALBEDO
+					mat.normal_enabled = true
+					mat.normal_texture = SONIC_SHOE_NORMAL
+					mat.normal_scale = 1.8
+					mat.albedo_color = Color("ffffff")
+					mat.roughness = 0.35
+					mat.metallic = 0.15
+				elif "Buckle" in mesh.name:
+					mat.albedo_color = Color("f5c227")
+					mat.metallic = 0.95
+					mat.roughness = 0.12
+					mat.emission_enabled = true
+					mat.emission_texture = SONIC_BUCKLE_EMISSION
+					mat.emission = Color("ffd240")
+					mat.emission_energy_multiplier = 3.0
+					glow_materials.append(mat)
+					base_emissions.append(3.0)
+				elif "Muzzle" in mesh.name or "Ear_Inner" in mesh.name or "Belly" in mesh.name or "Arm" in mesh.name:
+					mat.albedo_texture = SONIC_SKIN_ALBEDO
+					mat.albedo_color = Color("ffffff")
+					mat.roughness = 0.55
+					mat.metallic = 0.0
+					mat.rim_enabled = true
+					mat.rim = 0.40
+				elif "Glove" in mesh.name or "Sock" in mesh.name or "Cuff" in mesh.name:
+					mat.albedo_color = Color("f0f2f6")
+					mat.roughness = 0.70
+					mat.metallic = 0.02
+				elif "Iris" in mesh.name:
+					mat.albedo_color = Color("00e575")
+					mat.roughness = 0.10
+					mat.metallic = 0.20
+					mat.emission_enabled = true
+					mat.emission = Color("00ff88")
+					mat.emission_energy_multiplier = 2.8
+					glow_materials.append(mat)
+					base_emissions.append(2.8)
+				elif "EyeWhite" in mesh.name:
+					mat.albedo_color = Color("ffffff")
+					mat.roughness = 0.15
+				elif "Nose" in mesh.name or "Pupil" in mesh.name:
+					mat.albedo_color = Color("0a0a0c")
+					mat.roughness = 0.25
+				elif "Spin" in mesh.name:
+					mat.albedo_color = Color("1e90ff")
+					mat.roughness = 0.08
+					mat.metallic = 0.40
+					mat.emission_enabled = true
+					mat.emission = Color("00a2ff")
+					mat.emission_energy_multiplier = 4.0
+					glow_materials.append(mat)
+					base_emissions.append(4.0)
+					sonic_spin_sphere = mesh
+					mesh.visible = false
+				else:
+					mat.albedo_texture = SONIC_FUR_ALBEDO
+					mat.albedo_color = Color("1060ee")
+					mat.roughness = 0.45
 			else: # Ninja
 				if "Eye" in mesh.name or "Visor" in mesh.name or "Conduit" in mesh.name or "PowerPort" in mesh.name or "GreaveGlow" in mesh.name or "BackNode" in mesh.name or "Center" in mesh.name:
 					# Sharp glowing cyber-shinobi energy nodes & assassin eye slits
@@ -929,6 +1015,8 @@ func update_state(state: Dictionary, delta: float) -> void:
 	model.visible = not is_invuln or (int(pulse_time * 24.0) % 2 == 0)
 
 	var pose: String = state.pose
+	if sonic_spin_sphere:
+		sonic_spin_sphere.visible = (pose == "SpecialAttack")
 	if pose != current_pose and animation and clip_map.has(pose):
 		animation.play(clip_map[pose], 0.09)
 		current_pose = pose

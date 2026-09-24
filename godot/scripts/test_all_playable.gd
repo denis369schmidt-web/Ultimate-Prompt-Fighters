@@ -16,11 +16,12 @@ func _initialize():
 		{"key": "goku", "prompt": "Son Goku Super Saiyan Kamehameha Dragon Ball Z"},
 		{"key": "subzero", "prompt": "Sub-Zero Lin Kuei Cryomancer ice ninja kori blade"},
 		{"key": "pain", "prompt": "Pain Nagato Akatsuki Rinnegan Shinra Tensei"},
-		{"key": "luffy", "prompt": "Monkey D. Luffy Strohhut Gum-Gum One Piece Mugiwara"}
+		{"key": "luffy", "prompt": "Monkey D. Luffy Strohhut Gum-Gum One Piece Mugiwara"},
+		{"key": "sonic", "prompt": "Sonic the Hedgehog Blue Blur Super Spin Dash Sega"}
 	]
 	
 	print("==================================================")
-	print("TESTING ALL 11 CHARACTERS (PROMPT -> SIM -> VIEW)")
+	print("TESTING ALL 12 CHARACTERS (PROMPT -> SIM -> VIEW)")
 	print("==================================================")
 	
 	var all_ok := true

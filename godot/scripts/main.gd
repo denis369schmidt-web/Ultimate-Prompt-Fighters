@@ -15,6 +15,14 @@ const PORTRAITS = {
     "storm": preload("res://assets/textures/ui/portrait_storm.png"),
     "toxic": preload("res://assets/textures/ui/portrait_toxic.png"),
     "cyber": preload("res://assets/textures/ui/portrait_cyber.png"),
+    "sonic": preload("res://assets/textures/ui/portrait_sonic.png"),
+    "goku": preload("res://assets/textures/characters/thumbs/thumb_goku.png"),
+    "subzero": preload("res://assets/textures/characters/thumbs/thumb_subzero.png"),
+    "pain": preload("res://assets/textures/characters/thumbs/thumb_pain.png"),
+    "luffy": preload("res://assets/textures/characters/thumbs/thumb_luffy.png"),
+    "anubis": preload("res://assets/textures/characters/thumbs/thumb_anubis.png"),
+    "specter": preload("res://assets/textures/characters/thumbs/thumb_specter.png"),
+    "phoenix": preload("res://assets/textures/characters/thumbs/thumb_phoenix.png"),
 }
 
 const HIT_SPARK = preload("res://assets/textures/vfx/hit_spark.png")
@@ -146,6 +154,11 @@ var platform_nodes: Array = []
 var platform_trims: Array = []
 var item_nodes: Array = []
 
+var active_picker := 0
+var mk_card_buttons: Array = []
+var mk_toggle_buttons: Array = []
+var mk_presets: Array = []
+
 func _ready() -> void:
     for arg in OS.get_cmdline_user_args():
         if arg == "--smoke": smoke = true
@@ -157,6 +170,7 @@ func _ready() -> void:
     setup_audio()
     restore_prompts()
     refresh_previews()
+    update_mk_grid_visuals()
     get_window().focus_exited.connect(func():
         if active and sim.mode == "manual" and not smoke: paused = true)
     if smoke: start_round("autonomous")
@@ -629,16 +643,16 @@ func setup_citadel_scenery(enable: bool) -> void:
         stump.material_override = mat
         citadel_scenery_node.add_child(stump)
 
-func panel_style(color: Color, border: Color = Color("34445b")) -> StyleBoxFlat:
+func panel_style(color: Color, border: Color = Color("34445b"), width: int = 1, radius: int = 12) -> StyleBoxFlat:
     var s := StyleBoxFlat.new()
     s.bg_color = color
     s.border_color = border
-    s.set_border_width_all(1)
-    s.set_corner_radius_all(12)
-    s.content_margin_left = 22
-    s.content_margin_right = 22
-    s.content_margin_top = 16
-    s.content_margin_bottom = 16
+    s.set_border_width_all(width)
+    s.set_corner_radius_all(radius)
+    s.content_margin_left = 18
+    s.content_margin_right = 18
+    s.content_margin_top = 12
+    s.content_margin_bottom = 12
     return s
 
 func label(text: String, size: int = 18, color: Color = Color("dce7f5")) -> Label:
@@ -766,74 +780,172 @@ func setup_ui() -> void:
 
     selection = PanelContainer.new()
     root_ui.add_child(selection)
-    selection.position = Vector2(170, 16)
-    selection.custom_minimum_size = Vector2(940, 0)
-    selection.add_theme_stylebox_override("panel", panel_style(Color(0.025,0.045,0.078,0.97), Color("36546e")))
+    selection.position = Vector2(140, 6)
+    selection.custom_minimum_size = Vector2(1000, 695)
+    selection.add_theme_stylebox_override("panel", panel_style(Color(0.02, 0.03, 0.05, 0.98), Color("8a1a1a"), 2, 10))
     var select_box := VBoxContainer.new()
-    select_box.add_theme_constant_override("separation", 5)
+    select_box.add_theme_constant_override("separation", 4)
     selection.add_child(select_box)
-    select_box.add_child(label("DEIN PROMPT. DEIN KÄMPFER.", 20))
-    select_box.add_child(label("Wähle deinen Kämpfer aus allen 11 Charakteren oder gib einen eigenen Prompt ein (100 Punkte)", 12, Color("93aec9")))
 
-    var presets = [
-        {"id": "golem", "name": "Golem", "prompt": "Gepanzerter Lavagolem mit brennenden Fäusten"},
-        {"id": "ninja", "name": "Ninja", "prompt": "Blitzschneller Schattenninja mit elektrischen Klingen"},
-        {"id": "valkyrie", "name": "Valkyrie", "prompt": "Strahlende Moe Valkyrie Paladin Kriegerin mit Lichtflügeln und Rapier"},
-        {"id": "dragon", "name": "Drache", "prompt": "Mächtiger Cyber Drachenritter mit flammendem Drachen-Großschwert"},
-        {"id": "anubis", "name": "Anubis", "prompt": "Jackal God Anubis wielding dual Khopesh"},
-        {"id": "specter", "name": "Specter", "prompt": "Void Specter crystal phantom warrior with void lance"},
-        {"id": "phoenix", "name": "Phoenix", "prompt": "Phoenix Empress with feather armor and phoenix glaive"},
-        {"id": "goku", "name": "Goku", "prompt": "Son Goku Super Saiyan Kamehameha Dragon Ball Z"},
-        {"id": "subzero", "name": "Sub-Zero", "prompt": "Sub-Zero Lin Kuei Cryomancer ice ninja kori blade"},
-        {"id": "pain", "name": "Pain", "prompt": "Pain Nagato Akatsuki Rinnegan Shinra Tensei"},
-        {"id": "luffy", "name": "Ruffy", "prompt": "Monkey D. Luffy Strohhut Gum-Gum One Piece Mugiwara"}
+    # 1. MORTAL KOMBAT HEADER
+    var header_box := VBoxContainer.new()
+    header_box.add_theme_constant_override("separation", 1)
+    select_box.add_child(header_box)
+    var mk_title := label("CHOOSE YOUR FIGHTER", 22, Color("f7c844"))
+    mk_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    header_box.add_child(mk_title)
+    var mk_sub := label("MORTAL KOMBAT AUSWAHL · 12 KÄMPFER BEREIT · LINKSKLICK: P1 · RECHTSKLICK: P2", 11, Color("e55050"))
+    mk_sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    header_box.add_child(mk_sub)
+
+    # 2. ACTIVE PLAYER SELECTOR TABS
+    var toggle_h := HBoxContainer.new()
+    toggle_h.add_theme_constant_override("separation", 16)
+    toggle_h.alignment = BoxContainer.ALIGNMENT_CENTER
+    select_box.add_child(toggle_h)
+
+    mk_toggle_buttons.clear()
+    for pi in range(2):
+        var tbtn := Button.new()
+        tbtn.custom_minimum_size = Vector2(240, 30)
+        tbtn.add_theme_font_size_override("font_size", 12)
+        tbtn.focus_mode = Control.FOCUS_NONE
+        var slot_target: int = pi
+        tbtn.pressed.connect(func():
+            active_picker = slot_target
+            update_mk_grid_visuals()
+        )
+        toggle_h.add_child(tbtn)
+        mk_toggle_buttons.append(tbtn)
+
+    # 3. 12-FIGHTER PRESETS (ALL 12 PLAYABLE CHARACTERS)
+    mk_presets = [
+        {"id": "ninja", "name": "VOLT NINJA", "prompt": "Blitzschneller Schattenninja mit elektrischen Klingen"},
+        {"id": "golem", "name": "LAVA GOLEM", "prompt": "Gepanzerter Lavagolem mit brennenden Fäusten"},
+        {"id": "valkyrie", "name": "VALKYRIE", "prompt": "Strahlende Moe Valkyrie Paladin Kriegerin mit Lichtflügeln und Rapier"},
+        {"id": "dragon", "name": "IGNIS DRAKE", "prompt": "Mächtiger Cyber Drachenritter mit flammendem Drachen-Großschwert"},
+        {"id": "goku", "name": "SON GOKU", "prompt": "Son Goku Super Saiyan Kamehameha Dragon Ball Z"},
+        {"id": "subzero", "name": "SUB-ZERO", "prompt": "Sub-Zero Lin Kuei Cryomancer ice ninja kori blade"},
+        {"id": "pain", "name": "PAIN", "prompt": "Pain Nagato Akatsuki Rinnegan Shinra Tensei"},
+        {"id": "luffy", "name": "RUFFY", "prompt": "Monkey D. Luffy Strohhut Gum-Gum One Piece Mugiwara"},
+        {"id": "sonic", "name": "SONIC", "prompt": "Sonic the Hedgehog Blue Blur Super Spin Dash Sega"},
+        {"id": "anubis", "name": "ANUBIS", "prompt": "Jackal God Anubis wielding dual Khopesh"},
+        {"id": "specter", "name": "SPECTER", "prompt": "Void Specter crystal phantom warrior with void lance"},
+        {"id": "phoenix", "name": "PHOENIX", "prompt": "Phoenix Empress with feather armor and phoenix glaive"}
     ]
 
+    # 4. MORTAL KOMBAT 6x2 GRID
+    var mk_grid := GridContainer.new()
+    mk_grid.columns = 6
+    mk_grid.add_theme_constant_override("h_separation", 8)
+    mk_grid.add_theme_constant_override("v_separation", 6)
+    select_box.add_child(mk_grid)
+
+    mk_card_buttons.clear()
+    for idx in range(mk_presets.size()):
+        var preset: Dictionary = mk_presets[idx]
+        var card := Button.new()
+        card.custom_minimum_size = Vector2(152, 74)
+        card.focus_mode = Control.FOCUS_NONE
+
+        # Layout inside card button
+        var card_v := VBoxContainer.new()
+        card_v.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+        card_v.alignment = BoxContainer.ALIGNMENT_CENTER
+        card_v.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        card.add_child(card_v)
+
+        var port_tex: Texture2D = null
+        if PORTRAITS.has(preset.id):
+            port_tex = PORTRAITS[preset.id]
+        elif ResourceLoader.exists("res://assets/textures/characters/thumbs/thumb_%s.png" % preset.id):
+            port_tex = load("res://assets/textures/characters/thumbs/thumb_%s.png" % preset.id)
+
+        var img := TextureRect.new()
+        img.custom_minimum_size = Vector2(44, 44)
+        img.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+        img.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+        img.texture = port_tex
+        img.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        card_v.add_child(img)
+
+        var n_lbl := Label.new()
+        n_lbl.text = preset.name
+        n_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+        n_lbl.add_theme_font_size_override("font_size", 10)
+        n_lbl.add_theme_color_override("font_color", Color("dce7f5"))
+        n_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        card_v.add_child(n_lbl)
+
+        # Badges for P1 & P2
+        var badge_p1 := Label.new()
+        badge_p1.text = "P1"
+        badge_p1.add_theme_font_size_override("font_size", 10)
+        badge_p1.add_theme_color_override("font_color", CYAN)
+        badge_p1.position = Vector2(6, 4)
+        badge_p1.visible = false
+        card.add_child(badge_p1)
+
+        var badge_p2 := Label.new()
+        badge_p2.text = "P2"
+        badge_p2.add_theme_font_size_override("font_size", 10)
+        badge_p2.add_theme_color_override("font_color", ORANGE)
+        badge_p2.position = Vector2(128, 4)
+        badge_p2.visible = false
+        card.add_child(badge_p2)
+
+        var p_idx := idx
+        card.pressed.connect(func():
+            on_mk_fighter_selected(active_picker, p_idx)
+            active_picker = 1 if active_picker == 0 else 0
+            update_mk_grid_visuals()
+        )
+        card.gui_input.connect(func(ev: InputEvent):
+            if ev is InputEventMouseButton and ev.is_pressed() and ev.button_index == MOUSE_BUTTON_RIGHT:
+                on_mk_fighter_selected(1, p_idx)
+                update_mk_grid_visuals()
+        )
+
+        mk_grid.add_child(card)
+        mk_card_buttons.append({"button": card, "badge_p1": badge_p1, "badge_p2": badge_p2})
+
+    # 5. SIDE-BY-SIDE PLAYER INFO & EDIT PANELS
+    var player_cols := HBoxContainer.new()
+    player_cols.add_theme_constant_override("separation", 12)
+    select_box.add_child(player_cols)
+
     for i in range(2):
-        select_box.add_child(label("SPIELER %d" % (i+1), 12, CYAN if i == 0 else ORANGE))
+        var pcol := PanelContainer.new()
+        pcol.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+        pcol.add_theme_stylebox_override("panel", panel_style(Color("0e141f"), (CYAN if i == 0 else ORANGE).darkened(0.4), 1, 8))
+        player_cols.add_child(pcol)
+
+        var pv := VBoxContainer.new()
+        pv.add_theme_constant_override("separation", 2)
+        pcol.add_child(pv)
+
+        var plbl := label("SPIELER %d" % (i+1), 11, CYAN if i == 0 else ORANGE)
+        pv.add_child(plbl)
+
         var edit := LineEdit.new()
         edit.name = "PromptPlayer%d" % (i+1)
         edit.max_length = 512
-        edit.custom_minimum_size.y = 28
+        edit.custom_minimum_size.y = 26
         edit.text = "Blitzschneller Schattenninja mit elektrischen Klingen" if i == 0 else "Gepanzerter Lavagolem mit brennenden Fäusten"
-        edit.add_theme_font_size_override("font_size", 13)
-        select_box.add_child(edit)
+        edit.add_theme_font_size_override("font_size", 11)
+        pv.add_child(edit)
         prompts.append(edit)
 
-        # Visual character selection cards row
-        var preset_row := HBoxContainer.new()
-        preset_row.add_theme_constant_override("separation", 6)
-        select_box.add_child(preset_row)
-        for preset in presets:
-            var pbtn := Button.new()
-            pbtn.text = preset.name
-            var thumb_path: String = "res://assets/textures/characters/thumbs/thumb_%s.png" % preset.id
-            if ResourceLoader.exists(thumb_path):
-                pbtn.icon = load(thumb_path)
-            pbtn.expand_icon = true
-            pbtn.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
-            pbtn.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
-            pbtn.custom_minimum_size = Vector2(76, 60)
-            pbtn.add_theme_font_size_override("font_size", 9)
-            pbtn.add_theme_stylebox_override("normal", panel_style(Color("162436"), Color("2a445d")))
-            pbtn.add_theme_stylebox_override("hover", panel_style(Color("26415e"), CYAN if i == 0 else ORANGE))
-            pbtn.focus_mode = Control.FOCUS_NONE
-            var p_text: String = preset.prompt
-            var edit_ref: LineEdit = edit
-            pbtn.pressed.connect(func():
-                edit_ref.text = p_text
-                refresh_profile_text()
-                refresh_previews()
-            )
-            preset_row.add_child(pbtn)
-
-        var info := label("", 11, Color("93aec9"))
-        select_box.add_child(info)
+        var info := label("", 10, Color("93aec9"))
+        pv.add_child(info)
         profile_text.append(info)
-        edit.text_changed.connect(func(_s): refresh_profile_text())
+        edit.text_changed.connect(func(_s):
+            refresh_profile_text()
+            update_mk_grid_visuals()
+        )
 
-    # Arena Selector Row with Thumbnails
-    select_box.add_child(label("ARENA WÄHLEN", 14, Color("ffc857")))
+    # 6. ARENA SELECTOR ROW
+    select_box.add_child(label("ARENA WÄHLEN", 12, Color("ffc857")))
     var arena_row := HBoxContainer.new()
     arena_row.add_theme_constant_override("separation", 8)
     select_box.add_child(arena_row)
@@ -845,10 +957,10 @@ func setup_ui() -> void:
         abtn.expand_icon = true
         abtn.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
         abtn.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
-        abtn.custom_minimum_size = Vector2(126, 68)
-        abtn.add_theme_font_size_override("font_size", 10)
-        abtn.add_theme_stylebox_override("normal", panel_style(Color("162b40"), Color("34445b")))
-        abtn.add_theme_stylebox_override("hover", panel_style(Color("29445a"), CYAN))
+        abtn.custom_minimum_size = Vector2(126, 56)
+        abtn.add_theme_font_size_override("font_size", 9)
+        abtn.add_theme_stylebox_override("normal", panel_style(Color("162b40"), Color("34445b"), 1, 6))
+        abtn.add_theme_stylebox_override("hover", panel_style(Color("29445a"), CYAN, 1, 6))
         abtn.focus_mode = Control.FOCUS_NONE
         var target_aid: String = aid
         abtn.pressed.connect(func():
@@ -856,23 +968,24 @@ func setup_ui() -> void:
         )
         arena_row.add_child(abtn)
 
+    # 7. ACTION BUTTONS
     var actions := HBoxContainer.new()
     actions.add_theme_constant_override("separation", 12)
     select_box.add_child(actions)
-    for spec in [["LOKALER VERSUS", "manual", CYAN], ["AGENTENKAMPF", "autonomous", ORANGE]]:
+    for spec in [["⚔  KAMPF STARTEN (VERSUS)", "manual", CYAN], ["🤖  AGENTENKAMPF (KI vs KI)", "autonomous", ORANGE]]:
         var start_btn := button(spec[0], spec[2], start_round.bind(spec[1]))
         start_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
         actions.add_child(start_btn)
 
+    # 8. CONTROLS CHEAT SHEET
     var controls_panel := PanelContainer.new()
-    controls_panel.add_theme_stylebox_override("panel", panel_style(Color(0.015, 0.025, 0.045, 0.85), Color("22354c")))
+    controls_panel.add_theme_stylebox_override("panel", panel_style(Color(0.015, 0.025, 0.045, 0.85), Color("22354c"), 1, 6))
     select_box.add_child(controls_panel)
     var controls_box := VBoxContainer.new()
     controls_panel.add_child(controls_box)
-    controls_box.add_child(label("KAMPF-STEUERUNG (SUPER SMASH & ARENA-OBJEKTE)", 12, Color("76a8d6")))
-    controls_box.add_child(label("P1:  A/D Laufen  ·  W Sprung (Doppel)  ·  S Block/Plattform Drop  ·  F Schlag  ·  G Spezial  ·  E Greifen/Werfen/Aufheben", 11, CYAN))
-    controls_box.add_child(label("P2:  ←/→ Laufen  ·  ↑ Sprung (Doppel)  ·  ↓ Block/Plattform Drop  ·  K Schlag  ·  L Spezial  ·  O Greifen/Werfen/Aufheben", 11, ORANGE))
-    controls_box.add_child(label("Features: 3 Stocks, dynamischer Smash-Rückstoß je weniger HP, Gegner Greifen & Werfen (Richtungstaste), Kisten/Fässer werfen!", 11, Color("ffc857")))
+    controls_box.add_child(label("KAMPF-STEUERUNG (SUPER SMASH & ARENA-OBJEKTE)", 11, Color("76a8d6")))
+    controls_box.add_child(label("P1:  A/D Laufen  ·  W Sprung (Doppel)  ·  S Block/Drop  ·  F Schlag  ·  G Spezial  ·  E Greifen/Werfen", 10, CYAN))
+    controls_box.add_child(label("P2:  ←/→ Laufen  ·  ↑ Sprung (Doppel)  ·  ↓ Block/Drop  ·  K Schlag  ·  L Spezial  ·  O Greifen/Werfen", 10, ORANGE))
 
     result_panel = PanelContainer.new()
     root_ui.add_child(result_panel)
@@ -935,6 +1048,47 @@ func show_selection() -> void:
     result_panel.hide()
     selection.show()
     refresh_previews()
+    update_mk_grid_visuals()
+
+func on_mk_fighter_selected(player_slot: int, preset_idx: int) -> void:
+    if preset_idx < 0 or preset_idx >= mk_presets.size(): return
+    var preset: Dictionary = mk_presets[preset_idx]
+    if prompts.size() > player_slot and prompts[player_slot]:
+        prompts[player_slot].text = preset.prompt
+    refresh_profile_text()
+    refresh_previews()
+    update_mk_grid_visuals()
+    sound("jump")
+
+func update_mk_grid_visuals() -> void:
+    for i in range(mk_toggle_buttons.size()):
+        var tbtn: Button = mk_toggle_buttons[i]
+        var is_active := (active_picker == i)
+        var col: Color = CYAN if i == 0 else ORANGE
+        if is_active:
+            tbtn.add_theme_stylebox_override("normal", panel_style(col.darkened(0.6), col, 2, 6))
+            tbtn.text = "▶ SPIELER %d WÄHLEN (AKTIV) ◀" % (i + 1)
+        else:
+            tbtn.add_theme_stylebox_override("normal", panel_style(Color("101622"), Color("25384e"), 1, 6))
+            tbtn.text = "SPIELER %d WÄHLEN" % (i + 1)
+
+    for k in range(mk_card_buttons.size()):
+        var item: Dictionary = mk_card_buttons[k]
+        var btn: Button = item.button
+        var b_p1: Label = item.badge_p1
+        var b_p2: Label = item.badge_p2
+        var is_p1: bool = (prompts.size() > 0 and prompts[0].text == mk_presets[k].prompt)
+        var is_p2: bool = (prompts.size() > 1 and prompts[1].text == mk_presets[k].prompt)
+        b_p1.visible = is_p1
+        b_p2.visible = is_p2
+        if is_p1 and is_p2:
+            btn.add_theme_stylebox_override("normal", panel_style(Color("281834"), Color("e040fb"), 2, 8))
+        elif is_p1:
+            btn.add_theme_stylebox_override("normal", panel_style(Color("0f2638"), CYAN, 2, 8))
+        elif is_p2:
+            btn.add_theme_stylebox_override("normal", panel_style(Color("361810"), ORANGE, 2, 8))
+        else:
+            btn.add_theme_stylebox_override("normal", panel_style(Color("0e141f"), Color("243346"), 1, 8))
 
 func _unhandled_key_input(event: InputEvent) -> void:
     if not event.is_pressed() or event.is_echo(): return
@@ -1072,6 +1226,8 @@ func _process(delta: float) -> void:
 
 func get_portrait_for_fighter(f: Dictionary) -> Texture2D:
     var family: String = f.profile.get("family", "")
+    if PORTRAITS.has(family) and PORTRAITS[family] != null:
+        return PORTRAITS[family]
     var thumb_path: String = "res://assets/textures/characters/thumbs/thumb_%s.png" % family
     if ResourceLoader.exists(thumb_path):
         return load(thumb_path)
@@ -1080,6 +1236,16 @@ func get_portrait_for_fighter(f: Dictionary) -> Texture2D:
         return PORTRAITS.get("dragon", null)
     if family == "valkyrie" or "valkyrie" in ptext or "moe" in ptext or "anime" in ptext:
         return PORTRAITS.get("valkyrie", null)
+    if "sonic" in ptext:
+        return PORTRAITS.get("sonic", null)
+    if "goku" in ptext:
+        return PORTRAITS.get("goku", null)
+    if "subzero" in ptext or "sub zero" in ptext:
+        return PORTRAITS.get("subzero", null)
+    if "pain" in ptext:
+        return PORTRAITS.get("pain", null)
+    if "luffy" in ptext or "ruffy" in ptext:
+        return PORTRAITS.get("luffy", null)
     if "frost" in ptext or "eis" in ptext:
         return PORTRAITS.get("frost", null)
     if "sturm" in ptext or "donner" in ptext or "blitz" in ptext or "storm" in ptext:
