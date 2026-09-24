@@ -1,0 +1,10 @@
+* text=auto
+*.sh text eol=lf
+*.ps1 text eol=crlf
+
+# Binary production assets use Git LFS (configured locally for this repository).
+*.blend filter=lfs diff=lfs merge=lfs -text
+*.fbx filter=lfs diff=lfs merge=lfs -text
+*.uasset filter=lfs diff=lfs merge=lfs -text
+*.png filter=lfs diff=lfs merge=lfs -text
+*.glb filter=lfs diff=lfs merge=lfs -text

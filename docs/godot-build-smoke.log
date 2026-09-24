@@ -1,0 +1,6 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+OpenGL API 3.3.0 - Build 32.0.101.5763 - Compatibility - Using Device: Intel - Intel(R) UHD Graphics
+
+PFU_RENDER_ROUND_COMPLETE 1 hits=23
+PFU_RENDER_ROUND_COMPLETE 1 hits=46
+PFU_RENDER_SMOKE_OK {"hits":46,"restarts":1}

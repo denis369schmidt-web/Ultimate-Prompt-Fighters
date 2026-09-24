@@ -1,0 +1,15 @@
+{
+  "FileVersion": 3,
+  "EngineAssociation": "5.7",
+  "Category": "Games",
+  "Description": "Local 2.5D prompt-driven fighting game prototype.",
+  "Modules": [
+    {
+      "Name": "PromptFighterUltimate",
+      "Type": "Runtime",
+      "LoadingPhase": "Default"
+    }
+  ],
+  "Plugins": []
+}
+

@@ -1,0 +1,141 @@
+{
+  "balance_sample": [
+    5,
+    25,
+    0
+  ],
+  "engine": "4.7.2-stable (official)",
+  "failed": 0,
+  "passed": 32,
+  "sample_hits": 691,
+  "tests": [
+    {
+      "pass": true,
+      "test": "independent prompts and skeleton families"
+    },
+    {
+      "pass": true,
+      "test": "deterministic profile"
+    },
+    {
+      "pass": true,
+      "test": "same prompt reproducible across player slots"
+    },
+    {
+      "pass": true,
+      "test": "1000 profiles: budget, bounds, invalid inputs and module compatibility"
+    },
+    {
+      "pass": true,
+      "test": "standard attack accepted"
+    },
+    {
+      "pass": true,
+      "test": "duplicate attack blocked by pending/cooldown"
+    },
+    {
+      "pass": true,
+      "test": "single standard hit applied within damage budget"
+    },
+    {
+      "pass": true,
+      "test": "no repeated damage after completed hit"
+    },
+    {
+      "pass": true,
+      "test": "special misses outside range"
+    },
+    {
+      "pass": true,
+      "test": "player 1 win and player 2 defeat"
+    },
+    {
+      "pass": true,
+      "test": "restart resets all combat state"
+    },
+    {
+      "pass": true,
+      "test": "player 2 special attack and victory"
+    },
+    {
+      "pass": true,
+      "test": "simultaneous double KO is a draw"
+    },
+    {
+      "pass": true,
+      "test": "timeout compares normalized health"
+    },
+    {
+      "pass": true,
+      "test": "timeout winner"
+    },
+    {
+      "pass": true,
+      "test": "identical commands yield identical rules in both modes"
+    },
+    {
+      "pass": true,
+      "test": "30 autonomous matches terminate with real hits"
+    },
+    {
+      "pass": true,
+      "test": "arena boundaries"
+    },
+    {
+      "pass": true,
+      "test": "fighters do not cross through each other"
+    },
+    {
+      "pass": true,
+      "test": "ninja imported 18-bone skeleton"
+    },
+    {
+      "pass": true,
+      "test": "ninja imported animation clips [\"Ninja_Defeat\", \"Ninja_HitReact\", \"Ninja_Idle\", \"Ninja_LightAttack\", \"Ninja_Move\", \"Ninja_SpecialAttack\", \"Ninja_Victory\"]"
+    },
+    {
+      "pass": true,
+      "test": "golem imported 18-bone skeleton"
+    },
+    {
+      "pass": true,
+      "test": "golem imported animation clips [\"Golem_Defeat\", \"Golem_HitReact\", \"Golem_Idle\", \"Golem_LightAttack\", \"Golem_Move\", \"Golem_SpecialAttack\", \"Golem_Victory\"]"
+    },
+    {
+      "pass": true,
+      "test": "P1 movement input is isolated"
+    },
+    {
+      "pass": true,
+      "test": "P2 movement input is isolated"
+    },
+    {
+      "pass": true,
+      "test": "attack key isolated: F"
+    },
+    {
+      "pass": true,
+      "test": "attack key isolated: G"
+    },
+    {
+      "pass": true,
+      "test": "attack key isolated: K"
+    },
+    {
+      "pass": true,
+      "test": "attack key isolated: L"
+    },
+    {
+      "pass": true,
+      "test": "return to prompt selection"
+    },
+    {
+      "pass": true,
+      "test": "agent start button route"
+    },
+    {
+      "pass": true,
+      "test": "UI restart route"
+    }
+  ]
+}

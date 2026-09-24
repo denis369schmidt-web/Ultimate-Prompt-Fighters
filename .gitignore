@@ -1,0 +1,46 @@
+# Unreal generated data
+Binaries/
+Build/
+DerivedDataCache/
+Intermediate/
+Saved/
+.vs/
+*.VC.db
+*.VC.opendb
+*.sln
+
+# Packaged builds and local exports
+dist/
+builds/
+exports/*.fbx
+exports/*.glb
+exports/*.gltf
+exports/*.abc
+
+# Project-local portable tools and verified downloads
+tools/
+.downloads/
+godot/.godot/
+godot/export_credentials.cfg
+
+# Blender recovery/cache
+*.blend1
+*.blend2
+*.blend@
+*.autosave
+
+# Local credentials and environment files
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+
+# Tool and OS noise
+.idea/
+.vscode/
+Thumbs.db
+Desktop.ini
+__pycache__/
+*.pyc
