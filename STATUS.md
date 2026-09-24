@@ -1,7 +1,7 @@
 # Status: Ultimate Prompt Fighters Upgrade
 
 ## 1. Übersicht & Zielsetzung
-Ziel: Hochwertiger 2,5D-Arenakämpfer mit datengetriebenem Rückstoß (proportional zu fehlenden HP), Greif-/Wurfsystem, aufhebbaren/werfbaren Gegenständen, individuellen Spezialfähigkeiten, überarbeiteten Charaktermodellen/Arenen und nahtloser Unterstützung von Spieler- vs. KI-Steuerung.
+Ziel: Hochwertiger 2,5D-Arenakämpfer mit datengetriebenem Rückstoß (proportional zu fehlenden HP), Greif-/Wurfsystem, aufhebbaren/werfbaren Gegenständen inklusive explosiven Fässern, individuellen Spezialfähigkeiten, überarbeiteten Charaktermodellen/Arenen und nahtloser Unterstützung von Spieler- vs. KI-Steuerung.
 
 ## 2. Aktueller Status
 
@@ -18,30 +18,31 @@ Ziel: Hochwertiger 2,5D-Arenakämpfer mit datengetriebenem Rückstoß (proportio
   - Vorwärtswurf (Forward Throw), Rückwärtswurf (Back Throw), Aufwärtswurf (Up Throw).
   - Anti-Chain-Grab-Schutzzeit (Immunity 0.85s).
   - Automatisches Losreißen (Breakout) bei Zeitüberschreitung.
-- [x] **D. Aufhebbare & werfbare Arenaobjekte**:
-  - 3 Objekttypen: Leichte Kiste (Light Crate, zerspringt bei Treffer), Schwerer Stein (Heavy Rock, hoher Schaden), Holzfass (Barrel, rollt/prallt ab).
+- [x] **D. Aufhebbare & werfbare Arenaobjekte + Explosivfässer**:
+  - 4 Objekttypen: Leichte Kiste (Light Crate), Schwerer Stein (Heavy Rock), Holzfass (Barrel), Explosiv-Fass (TNT Barrel mit AoE-Detonation).
+  - Explosivfässer explodieren bei Feindkontakt, Bodenaufprall nach Wurf oder bei gezieltem Angriff eines Kämpfers.
   - Eingabepriorität: Objekt aufheben hat Vorrang bei räumlicher Nähe, sonst Gegner-Greifen.
   - Physikalische Wurfsimulation auf der Kampfebene (Z=0) mit Trägheit, Flugbahn, Geschwindigkeitsdämpfung, Tunneling-Schutz und automatischem Plattform-Respawn.
-  - 3D-Meshes und PBR-Materialien in `main.gd` mit prozeduraler Holzmaserung, Rissstein, Eisenreifen und Flug-Rotationsanimation.
-- [x] **E. Visuelle Charakter-Überarbeitung**:
-  - PBR-Materialien mit Normalmaps, Albedo, Roughness und dynamischem Emissions-Glow für Golem, Ninja, Valkyrie, Dragon und Neuzugänge.
+  - 3D-Meshes und PBR-Materialien in `main.gd` mit prozeduraler Holzmaserung, Rissstein, Eisenreifen, Gefahrenstreifen und Zünder-Glow.
+- [x] **E. PBR-Skins aller 11 Charaktere überarbeitet**:
+  - Generierte & eingebundene Albedo-, Normal- und Emissions-Texturen für: Valkyrie, Ignis Drake, Cyber Anubis, Void Specter, Phoenix Empress, Son Goku, Sub-Zero, Pain, Monkey D. Ruffy, Ninja und Golem in `godot/scripts/fighter_view.gd`.
   - Animations-Aliasing in `fighter_view.gd` für `Attack`, `Throw`, `Grab`, `Carrying`, `Grabbed`.
 - [x] **F. Individuelle Spezialfähigkeiten**:
   - Schattenninja: Raijin Dash (schneller elektrischer Klingenvorstoß)
   - Lavagolem: Magma Quake (schwerer Bodenschlag mit Schockwelle)
-  - Eisninja: Kori Ice Shard (Eisprojektil mit Verlangsamungseffekt)
+  - Eisninja / Sub-Zero: Kori Ice Shard (Eisprojektil mit Verlangsamungseffekt)
   - Pain: Shinra Tensei (radialer Abstoßungsimpuls)
   - Ruffy: Gum-Gum Pistol (Reichweiten-Faustschlag)
-- [x] **G. Arena-Überarbeitung (Verfallene Zitadelle / Imperial Colosseum)**:
-  - Räumliche Staffelung aus Hintergrund (Monumentale Kolosseum-Kolonnade bei Z=-5.5, verfallene Festungsmauer bei Z=-8.0), Spielfläche (Z=0 mit leuchtenden Battlefield-Plattformen) und Vordergrund-Rahmung (gebrochene Pfeilerstümpfe seitlich bei X=±6.8, Z=+1.5).
+  - Son Goku: Ki Blast / Kaio-ken Burst
+- [x] **G. Arena-Überarbeitung & Vergrößerung**:
+  - Spielfläche erweitert: Hauptbühne `STAGE_LEFT = -5.15`, `STAGE_RIGHT = 5.15`, Blast Zones `-9.5` bis `+9.5`.
+  - Monumentale Kolosseum-Kolonnade mit 6 Säulen, Zinnen, Architrav und lodernden Feuerschalen/Fackeln.
   - Kampffeld lesbar freigestellt mit Kontrast und Kantenlicht.
 - [x] **H. Steuerung & Oberfläche**:
   - HUD mit 3 Leben (Stocks `● ● ●`), Lebenspunkten, Spezial-Status, dynamischen Ring-Out-Meldungen und interaktivem Controls-Panel.
-- [x] **I. Umfassende Testsuite**:
-  - `res://tests/test_game.gd`: 36 von 36 Tests bestanden (100% Pass Rate).
+- [x] **I. Umfassende Testsuite (100% grün)**:
+  - `res://tests/test_game.gd`: 36 von 36 Tests bestanden.
   - `res://scripts/test_grab_and_items.gd`: Alle Knockback-, Grab/Throw- und Item-Tests bestanden.
+  - `res://scripts/test_explosive_barrel.gd`: Wurf- & Detonations-Mechanik bestanden.
   - `res://scripts/test_smash_mechanics.gd`: Alle Plattform- und Stock-Tests bestanden.
   - `res://scripts/test_all_playable.gd`: Alle 11 Charaktere spielbar validiert.
-
-### Nächster Arbeitsschritt
-- Bereitstellung und Start des aktualisierten Spiels für den User.
