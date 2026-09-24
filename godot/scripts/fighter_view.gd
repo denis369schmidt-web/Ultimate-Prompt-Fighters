@@ -105,6 +105,14 @@ func setup(p: Dictionary) -> void:
 					clip_map[pose] = clip
 					if pose in ["Idle", "Move"]:
 						animation.get_animation(clip).loop_mode = Animation.LOOP_LINEAR
+		if clip_map.has("LightAttack"):
+			clip_map["Attack"] = clip_map["LightAttack"]
+			clip_map["Throw"] = clip_map["LightAttack"]
+			clip_map["Grab"] = clip_map["LightAttack"]
+		if clip_map.has("Idle"):
+			clip_map["Carrying"] = clip_map["Idle"]
+		if clip_map.has("HitReact"):
+			clip_map["Grabbed"] = clip_map["HitReact"]
 		if clip_map.has("Idle"):
 			animation.play(clip_map["Idle"])
 			current_pose = "Idle"

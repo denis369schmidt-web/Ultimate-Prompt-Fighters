@@ -144,6 +144,7 @@ var hitstop_freeze := 0               # global rendering freeze frames
 var lives_labels: Array = []
 var platform_nodes: Array = []
 var platform_trims: Array = []
+var item_nodes: Array = []
 
 func _ready() -> void:
     for arg in OS.get_cmdline_user_args():
@@ -166,8 +167,8 @@ func _ready() -> void:
 
 func setup_inputs() -> void:
     var mapping := {
-        "p1_left": KEY_A, "p1_right": KEY_D, "p1_jump": KEY_W, "p1_block": KEY_S, "p1_standard": KEY_F, "p1_special": KEY_G,
-        "p2_left": KEY_LEFT, "p2_right": KEY_RIGHT, "p2_jump": KEY_UP, "p2_block": KEY_DOWN, "p2_standard": KEY_K, "p2_special": KEY_L
+        "p1_left": KEY_A, "p1_right": KEY_D, "p1_jump": KEY_W, "p1_block": KEY_S, "p1_standard": KEY_F, "p1_special": KEY_G, "p1_grab": KEY_E,
+        "p2_left": KEY_LEFT, "p2_right": KEY_RIGHT, "p2_jump": KEY_UP, "p2_block": KEY_DOWN, "p2_standard": KEY_K, "p2_special": KEY_L, "p2_grab": KEY_O
     }
     for action in mapping:
         if not InputMap.has_action(action): InputMap.add_action(action)
@@ -262,7 +263,91 @@ func setup_world() -> void:
     camera.current = true
 
     setup_platforms()
+    setup_items()
     apply_arena(current_arena)
+
+func setup_items() -> void:
+    for node in item_nodes: node.queue_free()
+    item_nodes.clear()
+
+    var stone_tex: Texture2D = preload("res://assets/textures/characters/golem_rock_albedo.png")
+    var stone_norm: Texture2D = preload("res://assets/textures/characters/golem_rock_normal.png")
+
+    for i in range(sim.items.size()):
+        var it_data: Dictionary = sim.items[i]
+        var root_item := Node3D.new()
+        root_item.position = Vector3(it_data.x, it_data.y, 0.0)
+        add_child(root_item)
+        item_nodes.append(root_item)
+
+        var mesh_inst := MeshInstance3D.new()
+        mesh_inst.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+
+        if it_data.type == "light_crate":
+            var box := BoxMesh.new()
+            box.size = Vector3(0.50, 0.50, 0.50)
+            mesh_inst.mesh = box
+            var mat := StandardMaterial3D.new()
+            mat.albedo_color = Color("8c5828")
+            mat.roughness = 0.72
+            mat.metallic = 0.15
+            mesh_inst.material_override = mat
+
+            var trim := MeshInstance3D.new()
+            var trim_box := BoxMesh.new()
+            trim_box.size = Vector3(0.52, 0.52, 0.52)
+            trim.mesh = trim_box
+            var trim_mat := StandardMaterial3D.new()
+            trim_mat.albedo_color = Color("382e25")
+            trim_mat.metallic = 0.65
+            trim_mat.roughness = 0.35
+            trim.material_override = trim_mat
+            root_item.add_child(trim)
+
+        elif it_data.type == "heavy_rock":
+            var sphere := SphereMesh.new()
+            sphere.radius = 0.32
+            sphere.height = 0.64
+            mesh_inst.mesh = sphere
+            var mat := StandardMaterial3D.new()
+            mat.albedo_texture = stone_tex
+            mat.normal_enabled = true
+            mat.normal_texture = stone_norm
+            mat.roughness = 0.60
+            mat.metallic = 0.20
+            mat.emission_enabled = true
+            mat.emission = Color("ff5500")
+            mat.emission_energy_multiplier = 2.0
+            mesh_inst.material_override = mat
+
+        elif it_data.type == "barrel":
+            var cyl := CylinderMesh.new()
+            cyl.top_radius = 0.26
+            cyl.bottom_radius = 0.26
+            cyl.height = 0.60
+            mesh_inst.mesh = cyl
+            var mat := StandardMaterial3D.new()
+            mat.albedo_color = Color("5c3a21")
+            mat.roughness = 0.65
+            mat.metallic = 0.10
+            mesh_inst.material_override = mat
+
+            for y_off in [-0.18, 0.18]:
+                var hoop := MeshInstance3D.new()
+                var hoop_cyl := CylinderMesh.new()
+                hoop_cyl.top_radius = 0.27
+                hoop_cyl.bottom_radius = 0.27
+                hoop_cyl.height = 0.04
+                hoop.mesh = hoop_cyl
+                hoop.position.y = y_off
+                var hoop_mat := StandardMaterial3D.new()
+                hoop_mat.albedo_color = Color("222428")
+                hoop_mat.metallic = 0.85
+                hoop_mat.roughness = 0.25
+                hoop.material_override = hoop_mat
+                root_item.add_child(hoop)
+
+        root_item.add_child(mesh_inst)
 
 func setup_platforms() -> void:
     for node in platform_nodes: node.queue_free()
@@ -387,8 +472,87 @@ func apply_arena(id: String) -> void:
                 s_mat.roughness = 0.86
                 mesh.material_override = s_mat
 
+    setup_citadel_scenery(id == "imperial_colosseum" or id == "gladiator_fortress")
+
     if status:
         status.text = "%s  /  %s" % [a.name, ("AGENTENKAMPF" if sim.mode == "autonomous" else "LOKALER VERSUS")]
+
+var citadel_scenery_node: Node3D
+
+func setup_citadel_scenery(enable: bool) -> void:
+    if citadel_scenery_node:
+        citadel_scenery_node.queue_free()
+        citadel_scenery_node = null
+    if not enable: return
+
+    citadel_scenery_node = Node3D.new()
+    add_child(citadel_scenery_node)
+
+    var stone_tex: Texture2D = preload("res://assets/textures/characters/golem_rock_albedo.png")
+    var stone_norm: Texture2D = preload("res://assets/textures/characters/golem_rock_normal.png")
+    var mat := StandardMaterial3D.new()
+    mat.albedo_texture = stone_tex
+    mat.normal_enabled = true
+    mat.normal_texture = stone_norm
+    mat.normal_scale = 1.5
+    mat.roughness = 0.82
+    mat.uv1_scale = Vector3(2, 2, 2)
+    mat.uv1_triplanar = true
+
+    # 1. Background: Monumental Colosseum Colonnade (Z = -5.5)
+    for col_x in [-5.8, -3.2, 3.2, 5.8]:
+        var col := MeshInstance3D.new()
+        var cyl := CylinderMesh.new()
+        cyl.top_radius = 0.42
+        cyl.bottom_radius = 0.48
+        cyl.height = 6.2
+        col.mesh = cyl
+        col.position = Vector3(col_x, 2.6, -5.5)
+        col.material_override = mat
+        col.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+        citadel_scenery_node.add_child(col)
+
+        # Capital on top
+        var cap := MeshInstance3D.new()
+        var box := BoxMesh.new()
+        box.size = Vector3(1.1, 0.35, 1.1)
+        cap.mesh = box
+        cap.position = Vector3(col_x, 5.7, -5.5)
+        cap.material_override = mat
+        citadel_scenery_node.add_child(cap)
+
+    # Architrave / Beam across pillars
+    var architrave := MeshInstance3D.new()
+    var beam_mesh := BoxMesh.new()
+    beam_mesh.size = Vector3(14.0, 0.55, 1.2)
+    architrave.mesh = beam_mesh
+    architrave.position = Vector3(0, 6.0, -5.5)
+    architrave.material_override = mat
+    citadel_scenery_node.add_child(architrave)
+
+    # 2. Distant Ruined Wall with Archways (Z = -8.0)
+    var rear_wall := MeshInstance3D.new()
+    var wall_box := BoxMesh.new()
+    wall_box.size = Vector3(22.0, 9.0, 0.8)
+    rear_wall.mesh = wall_box
+    rear_wall.position = Vector3(0, 4.0, -8.0)
+    var wall_mat := StandardMaterial3D.new()
+    wall_mat.albedo_color = Color("2d2b33")
+    wall_mat.roughness = 0.95
+    rear_wall.material_override = wall_mat
+    citadel_scenery_node.add_child(rear_wall)
+
+    # 3. Foreground Framing (Sides only, Z = +1.5, X = ±6.8, never obstructing fighters)
+    for side in [-1, 1]:
+        var stump := MeshInstance3D.new()
+        var s_cyl := CylinderMesh.new()
+        s_cyl.top_radius = 0.38
+        s_cyl.bottom_radius = 0.45
+        s_cyl.height = 1.4
+        stump.mesh = s_cyl
+        stump.position = Vector3(side * 6.8, 0.7, 1.5)
+        stump.material_override = mat
+        citadel_scenery_node.add_child(stump)
 
 func panel_style(color: Color, border: Color = Color("34445b")) -> StyleBoxFlat:
     var s := StyleBoxFlat.new()
@@ -630,10 +794,10 @@ func setup_ui() -> void:
     select_box.add_child(controls_panel)
     var controls_box := VBoxContainer.new()
     controls_panel.add_child(controls_box)
-    controls_box.add_child(label("KAMPF-STEUERUNG (SUPER SMASH REGELN)", 12, Color("76a8d6")))
-    controls_box.add_child(label("P1:  A/D Laufen  ·  W Springen (Doppelsprung)  ·  S Blocken / Plattform runter  ·  F Schlag  ·  G Spezial", 12, CYAN))
-    controls_box.add_child(label("P2:  ←/→ Laufen  ·  ↑ Springen (Doppelsprung)  ·  ↓ Blocken / Plattform runter  ·  K Schlag  ·  L Spezial", 12, ORANGE))
-    controls_box.add_child(label("Super Smash: Jeder hat 3 Leben! Schlage den Gegner von der Arena oder besiege ihn.", 12, Color("ffc857")))
+    controls_box.add_child(label("KAMPF-STEUERUNG (SUPER SMASH & ARENA-OBJEKTE)", 12, Color("76a8d6")))
+    controls_box.add_child(label("P1:  A/D Laufen  ·  W Sprung (Doppel)  ·  S Block/Plattform Drop  ·  F Schlag  ·  G Spezial  ·  E Greifen/Werfen/Aufheben", 11, CYAN))
+    controls_box.add_child(label("P2:  ←/→ Laufen  ·  ↑ Sprung (Doppel)  ·  ↓ Block/Plattform Drop  ·  K Schlag  ·  L Spezial  ·  O Greifen/Werfen/Aufheben", 11, ORANGE))
+    controls_box.add_child(label("Features: 3 Stocks, dynamischer Smash-Rückstoß je weniger HP, Gegner Greifen & Werfen (Richtungstaste), Kisten/Fässer werfen!", 11, Color("ffc857")))
 
     result_panel = PanelContainer.new()
     root_ui.add_child(result_panel)
@@ -675,7 +839,8 @@ func start_round(mode: String) -> void:
     save_prompts()
     sim.start(Prompt.interpret(prompts[0].text, 0), Prompt.interpret(prompts[1].text, 1), mode)
     rebuild_fighters()
-    input_buffer = [{"standard": false, "special": false, "jump": false}, {"standard": false, "special": false, "jump": false}]
+    setup_items()
+    input_buffer = [{"standard": false, "special": false, "jump": false, "grab": false}, {"standard": false, "special": false, "jump": false, "grab": false}]
     accumulator = 0
     active = true
     paused = false
@@ -707,7 +872,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
             return
     if not active or paused or sim.mode != "manual": return
     for i in range(2):
-        for action_type in ["standard", "special", "jump"]:
+        for action_type in ["standard", "special", "jump", "grab"]:
             if event.is_action_pressed("p%d_%s" % [i+1, action_type]): input_buffer[i][action_type] = true
 
 func manual_commands() -> Array:
@@ -715,15 +880,17 @@ func manual_commands() -> Array:
     for i in range(2):
         var is_blocking: bool = Input.is_action_pressed("p%d_block" % (i+1))
         var is_jumping: bool = input_buffer[i].get("jump", false) or Input.is_action_just_pressed("p%d_jump" % (i+1))
+        var is_grabbing: bool = input_buffer[i].get("grab", false) or Input.is_action_just_pressed("p%d_grab" % (i+1))
         var move_axis: float = 0.0 if is_blocking else Input.get_axis("p%d_left" % (i+1), "p%d_right" % (i+1))
         commands.append({
             "move": move_axis,
             "standard": input_buffer[i].standard and not is_blocking,
             "special": input_buffer[i].special and not is_blocking,
             "jump": is_jumping and not is_blocking,
-            "block": is_blocking
+            "block": is_blocking,
+            "grab": is_grabbing
         })
-        input_buffer[i] = {"standard": false, "special": false, "jump": false}
+        input_buffer[i] = {"standard": false, "special": false, "jump": false, "grab": false}
     return commands
 
 func _physics_process(delta: float) -> void:
@@ -747,6 +914,27 @@ func _physics_process(delta: float) -> void:
                 sound("jump")
             elif event.type == "attack" and event.special:
                 sound("lava" if sim.fighters[event.actor].profile.family == "golem" else "electric")
+            elif event.type == "grab_success":
+                views[event.target].shield_flash()
+                sound("block")
+                status.text = "%s HAT %s GEGRIFFEN!" % [sim.fighters[event.actor].profile.name, sim.fighters[event.target].profile.name]
+            elif event.type == "throw":
+                views[event.target].flash()
+                hit_effect(event.target, true, false)
+                sound("hit")
+            elif event.type == "grab_breakout":
+                sound("block")
+                status.text = "BEFREIUNG!"
+            elif event.type == "item_pickup":
+                sound("jump")
+                status.text = "%s HEBT %s AUF!" % [sim.fighters[event.actor].profile.name, event.item_name]
+            elif event.type == "item_throw":
+                sound("jump")
+            elif event.type == "item_hit":
+                views[event.target].flash()
+                hit_effect(event.target, true, false)
+                sound("hit")
+                status.text = "%s WURDE GETROFFEN VON %s!" % [sim.fighters[event.target].profile.name, event.item_name]
             elif event.type == "ring_out":
                 camera_shake = 0.95
                 hit_effect(event.actor, true, true)
@@ -766,6 +954,17 @@ func _physics_process(delta: float) -> void:
                 result_panel.show()
                 sound("victory")
                 if smoke: finish_smoke_round()
+
+        # Update 3D item nodes position & rotation
+        for it_i in range(mini(item_nodes.size(), sim.items.size())):
+            var it_data: Dictionary = sim.items[it_i]
+            var it_node: Node3D = item_nodes[it_i]
+            it_node.visible = (it_data.state != "destroyed")
+            it_node.position = Vector3(it_data.x, it_data.y, 0.0)
+            if it_data.state == "thrown":
+                it_node.rotate_z(-it_data.vx * delta * 3.5)
+            elif it_data.state == "carried":
+                it_node.rotation_degrees = Vector3.ZERO
     for i in range(views.size()): views[i].update_state(sim.fighters[i], delta)
     update_hud()
     if smoke: run_smoke_step()
