@@ -14,16 +14,22 @@ func _initialize():
 		{"key": "specter", "prompt": "Void Specter crystal phantom warrior with void lance"},
 		{"key": "phoenix", "prompt": "Phoenix Empress with feather armor and phoenix glaive"},
 		{"key": "goku", "prompt": "Son Goku Super Saiyan Kamehameha Dragon Ball Z"},
+		{"key": "vegeta", "prompt": "Prinz Vegeta Saiyajin Royal Armor Final Flash Galick Gun"},
 		{"key": "subzero", "prompt": "Sub-Zero Lin Kuei Cryomancer ice ninja kori blade"},
 		{"key": "pain", "prompt": "Pain Nagato Akatsuki Rinnegan Shinra Tensei"},
 		{"key": "luffy", "prompt": "Monkey D. Luffy Strohhut Gum-Gum One Piece Mugiwara"},
+		{"key": "zoro", "prompt": "Roronoa Zoro Santoryu Drei Schwerter Wado Ichimonji Onigiri"},
+		{"key": "naruto", "prompt": "Naruto Uzumaki Rasengan Konoha Stirnband Kyuubi Sage Mode"},
+		{"key": "sasuke", "prompt": "Sasuke Uchiha Chidori Sharingan Kusanagi Shimenawa Blitz"},
+		{"key": "saitama", "prompt": "Saitama One Punch Man Serious Punch Caped Baldy Hero"},
+		{"key": "tanjiro", "prompt": "Tanjiro Kamado Hinokami Kagura Nichirin Hanafuda Checkered Haori"},
 		{"key": "sonic", "prompt": "Sonic the Hedgehog Blue Blur Super Spin Dash Sega"},
 		{"key": "akaza", "prompt": "Akaza Upper Rank 3 Hakai Satsu Compass Needle Kimetsu"},
 		{"key": "blue_eyes", "prompt": "Weißer Drache mit eiskaltem Blick Burst Stream Yu-Gi-Oh"}
 	]
 	
 	print("==================================================")
-	print("TESTING ALL 14 CHARACTERS (PROMPT -> SIM -> VIEW)")
+	print("TESTING ALL 20 CHARACTERS (PROMPT -> SIM -> VIEW)")
 	print("==================================================")
 	
 	var all_ok := true
@@ -56,8 +62,8 @@ func _initialize():
 		
 	print("==================================================")
 	if all_ok:
-		print("ALL 14 CHARACTERS ARE FULLY PLAYABLE!")
+		print("ALL 20 CHARACTERS ARE FULLY PLAYABLE!")
 	else:
 		print("SOME CHARACTERS FAILED VALIDATION!")
 	print("==================================================")
-	quit(0)
+	quit(0 if all_ok else 1)

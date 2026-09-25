@@ -64,6 +64,36 @@ const BODY_MODULES := {
 		"id": "body_blue_eyes", "family": "blue_eyes", "name": "Platinum Dragon Wings",
 		"weight": 1.30, "base_hp": 125.0, "stats": {"vit": 24, "pwr": 28, "def": 22, "spd": 16, "tech": 10},
 		"anim_family": "blue_eyes", "scale": 0.0115
+	},
+	"naruto": {
+		"id": "body_naruto", "family": "naruto", "name": "Uzumaki Sage Vest",
+		"weight": 0.98, "base_hp": 115.0, "stats": {"vit": 22, "pwr": 24, "def": 16, "spd": 24, "tech": 14},
+		"anim_family": "naruto", "scale": 0.01
+	},
+	"vegeta": {
+		"id": "body_vegeta", "family": "vegeta", "name": "Saiyan Royal Cuirass",
+		"weight": 1.06, "base_hp": 118.0, "stats": {"vit": 18, "pwr": 28, "def": 16, "spd": 22, "tech": 16},
+		"anim_family": "vegeta", "scale": 0.01
+	},
+	"zoro": {
+		"id": "body_zoro", "family": "zoro", "name": "Santoryu Robe & Haramaki",
+		"weight": 1.12, "base_hp": 120.0, "stats": {"vit": 22, "pwr": 28, "def": 18, "spd": 18, "tech": 14},
+		"anim_family": "zoro", "scale": 0.01
+	},
+	"saitama": {
+		"id": "body_saitama", "family": "saitama", "name": "One Punch Hero Suit",
+		"weight": 1.05, "base_hp": 125.0, "stats": {"vit": 24, "pwr": 34, "def": 18, "spd": 16, "tech": 8},
+		"anim_family": "saitama", "scale": 0.01
+	},
+	"tanjiro": {
+		"id": "body_tanjiro", "family": "tanjiro", "name": "Demon Slayer Checkered Haori",
+		"weight": 1.02, "base_hp": 116.0, "stats": {"vit": 20, "pwr": 26, "def": 16, "spd": 22, "tech": 16},
+		"anim_family": "tanjiro", "scale": 0.01
+	},
+	"sasuke": {
+		"id": "body_sasuke", "family": "sasuke", "name": "Uchiha Chidori Shroud",
+		"weight": 0.98, "base_hp": 112.0, "stats": {"vit": 16, "pwr": 26, "def": 14, "spd": 28, "tech": 16},
+		"anim_family": "sasuke", "scale": 0.01
 	}
 }
 
@@ -161,6 +191,18 @@ static func remix_character(prompt: String, player_slot: int = 0, seed_val: int 
 		body_key = "sonic"
 	elif has_any(lower, ["akaza", "oberer rang", "hakai satsu", "kimetsu"]):
 		body_key = "akaza"
+	elif has_any(lower, ["naruto", "uzumaki", "rasengan", "hokage"]):
+		body_key = "naruto"
+	elif has_any(lower, ["vegeta", "final flash", "galick", "prinz"]):
+		body_key = "vegeta"
+	elif has_any(lower, ["zoro", "santoryu", "katana", "schwert"]):
+		body_key = "zoro"
+	elif has_any(lower, ["saitama", "one punch", "glatze"]):
+		body_key = "saitama"
+	elif has_any(lower, ["tanjiro", "hinokami", "sonnenatmung"]):
+		body_key = "tanjiro"
+	elif has_any(lower, ["sasuke", "chidori", "sharingan", "kusanagi"]):
+		body_key = "sasuke"
 
 	var body_data: Dictionary = BODY_MODULES[body_key]
 

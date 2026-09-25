@@ -296,6 +296,36 @@ func setup(p: Dictionary) -> void:
 		skin_glow_color = Color("70d6ff")
 		skin_metallic = 0.35
 		skin_roughness = 0.28
+	elif p.family == "naruto":
+		triplanar_scale = Vector3(0.018, 0.018, 0.018)
+		skin_glow_color = Color("4ae0ff") # Rasengan Cyan
+		skin_metallic = 0.10
+		skin_roughness = 0.50
+	elif p.family == "vegeta":
+		triplanar_scale = Vector3(0.018, 0.018, 0.018)
+		skin_glow_color = Color("ffe838") # Final Flash Gold
+		skin_metallic = 0.30
+		skin_roughness = 0.35
+	elif p.family == "zoro":
+		triplanar_scale = Vector3(0.018, 0.018, 0.018)
+		skin_glow_color = Color("3bfac8") # Wind Slash Emerald
+		skin_metallic = 0.25
+		skin_roughness = 0.40
+	elif p.family == "saitama":
+		triplanar_scale = Vector3(0.018, 0.018, 0.018)
+		skin_glow_color = Color("ff3322") # Serious Force Crimson
+		skin_metallic = 0.15
+		skin_roughness = 0.35
+	elif p.family == "tanjiro":
+		triplanar_scale = Vector3(0.018, 0.018, 0.018)
+		skin_glow_color = Color("ff6524") # Hinokami Fire Orange
+		skin_metallic = 0.18
+		skin_roughness = 0.45
+	elif p.family == "sasuke":
+		triplanar_scale = Vector3(0.018, 0.018, 0.018)
+		skin_glow_color = Color("60d5ff") # Chidori Electric Azure
+		skin_metallic = 0.20
+		skin_roughness = 0.38
 	else: # Ninja
 		triplanar_scale = Vector3(0.016, 0.016, 0.016)
 		if "fire" in p_text or "feuer" in p_text or "flam" in p_text or "lava" in p_text or element == "fire":
@@ -352,7 +382,7 @@ func setup(p: Dictionary) -> void:
 			var mat: StandardMaterial3D
 			if original is StandardMaterial3D:
 				mat = original.duplicate()
-			elif p.family in ["subzero", "pain", "goku", "luffy", "sonic", "akaza", "blue_eyes"]:
+			elif p.family in ["subzero", "pain", "goku", "luffy", "sonic", "akaza", "blue_eyes", "naruto", "vegeta", "zoro", "saitama", "tanjiro", "sasuke"]:
 				# GLB imported materials may be BaseMaterial3D or null – create fresh one
 				mat = StandardMaterial3D.new()
 			else:
@@ -370,11 +400,13 @@ func setup(p: Dictionary) -> void:
 				mesh.set_surface_override_material(surface, mat)
 				continue
 
-			if p.family in ["subzero", "pain", "goku", "luffy", "sonic"]:
+			if p.family in ["subzero", "pain", "goku", "luffy", "sonic", "akaza", "blue_eyes", "naruto", "vegeta", "zoro", "saitama", "tanjiro", "sasuke"]:
 				mat.uv1_triplanar = false
 				mat.rim_enabled = true
 				mat.rim = 0.35
 				mat.rim_tint = 0.50
+				mesh.set_surface_override_material(surface, mat)
+				continue
 			else:
 				mat.uv1_scale = triplanar_scale
 				mat.uv1_triplanar = true

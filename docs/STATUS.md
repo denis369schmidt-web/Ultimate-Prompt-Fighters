@@ -9,11 +9,11 @@
 | **Engine** | Godot 4.7.2 (Compatibility Renderer, OpenGL 3.3) |
 | **Plattform** | Windows (Entwicklung), Android (Produktionsziel) |
 | **3D-Tool** | Blender 4.5.5 (portabel) |
-| **Spielbare Charaktere** | 14 |
+| **Spielbare Charaktere** | 20 |
 | **Spielmodi** | 3 (PvP, PvE, KI vs KI) |
-| **Arenen** | 5 |
+| **Arenen** | 6 |
 
-## Spielbare Charaktere (14)
+## Spielbare Charaktere (20)
 
 | # | Familie | Name | Besondere Fähigkeit |
 |---|---------|------|---------------------|
@@ -22,15 +22,21 @@
 | 3 | valkyrie | VALKYRIE AURA | Radiant Pierce |
 | 4 | dragon | IGNIS DRAKE | Wyrm Flame |
 | 5 | goku | SON GOKU (ULTRA) | Kamehameha |
-| 6 | subzero | SUB-ZERO | Kori Ice Shard |
-| 7 | pain | PAIN | Shinra Tensei |
-| 8 | luffy | MONKEY D. RUFFY | Gum-Gum Pistol |
-| 9 | sonic | SONIC THE HEDGEHOG | Super Spin Dash |
-| 10 | akaza | AKAZA (UPPER RANK 3) | Destructive Death: Compass Needle |
-| 11 | blue_eyes | BLUE-EYES WHITE DRAGON | Burst Stream of Destruction |
-| 12 | anubis | CYBER ANUBIS | Anubis Wrath |
-| 13 | specter | VOID SPECTER | Void Lance |
-| 14 | phoenix | PHOENIX EMPRESS | Phoenix Flare |
+| 6 | vegeta | PRINZ VEGETA | Final Flash |
+| 7 | subzero | SUB-ZERO | Kori Ice Shard |
+| 8 | pain | PAIN | Shinra Tensei |
+| 9 | luffy | MONKEY D. RUFFY | Gum-Gum Pistol |
+| 10 | zoro | RORONOA ZORO | Santoryu: Onigiri |
+| 11 | naruto | NARUTO UZUMAKI | Rasengan |
+| 12 | sasuke | SASUKE UCHIHA | Chidori (1000 Birds) |
+| 13 | saitama | SAITAMA (ONE PUNCH) | Serious Punch |
+| 14 | tanjiro | TANJIRO KAMADO | Hinokami Kagura |
+| 15 | sonic | SONIC THE HEDGEHOG | Super Spin Dash |
+| 16 | akaza | AKAZA (UPPER RANK 3) | Destructive Death: Compass Needle |
+| 17 | blue_eyes | BLUE-EYES WHITE DRAGON | Burst Stream of Destruction |
+| 18 | anubis | CYBER ANUBIS | Anubis Wrath |
+| 19 | specter | VOID SPECTER | Void Lance |
+| 20 | phoenix | PHOENIX EMPRESS | Phoenix Flare |
 
 ## Spielmodi
 
@@ -82,16 +88,15 @@
 |---------|--------|
 | 14 spielbare Charaktere | ✅ Erledigt |
 | PvE Modus | ✅ Erledigt |
-| Mortal Kombat Auswahlscreen (7x2) | ✅ Erledigt |
-| 5 Arenen mit PBR-Texturen | ✅ Erledigt |
-| Character Remixer (Core) | ✅ Erledigt |
-| Character Remixer (UI) | ✅ Erledigt |
+| Mortal Kombat Auswahlscreen (10x2) | ✅ Erledigt (20 Kämpfer) |
+| 6 Arenen mit PBR-Texturen | ✅ Erledigt |
+| 6 Neue Anime-Legenden (Naruto, Vegeta, Zoro, Saitama, Tanjiro, Sasuke) | ✅ Erledigt mit 3D-Modellen & PBR-Skins |
+| Character Remixer (Core & UI) | ✅ Erledigt |
 | 3-Phasen Attack Pipeline | ✅ Erledigt |
 | Hit Interrupt System | ✅ Erledigt |
 | Knockback +25% | ✅ Erledigt |
-| Akaza Pro Model | ✅ Erledigt |
-| Blue-Eyes Pro Model | ✅ Erledigt |
-| Animation Audit (State Machine) | ✅ Erledigt — 14/14 bestanden |
+| Akaza & Blue-Eyes Pro Models | ✅ Erledigt |
+| Animation Audit (State Machine) | ✅ Erledigt — 20/20 bestanden |
 | Performance Baseline | ✅ Erledigt — 45.8µs avg (0.27% Budget) |
 | Attack Data-Driven System | ✅ Erledigt (windup/active/recovery/cost/push/angle/hitstun) |
 | GDScript Optimierung | 🟡 Offen |
@@ -102,8 +107,8 @@
 
 | Test | Ergebnis |
 |------|----------|
-| test_all_playable.gd | ✅ 14/14 BESTANDEN |
-| test_animation_audit.gd | ✅ 14/14 BESTANDEN |
+| test_all_playable.gd | ✅ 20/20 BESTANDEN (Sim & View) |
+| test_animation_audit.gd | ✅ 20/20 BESTANDEN (State Machine Transitions) |
 | test_performance.gd | ✅ 45.8µs avg, 0.27% Budget |
 | test_smash_mechanics.gd | ✅ ALLE BESTANDEN |
 | test_remixer.gd | ✅ 5/5 BESTANDEN |

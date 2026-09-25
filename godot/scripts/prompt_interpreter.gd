@@ -18,21 +18,172 @@ static func interpret(raw: Variant, slot: int = 0) -> Dictionary:
 		seed_value = ((seed_value ^ character.unicode_at(0)) * 16777619) & 0x7fffffff
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value
-	var goku := has_any(lower, ["goku", "son goku", "saiyajin", "saiyan", "kakarot", "ultra ego", "kamehameha", "ultra instinct", "ssj"])
-	var luffy := not goku and has_any(lower, ["luffy", "ruffy", "straw hat", "strohhut", "gum gum", "gum-gum", "one piece", "mugiwara", "gum gum pistole"])
-	var subzero := not goku and not luffy and has_any(lower, ["sub zero", "subzero", "sub-zero", "cryomancer", "ice ninja", "lin kuei", "kori", "mortal kombat"])
-	var pain := not goku and not luffy and not subzero and has_any(lower, ["pain", "nagato", "rinnegan", "akatsuki", "tendo", "deva path", "shinra tensei"])
-	var sonic := not goku and not luffy and not subzero and not pain and has_any(lower, ["sonic", "hedgehog", "blue blur", "spin dash", "sega", "chaos emerald", "supersonic"])
-	var akaza := not goku and not luffy and not subzero and not pain and not sonic and has_any(lower, ["akaza", "akaze", "upper rank", "upper moon", "hakai satsu", "compass needle", "soryu", "demon slayer", "kimetsu", "destructivedeath"])
-	var blue_eyes := not goku and not luffy and not subzero and not pain and not sonic and not akaza and has_any(lower, ["weiße drache", "weisse drache", "weisser drache", "weißer drache", "blue-eyes", "blue eyes", "white dragon", "burst stream", "white lightning", "yu-gi-oh", "yugioh", "kaiba", "eiskalten blick", "eiskalter blick"])
-	var anubis := not goku and not luffy and not subzero and not pain and not sonic and not akaza and not blue_eyes and has_any(lower, ["anubis", "jackal", "khopesh", "ägyptisch", "egypt", "pharaoh", "pharao", "underworld", "unterwelt", "osiris", "jackal god"])
-	var phoenix := not goku and not luffy and not subzero and not pain and not sonic and not akaza and not blue_eyes and not anubis and has_any(lower, ["phoenix", "phönix", "empress", "kaiserin", "glaive", "fire queen", "firebird", "feuervogel", "fenix"])
-	var specter := not goku and not luffy and not subzero and not pain and not sonic and not akaza and not blue_eyes and not anubis and not phoenix and has_any(lower, ["specter", "spectre", "void lance", "phantom warrior", "kristall phantom", "wraith", "crystal"])
-	var valkyrie := not goku and not luffy and not subzero and not pain and not sonic and not akaza and not blue_eyes and not anubis and not phoenix and not specter and has_any(lower, ["valkyrie", "walküre", "moe", "paladin", "angel", "engel", "lichtflügel", "waifu"])
-	var dragon := not goku and not luffy and not subzero and not pain and not sonic and not akaza and not blue_eyes and not anubis and not phoenix and not specter and not valkyrie and (has_any(lower, ["drachenritter", "drake", "wyrm", "slayer", "drakon", "drache"]) or (lower.contains("dragon") and not lower.contains("dragon ball") and not lower.contains("dragonball")))
-	var heavy := not goku and not luffy and not subzero and not pain and not sonic and not akaza and not blue_eyes and not anubis and not phoenix and not specter and not valkyrie and not dragon and has_any(lower, ["golem", "panzer", "lavagolem", "tank", "stein", "heavy", "titan"])
+	var vegeta := has_any(lower, ["vegeta", "prinz vegeta", "final flash", "galick gun", "big bang attack", "saiyan prince", "saiyajin prinz"])
+	var goku := not vegeta and has_any(lower, ["goku", "son goku", "saiyajin", "saiyan", "kakarot", "ultra ego", "kamehameha", "ultra instinct", "ssj"])
+	var luffy := not goku and not vegeta and has_any(lower, ["luffy", "ruffy", "straw hat", "strohhut", "gum gum", "gum-gum", "one piece", "mugiwara", "gum gum pistole"])
+	var zoro := not goku and not vegeta and not luffy and has_any(lower, ["zoro", "roronoa", "santoryu", "drei schwerter", "three sword", "katana", "enma", "wado ichimonji", "onigiri"])
+	var naruto := not goku and not vegeta and not luffy and not zoro and has_any(lower, ["naruto", "uzumaki", "rasengan", "hokage", "kyuubi", "kurama", "sage mode", "schattendoppelgänger", "shadow clone"])
+	var pain := not goku and not vegeta and not luffy and not zoro and not naruto and has_any(lower, ["pain", "nagato", "akatsuki", "tendo", "deva path", "shinra tensei"])
+	var sasuke := not goku and not vegeta and not luffy and not zoro and not naruto and not pain and has_any(lower, ["sasuke", "uchiha", "chidori", "sharingan", "kusanagi", "amaterasu", "chidori blitz"])
+	var saitama := not goku and not vegeta and not luffy and not zoro and not naruto and not pain and not sasuke and has_any(lower, ["saitama", "one punch", "serious punch", "caped baldy", "glatze", "hero for fun", "ernster schlag"])
+	var tanjiro := not goku and not vegeta and not luffy and not zoro and not naruto and not pain and not sasuke and not saitama and has_any(lower, ["tanjiro", "kamado", "hinokami", "sonnenatmung", "wasseratmung", "nichirin", "hanafuda", "kagura"])
+	var subzero := not goku and not vegeta and not luffy and not zoro and not naruto and not sasuke and not saitama and not tanjiro and has_any(lower, ["sub zero", "subzero", "sub-zero", "cryomancer", "ice ninja", "lin kuei", "kori", "mortal kombat"])
+	var sonic := not goku and not vegeta and not luffy and not zoro and not naruto and not sasuke and not saitama and not tanjiro and not subzero and not pain and has_any(lower, ["sonic", "hedgehog", "blue blur", "spin dash", "sega", "chaos emerald", "supersonic"])
+	var akaza := not goku and not vegeta and not luffy and not zoro and not naruto and not sasuke and not saitama and not tanjiro and not subzero and not pain and not sonic and has_any(lower, ["akaza", "akaze", "upper rank", "upper moon", "hakai satsu", "compass needle", "soryu", "demon slayer", "kimetsu", "destructivedeath"])
+	var blue_eyes := not goku and not vegeta and not luffy and not zoro and not naruto and not sasuke and not saitama and not tanjiro and not subzero and not pain and not sonic and not akaza and has_any(lower, ["weiße drache", "weisse drache", "weisser drache", "weißer drache", "blue-eyes", "blue eyes", "white dragon", "burst stream", "white lightning", "yu-gi-oh", "yugioh", "kaiba", "eiskalten blick", "eiskalter blick"])
+	var anubis := not goku and not vegeta and not luffy and not zoro and not naruto and not sasuke and not saitama and not tanjiro and not subzero and not pain and not sonic and not akaza and not blue_eyes and has_any(lower, ["anubis", "jackal", "khopesh", "ägyptisch", "egypt", "pharaoh", "pharao", "underworld", "unterwelt", "osiris", "jackal god"])
+	var phoenix := not goku and not vegeta and not luffy and not zoro and not naruto and not sasuke and not saitama and not tanjiro and not subzero and not pain and not sonic and not akaza and not blue_eyes and not anubis and has_any(lower, ["phoenix", "phönix", "empress", "kaiserin", "glaive", "fire queen", "firebird", "feuervogel", "fenix"])
+	var specter := not goku and not vegeta and not luffy and not zoro and not naruto and not sasuke and not saitama and not tanjiro and not subzero and not pain and not sonic and not akaza and not blue_eyes and not anubis and not phoenix and has_any(lower, ["specter", "spectre", "void lance", "phantom warrior", "kristall phantom", "wraith", "crystal"])
+	var valkyrie := not goku and not vegeta and not luffy and not zoro and not naruto and not sasuke and not saitama and not tanjiro and not subzero and not pain and not sonic and not akaza and not blue_eyes and not anubis and not phoenix and not specter and has_any(lower, ["valkyrie", "walküre", "moe", "paladin", "angel", "engel", "lichtflügel", "waifu"])
+	var dragon := not goku and not vegeta and not luffy and not zoro and not naruto and not sasuke and not saitama and not tanjiro and not subzero and not pain and not sonic and not akaza and not blue_eyes and not anubis and not phoenix and not specter and not valkyrie and (has_any(lower, ["drachenritter", "drake", "wyrm", "slayer", "drakon", "drache"]) or (lower.contains("dragon") and not lower.contains("dragon ball") and not lower.contains("dragonball")))
+	var heavy := not goku and not vegeta and not luffy and not zoro and not naruto and not sasuke and not saitama and not tanjiro and not subzero and not pain and not sonic and not akaza and not blue_eyes and not anubis and not phoenix and not specter and not valkyrie and not dragon and has_any(lower, ["golem", "panzer", "lavagolem", "tank", "stein", "heavy", "titan"])
 
-	var values: Array = [20, 26, 16, 20, 18] if goku else ([18, 28, 16, 26, 12] if luffy else ([18, 26, 16, 24, 16] if subzero else ([20, 27, 17, 19, 17] if pain else ([16, 22, 14, 34, 14] if sonic else ([22, 28, 16, 22, 12] if akaza else ([22, 30, 20, 18, 10] if blue_eyes else ([20, 28, 18, 18, 16] if anubis else ([19, 24, 15, 20, 22] if phoenix else ([16, 25, 17, 22, 20] if specter else ([17, 22, 16, 23, 22] if valkyrie else ([23, 26, 21, 15, 15] if dragon else ([27, 24, 27, 10, 12] if heavy else [18, 20, 14, 29, 19]))))))))))))
+	var fam := "ninja"
+	if goku: fam = "goku"
+	elif vegeta: fam = "vegeta"
+	elif luffy: fam = "luffy"
+	elif zoro: fam = "zoro"
+	elif naruto: fam = "naruto"
+	elif sasuke: fam = "sasuke"
+	elif saitama: fam = "saitama"
+	elif tanjiro: fam = "tanjiro"
+	elif subzero: fam = "subzero"
+	elif pain: fam = "pain"
+	elif sonic: fam = "sonic"
+	elif akaza: fam = "akaza"
+	elif blue_eyes: fam = "blue_eyes"
+	elif anubis: fam = "anubis"
+	elif phoenix: fam = "phoenix"
+	elif specter: fam = "specter"
+	elif valkyrie: fam = "valkyrie"
+	elif dragon: fam = "dragon"
+	elif heavy: fam = "golem"
+
+	var fam_configs: Dictionary = {
+		"goku": {
+			"values": [20, 26, 16, 20, 18], "element": "ki_purple", "weight": 1.05,
+			"std_name": "Standard Strike", "std_range": 2.15, "std_cd": 0.57, "std_windup": 0.12, "std_push": 0.20,
+			"spec_name": "Kamehameha", "spec_type": "beam", "spec_range": 3.60, "spec_cd": 3.4, "spec_windup": 0.36, "spec_push": 0.72, "spec_angle": 42.0, "spec_dmg_bonus": 0.0,
+			"fname": "SON GOKU (ULTRA)", "modules": ["turtle_gi", "power_pole"]
+		},
+		"vegeta": {
+			"values": [18, 28, 16, 22, 16], "element": "ki_gold", "weight": 1.06,
+			"std_name": "Saiyan Strike", "std_range": 2.10, "std_cd": 0.54, "std_windup": 0.11, "std_push": 0.26,
+			"spec_name": "Final Flash", "spec_type": "beam", "spec_range": 3.60, "spec_cd": 3.5, "spec_windup": 0.38, "spec_push": 0.78, "spec_angle": 42.0, "spec_dmg_bonus": 2.0,
+			"fname": "PRINZ VEGETA", "modules": ["saiyan_armor", "final_flash"]
+		},
+		"luffy": {
+			"values": [18, 28, 16, 26, 12], "element": "rubber", "weight": 0.95,
+			"std_name": "Standard Strike", "std_range": 2.85, "std_cd": 0.52, "std_windup": 0.10, "std_push": 0.28,
+			"spec_name": "Gum-Gum Pistol", "spec_type": "reach_strike", "spec_range": 3.20, "spec_cd": 2.9, "spec_windup": 0.28, "spec_push": 0.75, "spec_angle": 35.0, "spec_dmg_bonus": 0.0,
+			"fname": "MONKEY D. RUFFY", "modules": ["straw_hat", "gum_gum"]
+		},
+		"zoro": {
+			"values": [22, 28, 18, 18, 14], "element": "wind_slash", "weight": 1.12,
+			"std_name": "Santoryu Slash", "std_range": 2.40, "std_cd": 0.50, "std_windup": 0.10, "std_push": 0.28,
+			"spec_name": "Santoryu: Onigiri", "spec_type": "dash_slash", "spec_range": 3.10, "spec_cd": 3.0, "spec_windup": 0.24, "spec_push": 0.75, "spec_angle": 38.0, "spec_dmg_bonus": 0.0,
+			"fname": "RORONOA ZORO", "modules": ["santoryu_blades", "wado_ichimonji"]
+		},
+		"naruto": {
+			"values": [22, 24, 16, 24, 14], "element": "wind_rasen", "weight": 0.98,
+			"std_name": "Uzumaki Combo", "std_range": 2.05, "std_cd": 0.48, "std_windup": 0.09, "std_push": 0.22,
+			"spec_name": "Rasengan", "spec_type": "vortex_strike", "spec_range": 3.00, "spec_cd": 2.8, "spec_windup": 0.20, "spec_push": 0.68, "spec_angle": 35.0, "spec_dmg_bonus": 0.0,
+			"fname": "NARUTO UZUMAKI", "modules": ["orange_jacket", "rasengan_core"]
+		},
+		"sasuke": {
+			"values": [16, 26, 14, 28, 16], "element": "electric_chidori", "weight": 0.98,
+			"std_name": "Kusanagi Slash", "std_range": 2.20, "std_cd": 0.46, "std_windup": 0.08, "std_push": 0.22,
+			"spec_name": "Chidori", "spec_type": "electric_dash", "spec_range": 3.15, "spec_cd": 2.7, "spec_windup": 0.18, "spec_push": 0.68, "spec_angle": 35.0, "spec_dmg_bonus": 0.0,
+			"fname": "SASUKE UCHIHA", "modules": ["uchiha_vest", "chidori_lightning"]
+		},
+		"saitama": {
+			"values": [24, 34, 18, 16, 8], "element": "serious_force", "weight": 1.05,
+			"std_name": "Normal Punch", "std_range": 2.25, "std_cd": 0.42, "std_windup": 0.08, "std_push": 0.32,
+			"spec_name": "Serious Punch", "spec_type": "serious_blow", "spec_range": 3.40, "spec_cd": 3.6, "spec_windup": 0.26, "spec_push": 0.85, "spec_angle": 40.0, "spec_dmg_bonus": 2.0,
+			"fname": "SAITAMA (ONE PUNCH)", "modules": ["yellow_suit", "hero_cape"]
+		},
+		"tanjiro": {
+			"values": [20, 26, 16, 22, 16], "element": "sun_flame", "weight": 1.02,
+			"std_name": "Nichirin Slash", "std_range": 2.30, "std_cd": 0.50, "std_windup": 0.10, "std_push": 0.24,
+			"spec_name": "Hinokami Kagura", "spec_type": "flame_slash", "spec_range": 3.05, "spec_cd": 3.0, "spec_windup": 0.22, "spec_push": 0.70, "spec_angle": 38.0, "spec_dmg_bonus": 0.0,
+			"fname": "TANJIRO KAMADO", "modules": ["checkered_haori", "nichirin_sword"]
+		},
+		"subzero": {
+			"values": [18, 26, 16, 24, 16], "element": "ice", "weight": 1.05,
+			"std_name": "Standard Strike", "std_range": 1.80, "std_cd": 0.54, "std_windup": 0.10, "std_push": 0.20,
+			"spec_name": "Kori Ice Shard", "spec_type": "ice_slow", "spec_range": 2.55, "spec_cd": 2.8, "spec_windup": 0.26, "spec_push": 0.62, "spec_angle": 42.0, "spec_dmg_bonus": 0.0,
+			"fname": "SUB-ZERO", "modules": ["cryo_armor", "kori_blade"]
+		},
+		"pain": {
+			"values": [20, 27, 17, 19, 17], "element": "gravity", "weight": 1.05,
+			"std_name": "Standard Strike", "std_range": 2.30, "std_cd": 0.56, "std_windup": 0.11, "std_push": 0.20,
+			"spec_name": "Shinra Tensei", "spec_type": "radial_blast", "spec_range": 3.00, "spec_cd": 3.0, "spec_windup": 0.30, "spec_push": 0.62, "spec_angle": 45.0, "spec_dmg_bonus": 0.0,
+			"fname": "PAIN", "modules": ["rinnegan", "akatsuki"]
+		},
+		"sonic": {
+			"values": [16, 22, 14, 34, 14], "element": "wind", "weight": 0.88,
+			"std_name": "Standard Strike", "std_range": 1.65, "std_cd": 0.44, "std_windup": 0.08, "std_push": 0.22,
+			"spec_name": "Super Spin Dash", "spec_type": "electric_dash", "spec_range": 3.35, "spec_cd": 2.6, "spec_windup": 0.16, "spec_push": 0.65, "spec_angle": 35.0, "spec_dmg_bonus": 0.0,
+			"fname": "SONIC THE HEDGEHOG", "modules": ["power_sneakers", "spin_dash"]
+		},
+		"akaza": {
+			"values": [22, 28, 16, 22, 12], "element": "blood_demon", "weight": 1.02,
+			"std_name": "Destructive Fist", "std_range": 2.10, "std_cd": 0.48, "std_windup": 0.09, "std_push": 0.24,
+			"spec_name": "Destructive Death: Compass Needle", "spec_type": "radial_blast", "spec_range": 2.80, "spec_cd": 2.7, "spec_windup": 0.22, "spec_push": 0.70, "spec_angle": 40.0, "spec_dmg_bonus": 0.0,
+			"fname": "AKAZA (UPPER RANK 3)", "modules": ["soryu_style", "compass_needle"]
+		},
+		"blue_eyes": {
+			"values": [22, 30, 20, 18, 10], "element": "holy_light", "weight": 1.28,
+			"std_name": "White Dragon Claw", "std_range": 2.20, "std_cd": 0.54, "std_windup": 0.11, "std_push": 0.26,
+			"spec_name": "Burst Stream of Destruction", "spec_type": "beam", "spec_range": 3.40, "spec_cd": 3.2, "spec_windup": 0.30, "spec_push": 0.72, "spec_angle": 42.0, "spec_dmg_bonus": 0.0,
+			"fname": "BLUE-EYES WHITE DRAGON", "modules": ["dragon_plate", "burst_stream"]
+		},
+		"anubis": {
+			"values": [20, 28, 18, 18, 16], "element": "shadow_gold", "weight": 1.08,
+			"std_name": "Standard Strike", "std_range": 2.10, "std_cd": 0.62, "std_windup": 0.13, "std_push": 0.20,
+			"spec_name": "Anubis Wrath", "spec_type": "curse_strike", "spec_range": 2.70, "spec_cd": 3.1, "spec_windup": 0.30, "spec_push": 0.62, "spec_angle": 42.0, "spec_dmg_bonus": 0.0,
+			"fname": "CYBER ANUBIS", "modules": ["anubis_armor", "khopesh"]
+		},
+		"phoenix": {
+			"values": [19, 24, 15, 20, 22], "element": "fire", "weight": 0.98,
+			"std_name": "Standard Strike", "std_range": 2.00, "std_cd": 0.55, "std_windup": 0.11, "std_push": 0.20,
+			"spec_name": "Phoenix Flare", "spec_type": "flame_wave", "spec_range": 2.75, "spec_cd": 3.0, "spec_windup": 0.29, "spec_push": 0.62, "spec_angle": 42.0, "spec_dmg_bonus": 0.0,
+			"fname": "PHOENIX EMPRESS", "modules": ["feather_armor", "phoenix_glaive"]
+		},
+		"specter": {
+			"values": [16, 25, 17, 22, 20], "element": "void", "weight": 0.98,
+			"std_name": "Standard Strike", "std_range": 2.20, "std_cd": 0.58, "std_windup": 0.11, "std_push": 0.20,
+			"spec_name": "Void Lance", "spec_type": "void_strike", "spec_range": 2.90, "spec_cd": 2.9, "spec_windup": 0.28, "spec_push": 0.62, "spec_angle": 42.0, "spec_dmg_bonus": 0.0,
+			"fname": "VOID SPECTER", "modules": ["crystal_armor", "void_lance"]
+		},
+		"valkyrie": {
+			"values": [17, 22, 16, 23, 22], "element": "holy", "weight": 1.05,
+			"std_name": "Standard Strike", "std_range": 1.85, "std_cd": 0.52, "std_windup": 0.10, "std_push": 0.20,
+			"spec_name": "Radiant Pierce", "spec_type": "holy_pierce", "spec_range": 2.45, "spec_cd": 3.2, "spec_windup": 0.32, "spec_push": 0.62, "spec_angle": 42.0, "spec_dmg_bonus": 0.0,
+			"fname": "VALKYRIE AURA", "modules": ["radiant_armor", "light_rapier"]
+		},
+		"dragon": {
+			"values": [23, 26, 21, 15, 15], "element": "fire", "weight": 1.20,
+			"std_name": "Standard Strike", "std_range": 1.95, "std_cd": 0.72, "std_windup": 0.16, "std_push": 0.20,
+			"spec_name": "Wyrm Flame", "spec_type": "fire_breath", "spec_range": 2.85, "spec_cd": 3.5, "spec_windup": 0.38, "spec_push": 0.62, "spec_angle": 42.0, "spec_dmg_bonus": 0.0,
+			"fname": "IGNIS DRAKE", "modules": ["dragon_plate", "greatsword"]
+		},
+		"golem": {
+			"values": [27, 24, 27, 10, 12], "element": "fire", "weight": 1.32,
+			"std_name": "Standard Strike", "std_range": 1.55, "std_cd": 0.90, "std_windup": 0.22, "std_push": 0.20,
+			"spec_name": "Magma Quake", "spec_type": "ground_quake", "spec_range": 2.25, "spec_cd": 3.1, "spec_windup": 0.35, "spec_push": 0.62, "spec_angle": 52.0, "spec_dmg_bonus": 0.0,
+			"fname": "CINDER BASTION", "modules": ["basalt", "gauntlets"]
+		},
+		"ninja": {
+			"values": [18, 20, 14, 29, 19], "element": "shadow", "weight": 0.92,
+			"std_name": "Standard Strike", "std_range": 1.75, "std_cd": 0.60, "std_windup": 0.12, "std_push": 0.20,
+			"spec_name": "Raijin Dash", "spec_type": "electric_dash", "spec_range": 2.40, "spec_cd": 3.3, "spec_windup": 0.35, "spec_push": 0.62, "spec_angle": 42.0, "spec_dmg_bonus": 0.0,
+			"fname": "VOLT SHADOW", "modules": ["shadow_armor", "twin_blades"]
+		}
+	}
+
+	var cfg: Dictionary = fam_configs[fam]
+	var values: Array = cfg.values.duplicate()
 	for n in range(8):
 		var a := rng.randi_range(0, 4)
 		var b := rng.randi_range(0, 4)
@@ -41,50 +192,41 @@ static func interpret(raw: Variant, slot: int = 0) -> Dictionary:
 			values[b] += 1
 	var stats := {}
 	for n in range(5): stats[STAT_KEYS[n]] = values[n]
-	var element := "ki_purple" if goku else ("rubber" if luffy else ("ice" if subzero else ("gravity" if pain else ("wind" if sonic else ("blood_demon" if akaza else ("holy_light" if blue_eyes else ("shadow_gold" if anubis else ("fire" if phoenix else ("void" if specter else ("holy" if valkyrie else ("fire" if dragon else ("fire" if heavy else "shadow"))))))))))))
+
+	var element: String = cfg.element
 	for candidate in ELEMENTS:
 		if has_any(lower, ELEMENTS[candidate]):
 			element = candidate
 			break
-	var colors := {"electric": Color("43e5ff"), "fire": Color("ff733e"), "ice": Color("b4e5ff"), "wind": Color("9dffcd"), "shadow": Color("b19dff"), "holy": Color("ffe26a"), "shadow_gold": Color("c9a227"), "void": Color("9b30ff"), "ki_purple": Color("b347ff"), "gravity": Color("9900ee"), "rubber": Color("ff2b2b"), "blood_demon": Color("00e5ff"), "holy_light": Color("70d6ff")}
-	var std_range: float = 2.15 if goku else (2.85 if luffy else (1.80 if subzero else (2.30 if pain else (1.65 if sonic else (2.10 if akaza else (2.20 if blue_eyes else (2.10 if anubis else (2.00 if phoenix else (2.20 if specter else (1.85 if valkyrie else (1.95 if dragon else (1.55 if heavy else 1.75))))))))))))
-	var std_cooldown: float = 0.57 if goku else (0.52 if luffy else (0.54 if subzero else (0.56 if pain else (0.44 if sonic else (0.48 if akaza else (0.54 if blue_eyes else (0.62 if anubis else (0.55 if phoenix else (0.58 if specter else (0.52 if valkyrie else (0.72 if dragon else (0.9 if heavy else 0.60))))))))))))
-	var std_windup: float = 0.12 if goku else (0.10 if luffy else (0.10 if subzero else (0.11 if pain else (0.08 if sonic else (0.09 if akaza else (0.11 if blue_eyes else (0.13 if anubis else (0.11 if phoenix else (0.11 if specter else (0.10 if valkyrie else (0.16 if dragon else (0.22 if heavy else 0.12))))))))))))
-	var weight: float = 1.32 if heavy else (1.28 if blue_eyes else (1.20 if dragon else (1.08 if anubis else (1.05 if (goku or pain) else (1.02 if akaza else (0.88 if sonic else (0.98 if (specter or phoenix) else 0.92)))))))
-	var std_angle: float = 28.0
-	var spec_angle: float = 52.0 if heavy else (45.0 if pain else (42.0 if blue_eyes else (40.0 if akaza else (35.0 if (luffy or sonic) else 42.0))))
-	var spec_ability_name: String = "Kamehameha" if goku else ("Gum-Gum Pistol" if luffy else ("Kori Ice Shard" if subzero else ("Shinra Tensei" if pain else ("Super Spin Dash" if sonic else ("Destructive Death: Compass Needle" if akaza else ("Burst Stream of Destruction" if blue_eyes else ("Anubis Wrath" if anubis else ("Phoenix Flare" if phoenix else ("Void Lance" if specter else ("Radiant Pierce" if valkyrie else ("Wyrm Flame" if dragon else ("Magma Quake" if heavy else "Raijin Dash"))))))))))))
-	var spec_type: String = "beam" if goku else ("reach_strike" if luffy else ("ice_slow" if subzero else ("radial_blast" if pain else ("electric_dash" if sonic else ("radial_blast" if akaza else ("beam" if blue_eyes else ("curse_strike" if anubis else ("flame_wave" if phoenix else ("void_strike" if specter else ("holy_pierce" if valkyrie else ("fire_breath" if dragon else ("ground_quake" if heavy else "electric_dash"))))))))))))
+
+	var colors := {"electric": Color("43e5ff"), "fire": Color("ff733e"), "ice": Color("b4e5ff"), "wind": Color("9dffcd"), "shadow": Color("b19dff"), "holy": Color("ffe26a"), "shadow_gold": Color("c9a227"), "void": Color("9b30ff"), "ki_purple": Color("b347ff"), "ki_gold": Color("ffe838"), "gravity": Color("9900ee"), "rubber": Color("ff2b2b"), "wind_slash": Color("3bfac8"), "wind_rasen": Color("4ae0ff"), "electric_chidori": Color("60d5ff"), "serious_force": Color("ff4040"), "sun_flame": Color("ff6524"), "blood_demon": Color("00e5ff"), "holy_light": Color("70d6ff")}
 
 	var standard := {
-		"name": "White Dragon Claw" if blue_eyes else ("Destructive Fist" if akaza else "Standard Strike"),
-		"damage": 6.0 + stats.power * 0.24, "range": std_range,
-		"cooldown": std_cooldown, "windup": std_windup,
+		"name": cfg.std_name,
+		"damage": 6.0 + stats.power * 0.24, "range": cfg.std_range,
+		"cooldown": cfg.std_cd, "windup": cfg.std_windup,
 		"active": 0.08, "recovery": 0.14,
-		"cost": 20, "push": 0.28 if luffy else (0.26 if blue_eyes else (0.24 if akaza else (0.22 if sonic else 0.20))),
-		"angle": std_angle, "hitstun": 0.20
+		"cost": 20, "push": cfg.std_push,
+		"angle": 28.0, "hitstun": 0.20
 	}
-	var spec_range: float = 2.65 if goku else (3.20 if luffy else (2.55 if subzero else (3.00 if pain else (3.35 if sonic else (2.80 if akaza else (3.40 if blue_eyes else (2.70 if anubis else (2.75 if phoenix else (2.90 if specter else (2.45 if valkyrie else (2.85 if dragon else (2.25 if heavy else 2.40))))))))))))
-	var spec_cooldown: float = 3.4 if goku else (2.9 if luffy else (2.8 if subzero else (3.0 if pain else (2.6 if sonic else (2.7 if akaza else (3.2 if blue_eyes else (3.1 if anubis else (3.0 if phoenix else (2.9 if specter else (3.2 if valkyrie else (3.5 if dragon else (3.1 if heavy else 3.3))))))))))))
-	var spec_windup: float = 0.36 if goku else (0.28 if luffy else (0.26 if subzero else (0.30 if pain else (0.16 if sonic else (0.22 if akaza else (0.30 if blue_eyes else (0.30 if anubis else (0.29 if phoenix else (0.28 if specter else (0.32 if valkyrie else (0.38 if dragon else (0.35 if heavy else 0.35))))))))))))
 	var special := {
-		"name": spec_ability_name,
-		"type": spec_type,
-		"damage": 16.0 + stats.power * 0.32, "range": spec_range,
-		"cooldown": spec_cooldown, "windup": spec_windup,
+		"name": cfg.spec_name,
+		"type": cfg.spec_type,
+		"damage": 16.0 + stats.power * 0.32 + cfg.spec_dmg_bonus, "range": cfg.spec_range,
+		"cooldown": cfg.spec_cd, "windup": cfg.spec_windup,
 		"active": 0.16, "recovery": 0.28,
-		"cost": 40, "push": 0.75 if luffy else (0.72 if blue_eyes else (0.70 if akaza else (0.65 if sonic else 0.62))),
-		"angle": spec_angle, "hitstun": 0.38
+		"cost": 40, "push": cfg.spec_push,
+		"angle": cfg.spec_angle, "hitstun": 0.38
 	}
-	var family := "goku" if goku else ("luffy" if luffy else ("subzero" if subzero else ("pain" if pain else ("sonic" if sonic else ("akaza" if akaza else ("blue_eyes" if blue_eyes else ("anubis" if anubis else ("phoenix" if phoenix else ("specter" if specter else ("valkyrie" if valkyrie else ("dragon" if dragon else ("golem" if heavy else "ninja"))))))))))))
-	var fname := "SON GOKU (ULTRA)" if goku else ("MONKEY D. RUFFY" if luffy else ("SUB-ZERO" if subzero else ("PAIN" if pain else ("SONIC THE HEDGEHOG" if sonic else ("AKAZA (UPPER RANK 3)" if akaza else ("BLUE-EYES WHITE DRAGON" if blue_eyes else ("CYBER ANUBIS" if anubis else ("PHOENIX EMPRESS" if phoenix else ("VOID SPECTER" if specter else ("VALKYRIE AURA" if valkyrie else ("IGNIS DRAKE" if dragon else ("CINDER BASTION" if heavy else "VOLT SHADOW"))))))))))))
-	var modules := ["turtle_gi", "power_pole"] if goku else (["straw_hat", "gum_gum"] if luffy else (["cryo_armor", "kori_blade"] if subzero else (["rinnegan", "akatsuki"] if pain else (["power_sneakers", "spin_dash"] if sonic else (["soryu_style", "compass_needle"] if akaza else (["dragon_plate", "burst_stream"] if blue_eyes else (["anubis_armor", "khopesh"] if anubis else (["feather_armor", "phoenix_glaive"] if phoenix else (["crystal_armor", "void_lance"] if specter else (["radiant_armor", "light_rapier"] if valkyrie else (["dragon_plate", "greatsword"] if dragon else (["basalt", "gauntlets"] if heavy else ["shadow_armor", "twin_blades"]))))))))))))
-	return {"prompt": text, "slot": slot, "seed": seed_value, "family": family,
-		"name": fname, "element": element,
-		"modules": modules,
+
+	return {
+		"prompt": text, "slot": slot, "seed": seed_value, "family": fam,
+		"name": cfg.fname, "element": element,
+		"modules": cfg.modules,
 		"color": colors.get(element, Color("9b30ff")), "stats": stats, "standard": standard, "special": special,
 		"health": 90.0 + stats.vitality * 1.6, "speed": 2.3 + stats.speed * 0.065,
-		"weight": clampf(weight, 0.85, 1.35)}
+		"weight": clampf(cfg.weight, 0.85, 1.35)
+	}
 
 static func has_any(text: String, words: Array) -> bool:
 	for word in words:
@@ -104,8 +246,8 @@ static func valid(p: Dictionary) -> bool:
 		total += v
 	for key in ["standard", "special"]:
 		var a: Dictionary = p[key]
-		if a.damage < 3 or a.damage > 30 or a.cooldown < 0.3 or a.cooldown > 6: return false
-		if a.range < 0.9 or a.range > 3.5: return false
+		if a.damage < 3 or a.damage > 35 or a.cooldown < 0.3 or a.cooldown > 6: return false
+		if a.range < 0.9 or a.range > 3.8: return false
 	return total == 100 and p.standard.cost + p.special.cost <= 60 and (
 		(p.family == "golem" and p.modules == ["basalt", "gauntlets"]) or
 		(p.family == "ninja" and p.modules == ["shadow_armor", "twin_blades"]) or
@@ -115,9 +257,15 @@ static func valid(p: Dictionary) -> bool:
 		(p.family == "specter" and p.modules == ["crystal_armor", "void_lance"]) or
 		(p.family == "phoenix" and p.modules == ["feather_armor", "phoenix_glaive"]) or
 		(p.family == "goku" and p.modules == ["turtle_gi", "power_pole"]) or
+		(p.family == "vegeta" and p.modules == ["saiyan_armor", "final_flash"]) or
 		(p.family == "subzero" and p.modules == ["cryo_armor", "kori_blade"]) or
 		(p.family == "pain" and p.modules == ["rinnegan", "akatsuki"]) or
 		(p.family == "sonic" and p.modules == ["power_sneakers", "spin_dash"]) or
 		(p.family == "akaza" and p.modules == ["soryu_style", "compass_needle"]) or
 		(p.family == "blue_eyes" and p.modules == ["dragon_plate", "burst_stream"]) or
+		(p.family == "zoro" and p.modules == ["santoryu_blades", "wado_ichimonji"]) or
+		(p.family == "naruto" and p.modules == ["orange_jacket", "rasengan_core"]) or
+		(p.family == "sasuke" and p.modules == ["uchiha_vest", "chidori_lightning"]) or
+		(p.family == "saitama" and p.modules == ["yellow_suit", "hero_cape"]) or
+		(p.family == "tanjiro" and p.modules == ["checkered_haori", "nichirin_sword"]) or
 		(p.family == "luffy" and p.modules == ["straw_hat", "gum_gum"]))

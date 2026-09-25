@@ -19,6 +19,12 @@ const PORTRAITS = {
     "sonic": preload("res://assets/textures/ui/portrait_sonic.png"),
     "akaza": preload("res://assets/textures/ui/portrait_akaza.png"),
     "blue_eyes": preload("res://assets/textures/ui/portrait_blue_eyes.png"),
+    "naruto": preload("res://assets/textures/ui/portrait_naruto.png"),
+    "vegeta": preload("res://assets/textures/ui/portrait_vegeta.png"),
+    "zoro": preload("res://assets/textures/ui/portrait_zoro.png"),
+    "saitama": preload("res://assets/textures/ui/portrait_saitama.png"),
+    "tanjiro": preload("res://assets/textures/ui/portrait_tanjiro.png"),
+    "sasuke": preload("res://assets/textures/ui/portrait_sasuke.png"),
     "goku": preload("res://assets/textures/characters/thumbs/thumb_goku.png"),
     "subzero": preload("res://assets/textures/characters/thumbs/thumb_subzero.png"),
     "pain": preload("res://assets/textures/characters/thumbs/thumb_pain.png"),
@@ -805,7 +811,7 @@ func setup_ui() -> void:
     var mk_title := label("CHOOSE YOUR FIGHTER", 22, Color("f7c844"))
     mk_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     header_box.add_child(mk_title)
-    var mk_sub := label("MORTAL KOMBAT AUSWAHL · 14 KÄMPFER BEREIT · LINKSKLICK: P1 · RECHTSKLICK: P2", 11, Color("e55050"))
+    var mk_sub := label("MORTAL KOMBAT AUSWAHL · 20 KÄMPFER BEREIT · LINKSKLICK: P1 · RECHTSKLICK: P2", 11, Color("e55050"))
     mk_sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     header_box.add_child(mk_sub)
 
@@ -829,16 +835,22 @@ func setup_ui() -> void:
         toggle_h.add_child(tbtn)
         mk_toggle_buttons.append(tbtn)
 
-    # 3. 14-FIGHTER PRESETS (ALL 14 PLAYABLE CHARACTERS - FULL 7x2 ROSTER)
+    # 3. 20-FIGHTER PRESETS (ALL 20 PLAYABLE CHARACTERS - FULL 10x2 ROSTER)
     mk_presets = [
         {"id": "ninja", "name": "VOLT NINJA", "prompt": "Blitzschneller Schattenninja mit elektrischen Klingen"},
         {"id": "golem", "name": "LAVA GOLEM", "prompt": "Gepanzerter Lavagolem mit brennenden Fäusten"},
         {"id": "valkyrie", "name": "VALKYRIE", "prompt": "Strahlende Moe Valkyrie Paladin Kriegerin mit Lichtflügeln und Rapier"},
         {"id": "dragon", "name": "IGNIS DRAKE", "prompt": "Mächtiger Cyber Drachenritter mit flammendem Drachen-Großschwert"},
         {"id": "goku", "name": "SON GOKU", "prompt": "Son Goku Super Saiyan Kamehameha Dragon Ball Z"},
+        {"id": "vegeta", "name": "VEGETA", "prompt": "Prinz Vegeta Saiyajin Royal Armor Final Flash Galick Gun"},
         {"id": "subzero", "name": "SUB-ZERO", "prompt": "Sub-Zero Lin Kuei Cryomancer ice ninja kori blade"},
         {"id": "pain", "name": "PAIN", "prompt": "Pain Nagato Akatsuki Rinnegan Shinra Tensei"},
         {"id": "luffy", "name": "RUFFY", "prompt": "Monkey D. Luffy Strohhut Gum-Gum One Piece Mugiwara"},
+        {"id": "zoro", "name": "ZORO", "prompt": "Roronoa Zoro Santoryu Drei Schwerter Wado Ichimonji Onigiri"},
+        {"id": "naruto", "name": "NARUTO", "prompt": "Naruto Uzumaki Rasengan Konoha Stirnband Kyuubi Sage Mode"},
+        {"id": "sasuke", "name": "SASUKE", "prompt": "Sasuke Uchiha Chidori Sharingan Kusanagi Shimenawa Blitz"},
+        {"id": "saitama", "name": "SAITAMA", "prompt": "Saitama One Punch Man Serious Punch Caped Baldy Hero"},
+        {"id": "tanjiro", "name": "TANJIRO", "prompt": "Tanjiro Kamado Hinokami Kagura Nichirin Hanafuda Checkered Haori"},
         {"id": "sonic", "name": "SONIC", "prompt": "Sonic the Hedgehog Blue Blur Super Spin Dash Sega"},
         {"id": "akaza", "name": "AKAZA", "prompt": "Akaza Upper Rank 3 Hakai Satsu Compass Needle Kimetsu"},
         {"id": "blue_eyes", "name": "BLUE-EYES", "prompt": "Weißer Drache mit eiskaltem Blick Burst Stream Yu-Gi-Oh"},
@@ -847,18 +859,18 @@ func setup_ui() -> void:
         {"id": "phoenix", "name": "PHOENIX", "prompt": "Phoenix Empress with feather armor and phoenix glaive"}
     ]
 
-    # 4. MORTAL KOMBAT 7x2 GRID
+    # 4. MORTAL KOMBAT 10x2 GRID
     var mk_grid := GridContainer.new()
-    mk_grid.columns = 7
-    mk_grid.add_theme_constant_override("h_separation", 6)
-    mk_grid.add_theme_constant_override("v_separation", 6)
+    mk_grid.columns = 10
+    mk_grid.add_theme_constant_override("h_separation", 4)
+    mk_grid.add_theme_constant_override("v_separation", 4)
     select_box.add_child(mk_grid)
 
     mk_card_buttons.clear()
     for idx in range(mk_presets.size()):
         var preset: Dictionary = mk_presets[idx]
         var card := Button.new()
-        card.custom_minimum_size = Vector2(132, 74)
+        card.custom_minimum_size = Vector2(94, 68)
         card.focus_mode = Control.FOCUS_NONE
 
         # Layout inside card button
@@ -875,7 +887,7 @@ func setup_ui() -> void:
             port_tex = load("res://assets/textures/characters/thumbs/thumb_%s.png" % preset.id)
 
         var img := TextureRect.new()
-        img.custom_minimum_size = Vector2(44, 44)
+        img.custom_minimum_size = Vector2(38, 38)
         img.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
         img.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
         img.texture = port_tex
@@ -885,7 +897,7 @@ func setup_ui() -> void:
         var n_lbl := Label.new()
         n_lbl.text = preset.name
         n_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-        n_lbl.add_theme_font_size_override("font_size", 10)
+        n_lbl.add_theme_font_size_override("font_size", 9)
         n_lbl.add_theme_color_override("font_color", Color("dce7f5"))
         n_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
         card_v.add_child(n_lbl)
@@ -1330,6 +1342,18 @@ func get_portrait_for_fighter(f: Dictionary) -> Texture2D:
         return PORTRAITS.get("dragon", null)
     if family == "valkyrie" or "valkyrie" in ptext or "moe" in ptext or "anime" in ptext:
         return PORTRAITS.get("valkyrie", null)
+    if "naruto" in ptext:
+        return PORTRAITS.get("naruto", null)
+    if "vegeta" in ptext:
+        return PORTRAITS.get("vegeta", null)
+    if "zoro" in ptext:
+        return PORTRAITS.get("zoro", null)
+    if "saitama" in ptext:
+        return PORTRAITS.get("saitama", null)
+    if "tanjiro" in ptext:
+        return PORTRAITS.get("tanjiro", null)
+    if "sasuke" in ptext:
+        return PORTRAITS.get("sasuke", null)
     if "sonic" in ptext:
         return PORTRAITS.get("sonic", null)
     if "goku" in ptext:
