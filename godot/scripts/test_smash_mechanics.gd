@@ -32,14 +32,20 @@ func _initialize():
 				  {"move": 0.0, "standard": false, "special": false, "jump": false, "block": false}], 0.016)
 
 	print("  P1 landed on platform at y=%.2f, grounded=%s" % [sim.fighters[0].y, str(sim.fighters[0].is_grounded)])
-	assert(sim.fighters[0].is_grounded and abs(sim.fighters[0].y - 1.45) < 0.1, "Fighter should land on left platform at y=1.45")
+	assert(sim.fighters[0].is_grounded and abs(sim.fighters[0].y - 1.35) < 0.1, "Fighter should land on left platform at y=1.35")
 
-	# Test 3: Drop-Through Platform
-	print("3. Testing Drop-Through Platform:")
+	# Test 3: Safe Blocking on Platform & Drop-Through Mechanic
+	print("3. Testing Platform Blocking (Safe) & Drop-Through:")
 	sim.tick([{"move": 0.0, "standard": false, "special": false, "jump": false, "block": true},
 			  {"move": 0.0, "standard": false, "special": false, "jump": false, "block": false}], 0.016)
-	print("  P1 after pressing block on platform: y=%.2f, grounded=%s" % [sim.fighters[0].y, str(sim.fighters[0].is_grounded)])
-	assert(not sim.fighters[0].is_grounded, "Fighter should have dropped through platform")
+	print("  P1 blocking on platform: y=%.2f, grounded=%s" % [sim.fighters[0].y, str(sim.fighters[0].is_grounded)])
+	assert(sim.fighters[0].is_grounded, "Fighter should stay safely on platform while blocking")
+
+	# Now perform explicit drop command (S+W or cmd.drop)
+	sim.tick([{"move": 0.0, "standard": false, "special": false, "jump": true, "block": true},
+			  {"move": 0.0, "standard": false, "special": false, "jump": false, "block": false}], 0.016)
+	print("  P1 after S+W drop command: y=%.2f, grounded=%s" % [sim.fighters[0].y, str(sim.fighters[0].is_grounded)])
+	assert(not sim.fighters[0].is_grounded, "Fighter should drop through platform on explicit S+W drop")
 
 	# Let P1 land on main stage (y=0.0)
 	for tick in range(60):

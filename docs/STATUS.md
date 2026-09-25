@@ -1,88 +1,110 @@
-# Projektstatus
+# Prompt Fighter Ultimate — Projektstatus
 
-Stand: 2026-09-18. Aktive Engine: Godot 4.7.2 stable. Projekt: `C:\Users\durmaz\Documents\PromptFighterUltimate`.
+> Letztes Update: 2026-09-25
 
-## Aktuelle Etappe – Enginewechsel
+## Projektübersicht
 
-Der Nutzer hat den Wechsel zu Godot ausdrücklich genehmigt. Godot wurde über Scoop im Benutzerkonto installiert; keine Adminfreigabe oder Umgehung von Windows-Richtlinien. Der Unreal-Quellstand bleibt erhalten, gehört aber nicht mehr zum aktiven Produkt. Die bisherigen Berichte wurden nach `docs/legacy-unreal/` kopiert.
+| Feld | Wert |
+|------|------|
+| **Engine** | Godot 4.7.2 (Compatibility Renderer, OpenGL 3.3) |
+| **Plattform** | Windows (Entwicklung), Android (Produktionsziel) |
+| **3D-Tool** | Blender 4.5.5 (portabel) |
+| **Spielbare Charaktere** | 14 |
+| **Spielmodi** | 3 (PvP, PvE, KI vs KI) |
+| **Arenen** | 5 |
 
-Die Etappe liefert einen eigenständigen Windows-Prototyp. Sie erklärt nicht das gesamte ursprüngliche Spieleprojekt für abgeschlossen.
+## Spielbare Charaktere (14)
 
-## Phase 1 – System und Projekt
+| # | Familie | Name | Besondere Fähigkeit |
+|---|---------|------|---------------------|
+| 1 | ninja | VOLT SHADOW | Raijin Dash |
+| 2 | golem | CINDER BASTION | Magma Quake |
+| 3 | valkyrie | VALKYRIE AURA | Radiant Pierce |
+| 4 | dragon | IGNIS DRAKE | Wyrm Flame |
+| 5 | goku | SON GOKU (ULTRA) | Kamehameha |
+| 6 | subzero | SUB-ZERO | Kori Ice Shard |
+| 7 | pain | PAIN | Shinra Tensei |
+| 8 | luffy | MONKEY D. RUFFY | Gum-Gum Pistol |
+| 9 | sonic | SONIC THE HEDGEHOG | Super Spin Dash |
+| 10 | akaza | AKAZA (UPPER RANK 3) | Destructive Death: Compass Needle |
+| 11 | blue_eyes | BLUE-EYES WHITE DRAGON | Burst Stream of Destruction |
+| 12 | anubis | CYBER ANUBIS | Anubis Wrath |
+| 13 | specter | VOID SPECTER | Void Lance |
+| 14 | phoenix | PHOENIX EMPRESS | Phoenix Flare |
 
-Abgeschlossen. Windows 11 Enterprise, HP ProBook/i5-1335U, 15,64 GB RAM und Intel UHD Graphics ermittelt. Git/LFS und Projektstruktur vorhanden. Keine dedizierte GPU. Aktuelle native Computer-Use-Anbindung kann Fenster auflisten; beim Spieltest zeigte sie den gesperrten Windows-Desktop. Keine Eingabeversuche nach Erkennen der Sperre.
+## Spielmodi
 
-## Phase 2 – Werkzeuge
+- **⚔ Spieler vs Spieler (PvP)** — Lokaler Versus mit geteilter Tastatur
+- **🥊 Spieler vs Agent (PvE)** — Spieler 1 manuell, Spieler 2 KI-gesteuert
+- **🤖 Agent vs Agent (KI vs KI)** — Beide Kämpfer vollautomatisch
 
-Für Godot abgeschlossen: Blender 4.5.5 LTS portable und Godot 4.7.2 stable. Offizielle Exportvorlagen geladen, SHA-256 geprüft und nur Windows-x86_64-Vorlagen ins Projekt extrahiert. Keine Unreal-/MSVC-/SDK-Installation mehr für diesen Windows-Build erforderlich. Details in SETUP.md.
+## Kernsysteme
 
-## Phasen 3–4 – Erster lokaler Kampf
+### Kampfsystem
+- Super Smash Bros Platform Fighter
+- 6 Plattformen auf 4 vertikalen Ebenen
+- Blast Zones (Ring Out)
+- 3-Stock Lives System
+- Datengetriebene Knockback-Formel (HP-abhängig)
+- 3-Phasen-Angriffspipeline: Windup → Active → Recovery
+- Hit Interrupt (Angriffe werden durch Treffer unterbrochen)
 
-Implementiert und als Windows-Build ausgeführt:
+### Greifen & Werfen
+- Gegner greifen, halten und in 4 Richtungen werfen
+- Blockende Gegner durchgreifen
+- Befreiung bei Timeout
 
-- Zwei voneinander unabhängige Promptfelder.
-- Ninja und Golem in der nächtlichen Zitadellen-Arena.
-- Lokaler Tastatur-Versus und autonome regelbasierte Agenten.
-- Gemeinsamer GDScript-Kampfkern für beide Modi.
-- Bewegung, Standard-/Spezialangriff, Trefferreaktion, Schaden, Cooldowns.
-- Lebensanzeigen, 90-Sekunden-Timer, Ergebnis, Unentschieden, Neustart, Pause und Rückkehr zur Auswahl.
-- Lokale Speicherung beider Prompttexte; keine Online-Dienste.
+### Arena Items
+- Leichte Kiste (zerbrechlich, 12 Schaden)
+- Schwerer Stein (robust, 22 Schaden)
+- Holzfass (mittel, 16 Schaden)
+- Explosiv-Fass (Flächenschaden, 34 Schaden, 2.6 Radius)
+- Aufheben, tragen, werfen
+- Auto-Respawn nach Zerstörung
 
-Automatisierte Steuerungsprüfung und gerenderter Agentenkampf bestanden. Physischer Tastatur-/Maus-End-to-End-Test bleibt bis zum Entsperren des Desktops offen.
+### Spezial-Mechaniken
+- Super-Meter (passiv + bei Treffer)
+- Combo-System mit Schadensmultiplikator
+- Parry-System (perfektes Block-Timing)
+- Hitstop bei Treffern
+- DI (Directional Influence) in der Luft
+- Drop-Through Plattformen (S+W)
 
-## Phase 5 – Konzeptgrafik
+### Character Remixer
+- Modularer Charakter-Generator aus Prompt
+- 11 Body-Module, 5 Elemente, 6 Abilities
+- Stat-Budget: 100 Punkte (balanciert)
+- UI im Auswahlscreen integriert
 
-Vier generierte Referenzbilder und Konsistenzprüfung vorhanden. Sie sind Zielbilder, keine Screenshots des Spiels.
+## Aufgabenstatus
 
-## Phase 6 – Blender und Import
+| Aufgabe | Status |
+|---------|--------|
+| 14 spielbare Charaktere | ✅ Erledigt |
+| PvE Modus | ✅ Erledigt |
+| Mortal Kombat Auswahlscreen (7x2) | ✅ Erledigt |
+| 5 Arenen mit PBR-Texturen | ✅ Erledigt |
+| Character Remixer (Core) | ✅ Erledigt |
+| Character Remixer (UI) | ✅ Erledigt |
+| 3-Phasen Attack Pipeline | ✅ Erledigt |
+| Hit Interrupt System | ✅ Erledigt |
+| Knockback +25% | ✅ Erledigt |
+| Akaza Pro Model | ✅ Erledigt |
+| Blue-Eyes Pro Model | ✅ Erledigt |
+| Animation Audit (State Machine) | ✅ Erledigt — 14/14 bestanden |
+| Performance Baseline | ✅ Erledigt — 45.8µs avg (0.27% Budget) |
+| Attack Data-Driven System | ✅ Erledigt (windup/active/recovery/cost/push/angle/hitstun) |
+| GDScript Optimierung | 🟡 Offen |
+| Android Export | 🟡 Offen |
+| Rendering LOD | 🟡 Offen |
 
-Zwei gegliederte Low-Poly-Quellen mit je 18 Bones und sieben Actions sowie modulare Arena vorhanden. GLB-Export und echter Godot-Import bestanden. Maßstab und Kameradarstellung anhand echter Renderbilder geprüft. Farben/Emission werden in Godot angepasst. Animationsclips sind importiert und im Lauf in Benutzung; vollständige Gelenk-, Bodenkontakt- und Kontaktlesbarkeitsabnahme ist noch offen. Kein fertiger hochwertiger Art-Stand.
+## Test-Ergebnisse
 
-## Phasen 7–8 – Architektur, Prompt und Balancing
-
-Aktiv in `godot/scripts/`:
-
-- `prompt_interpreter.gd`: deterministische lokale Interpretation, getrennte Profile, zwei kompatible Skelett-/Modulfamilien, Elemente und Farben.
-- `combat.gd`: Zustände, Bewegung, zentrale Trefferregeln, Angriffe, KI-Kommandos und Rundenende.
-- `fighter_view.gd`: GLB-Modelle, Materialien, Animationen, Spielermarkierungen.
-- `main.gd`: Kamera, UI, Eingaberouten, Audio, Speicherung und Laufzeittest.
-
-Jedes Profil hat exakt 100 Attributpunkte (je 8–36), Fähigkeiten kosten zusammen maximal 60. Gleicher Prompt bleibt unabhängig vom Spielerslot reproduzierbar. Aktuell wählen die Module im Wesentlichen zwischen Ninja und Golem; eine reichhaltige austauschbare Ausrüstungsbibliothek ist nicht vorhanden. Technik hat noch keinen eigenen Kampfeffekt.
-
-30 deterministische Ninja/Golem-Paarungen ergeben 5 Ninja- und 25 Golem-Siege. Das ist ein nachgewiesener Balance-Restpunkt, keine Fairness-Abnahme.
-
-## Phase 9 – Variantenbibliothek
-
-Noch nicht begonnen. Keine Behauptung von 120 eigenständigen Modellen oder Vorlagen. Erst manuellen Kernablauf abnehmen, Balancebasis und sichtbare austauschbare Module herstellen; dann 120 reproduzierbare Vorlagen über dieselben Datenstrukturen.
-
-## Phase 10 – Audio
-
-Fünf lokal synthetisierte WAV-Platzhalter importiert und an Treffer, Spezialangriff, Start und Sieg angeschlossen. Keine externen Samples/API-Kosten. Hörprüfung durch Menschen bleibt offen.
-
-## Phase 11 – Tests und Ausführung
-
-- 32/32 tatsächliche Godot-Tests bestanden; JSON-Bericht in `docs/godot-tests.json`.
-- 1.000 Eingabefälle für Profilgrenzen geprüft.
-- 30 autonome Simulationsmatches mit 691 Treffern beendet.
-- Je sieben Animationen und 18 Bones aus beiden importierten GLBs bestätigt.
-- Exportierter Windows-Build: zwei gerenderte Runden, 46 Treffer, ein Neustart; Abschlussmarker in `docs/godot-build-smoke.log`.
-- Echte Viewport-Screenshots unter `docs/screenshots/`.
-- Keine Fehler/Warnungen im abschließenden Test-/Build-Smoke-Protokoll.
-- Native manuelle Abnahme wegen gesperrtem Desktop offen.
-
-## Phase 12 – Mobile
-
-Compatibility-Renderer, einfache Materialien/Geometrie und begrenzte Effekte. Android-Toolchain, Touchsteuerung, LODs und Gerätetests fehlen noch. 60 FPS sind Ziel, kein gemessener Leistungsnachweis.
-
-## Phase 13 – Spätere Meilensteine
-
-Arcade, Bosse, Online-Versus, Android, Monetarisierung und Veröffentlichung nicht begonnen. Keine Cloudressourcen oder kostenpflichtigen Dienste eingerichtet.
-
-## Phase 14 – Übergabe und nächster Schritt
-
-Start: `Start-PFU.cmd` oder `builds/windows/PromptFighterUltimate.exe`.
-Editor: `godot --editor --path godot`.
-Tests: `scripts/Test-Project.ps1`.
-Build: `scripts/Build-Windows.ps1`.
-
-Nächster Schritt: Nach Entsperren von Windows beide manuellen Steuerungen, Treffer, Spezialangriffe, Pause und Neustart am echten Fenster abnehmen. Anschließend Golem-Dominanz und Kampfanimationen verbessern, bevor Phase 9 erweitert wird. Es gibt keinen Adminblocker für Godot; der offene Interaktionstest benötigt einen entsperrten Desktop.
+| Test | Ergebnis |
+|------|----------|
+| test_all_playable.gd | ✅ 14/14 BESTANDEN |
+| test_animation_audit.gd | ✅ 14/14 BESTANDEN |
+| test_performance.gd | ✅ 45.8µs avg, 0.27% Budget |
+| test_smash_mechanics.gd | ✅ ALLE BESTANDEN |
+| test_remixer.gd | ✅ 5/5 BESTANDEN |
+| test_match_all.gd | ✅ ALLE BESTANDEN |

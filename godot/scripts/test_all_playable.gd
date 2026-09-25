@@ -18,11 +18,12 @@ func _initialize():
 		{"key": "pain", "prompt": "Pain Nagato Akatsuki Rinnegan Shinra Tensei"},
 		{"key": "luffy", "prompt": "Monkey D. Luffy Strohhut Gum-Gum One Piece Mugiwara"},
 		{"key": "sonic", "prompt": "Sonic the Hedgehog Blue Blur Super Spin Dash Sega"},
-		{"key": "akaza", "prompt": "Akaza Upper Rank 3 Hakai Satsu Compass Needle Kimetsu"}
+		{"key": "akaza", "prompt": "Akaza Upper Rank 3 Hakai Satsu Compass Needle Kimetsu"},
+		{"key": "blue_eyes", "prompt": "Weißer Drache mit eiskaltem Blick Burst Stream Yu-Gi-Oh"}
 	]
 	
 	print("==================================================")
-	print("TESTING ALL 13 CHARACTERS (PROMPT -> SIM -> VIEW)")
+	print("TESTING ALL 14 CHARACTERS (PROMPT -> SIM -> VIEW)")
 	print("==================================================")
 	
 	var all_ok := true
@@ -55,7 +56,7 @@ func _initialize():
 		
 	print("==================================================")
 	if all_ok:
-		print("ALL 13 CHARACTERS ARE FULLY PLAYABLE!")
+		print("ALL 14 CHARACTERS ARE FULLY PLAYABLE!")
 	else:
 		print("SOME CHARACTERS FAILED VALIDATION!")
 	print("==================================================")

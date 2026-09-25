@@ -3,6 +3,7 @@ extends Node3D
 const Prompt = preload("res://scripts/prompt_interpreter.gd")
 const Combat = preload("res://scripts/combat.gd")
 const FighterView = preload("res://scripts/fighter_view.gd")
+const Remixer = preload("res://scripts/character_remixer.gd")
 const CYAN := Color("49def4")
 const ORANGE := Color("ff925b")
 
@@ -17,6 +18,7 @@ const PORTRAITS = {
     "cyber": preload("res://assets/textures/ui/portrait_cyber.png"),
     "sonic": preload("res://assets/textures/ui/portrait_sonic.png"),
     "akaza": preload("res://assets/textures/ui/portrait_akaza.png"),
+    "blue_eyes": preload("res://assets/textures/ui/portrait_blue_eyes.png"),
     "goku": preload("res://assets/textures/characters/thumbs/thumb_goku.png"),
     "subzero": preload("res://assets/textures/characters/thumbs/thumb_subzero.png"),
     "pain": preload("res://assets/textures/characters/thumbs/thumb_pain.png"),
@@ -159,6 +161,11 @@ var active_picker := 0
 var mk_card_buttons: Array = []
 var mk_toggle_buttons: Array = []
 var mk_presets: Array = []
+
+# Character Remixer UI state
+var remix_prompts: Array = []       # LineEdit references
+var remix_info: Array = []          # Label references for remix results
+var remix_profiles: Array = [{}, {}] # Cached remix character profiles
 
 func _ready() -> void:
     for arg in OS.get_cmdline_user_args():
@@ -422,9 +429,12 @@ func setup_platforms() -> void:
     var stone_norm: Texture2D = preload("res://assets/textures/characters/golem_rock_normal.png")
 
     var plats: Array = [
-        {"pos": Vector3(-2.6, 1.50, 0.0), "size": Vector3(2.4, 0.15, 1.2)},
-        {"pos": Vector3( 2.6, 1.50, 0.0), "size": Vector3(2.4, 0.15, 1.2)},
-        {"pos": Vector3( 0.0, 2.80, 0.0), "size": Vector3(2.4, 0.15, 1.2)},
+        {"pos": Vector3(-3.1, 1.35, 0.0), "size": Vector3(2.2, 0.15, 1.2)},
+        {"pos": Vector3( 3.1, 1.35, 0.0), "size": Vector3(2.2, 0.15, 1.2)},
+        {"pos": Vector3( 0.0, 2.05, 0.0), "size": Vector3(2.4, 0.15, 1.2)},
+        {"pos": Vector3(-2.4, 2.90, 0.0), "size": Vector3(2.0, 0.15, 1.2)},
+        {"pos": Vector3( 2.4, 2.90, 0.0), "size": Vector3(2.0, 0.15, 1.2)},
+        {"pos": Vector3( 0.0, 3.85, 0.0), "size": Vector3(1.8, 0.15, 1.2)},
     ]
 
     for p in plats:
@@ -769,7 +779,7 @@ func setup_ui() -> void:
     bottom.add_theme_stylebox_override("panel", panel_style(Color(0.025,0.042,0.075,0.94)))
     var footer := HBoxContainer.new()
     bottom.add_child(footer)
-    var keys := label("P1  A/D Laufen · W Sprung (x2) · S Block/Plattform runter · F Schlag · G Spezial   |   P2  ←/→ · ↑ Sprung (x2) · ↓ Block/Plattform runter · K Schlag · L Spezial", 13)
+    var keys := label("P1  A/D Laufen · W Sprung (x2) · S Block / S+W Plattform runter · F Schlag · G Spezial · E Greifen/Werfen   |   P2  ←/→ · ↑ Sprung (x2) · ↓ Block / ↓+↑ Plattform runter · K Schlag · L Spezial · O Greifen/Werfen", 12)
     keys.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     footer.add_child(keys)
     footer.add_child(button("↻  R", CYAN, restart_round))
@@ -795,7 +805,7 @@ func setup_ui() -> void:
     var mk_title := label("CHOOSE YOUR FIGHTER", 22, Color("f7c844"))
     mk_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     header_box.add_child(mk_title)
-    var mk_sub := label("MORTAL KOMBAT AUSWAHL · 13 KÄMPFER BEREIT · LINKSKLICK: P1 · RECHTSKLICK: P2", 11, Color("e55050"))
+    var mk_sub := label("MORTAL KOMBAT AUSWAHL · 14 KÄMPFER BEREIT · LINKSKLICK: P1 · RECHTSKLICK: P2", 11, Color("e55050"))
     mk_sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     header_box.add_child(mk_sub)
 
@@ -819,7 +829,7 @@ func setup_ui() -> void:
         toggle_h.add_child(tbtn)
         mk_toggle_buttons.append(tbtn)
 
-    # 3. 13-FIGHTER PRESETS (ALL 13 PLAYABLE CHARACTERS)
+    # 3. 14-FIGHTER PRESETS (ALL 14 PLAYABLE CHARACTERS - FULL 7x2 ROSTER)
     mk_presets = [
         {"id": "ninja", "name": "VOLT NINJA", "prompt": "Blitzschneller Schattenninja mit elektrischen Klingen"},
         {"id": "golem", "name": "LAVA GOLEM", "prompt": "Gepanzerter Lavagolem mit brennenden Fäusten"},
@@ -831,6 +841,7 @@ func setup_ui() -> void:
         {"id": "luffy", "name": "RUFFY", "prompt": "Monkey D. Luffy Strohhut Gum-Gum One Piece Mugiwara"},
         {"id": "sonic", "name": "SONIC", "prompt": "Sonic the Hedgehog Blue Blur Super Spin Dash Sega"},
         {"id": "akaza", "name": "AKAZA", "prompt": "Akaza Upper Rank 3 Hakai Satsu Compass Needle Kimetsu"},
+        {"id": "blue_eyes", "name": "BLUE-EYES", "prompt": "Weißer Drache mit eiskaltem Blick Burst Stream Yu-Gi-Oh"},
         {"id": "anubis", "name": "ANUBIS", "prompt": "Jackal God Anubis wielding dual Khopesh"},
         {"id": "specter", "name": "SPECTER", "prompt": "Void Specter crystal phantom warrior with void lance"},
         {"id": "phoenix", "name": "PHOENIX", "prompt": "Phoenix Empress with feather armor and phoenix glaive"}
@@ -970,11 +981,49 @@ func setup_ui() -> void:
         )
         arena_row.add_child(abtn)
 
-    # 7. ACTION BUTTONS
+    # 7. CHARACTER REMIXER PANEL
+    var remix_panel := PanelContainer.new()
+    remix_panel.add_theme_stylebox_override("panel", panel_style(Color(0.04, 0.02, 0.08, 0.92), Color("7b2fbe"), 1, 8))
+    select_box.add_child(remix_panel)
+    var remix_box := VBoxContainer.new()
+    remix_box.add_theme_constant_override("separation", 3)
+    remix_panel.add_child(remix_box)
+    remix_box.add_child(label("⚡ CHARACTER REMIXER — Eigenen Kämpfer aus Prompt generieren", 11, Color("c77dff")))
+    var remix_cols := HBoxContainer.new()
+    remix_cols.add_theme_constant_override("separation", 10)
+    remix_box.add_child(remix_cols)
+    remix_prompts.clear()
+    remix_info.clear()
+    for ri in range(2):
+        var rcol := VBoxContainer.new()
+        rcol.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+        rcol.add_theme_constant_override("separation", 2)
+        remix_cols.add_child(rcol)
+        var rlbl := label("REMIX P%d" % (ri+1), 10, CYAN if ri == 0 else ORANGE)
+        rcol.add_child(rlbl)
+        var redit := LineEdit.new()
+        redit.placeholder_text = "z.B. Eis-Ninja mit Blitz-Dash..."
+        redit.max_length = 256
+        redit.custom_minimum_size.y = 24
+        redit.add_theme_font_size_override("font_size", 10)
+        rcol.add_child(redit)
+        remix_prompts.append(redit)
+        var rbtn := button("⚡ REMIX P%d" % (ri+1), Color("c77dff") if ri == 0 else Color("e040fb"), _on_remix_pressed.bind(ri))
+        rbtn.custom_minimum_size = Vector2(0, 28)
+        rcol.add_child(rbtn)
+        var rinfo := label("", 9, Color("93aec9"))
+        rcol.add_child(rinfo)
+        remix_info.append(rinfo)
+
+    # 8. ACTION BUTTONS
     var actions := HBoxContainer.new()
     actions.add_theme_constant_override("separation", 12)
     select_box.add_child(actions)
-    for spec in [["⚔  KAMPF STARTEN (VERSUS)", "manual", CYAN], ["🤖  AGENTENKAMPF (KI vs KI)", "autonomous", ORANGE]]:
+    for spec in [
+        ["⚔  SPIELER vs SPIELER", "manual", CYAN],
+        ["🥊  SPIELER vs AGENT (KI)", "pve", Color("4ae371")],
+        ["🤖  AGENT vs AGENT (KI vs KI)", "autonomous", ORANGE]
+    ]:
         var start_btn := button(spec[0], spec[2], start_round.bind(spec[1]))
         start_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
         actions.add_child(start_btn)
@@ -1027,7 +1076,10 @@ func rebuild_fighters() -> void:
 func start_round(mode: String) -> void:
     get_viewport().gui_release_focus()
     save_prompts()
-    sim.start(Prompt.interpret(prompts[0].text, 0), Prompt.interpret(prompts[1].text, 1), mode)
+    # Use remix profiles if available, otherwise normal interpretation
+    var p1: Dictionary = remix_profiles[0] if not remix_profiles[0].is_empty() else Prompt.interpret(prompts[0].text, 0)
+    var p2: Dictionary = remix_profiles[1] if not remix_profiles[1].is_empty() else Prompt.interpret(prompts[1].text, 1)
+    sim.start(p1, p2, mode)
     rebuild_fighters()
     setup_items()
     input_buffer = [{"standard": false, "special": false, "jump": false, "grab": false}, {"standard": false, "special": false, "jump": false, "grab": false}]
@@ -1036,7 +1088,38 @@ func start_round(mode: String) -> void:
     paused = false
     selection.hide()
     result_panel.hide()
+    var mode_title := "LOKALER VERSUS (P1 vs P2)"
+    if mode == "pve": mode_title = "SOLO-KAMPF (SPIELER vs KI-AGENT)"
+    elif mode == "autonomous": mode_title = "AGENTENKAMPF (KI vs KI)"
+    status.text = "%s  /  %s" % [ARENAS[current_arena].name, mode_title]
     sound("start")
+
+func _on_remix_pressed(slot: int) -> void:
+    if slot >= remix_prompts.size(): return
+    var rtext: String = remix_prompts[slot].text.strip_edges()
+    if rtext.is_empty():
+        if remix_info.size() > slot:
+            remix_info[slot].text = "⚠ Prompt eingeben!"
+        return
+    var profile: Dictionary = Remixer.remix_character(rtext, slot)
+    var validation: Dictionary = Remixer.validate(profile)
+    if validation.valid:
+        remix_profiles[slot] = profile
+        # Also update the main prompt field to reflect the remix
+        if prompts.size() > slot:
+            prompts[slot].text = rtext
+        if remix_info.size() > slot:
+            remix_info[slot].text = "✓ %s · %s · %s · HP %d · SPD %.1f" % [profile.name, profile.element.to_upper(), profile.family.to_upper(), int(profile.health), profile.speed]
+        refresh_previews()
+        sound("jump")
+    else:
+        if remix_info.size() > slot:
+            remix_info[slot].text = "✗ FEHLER: %s" % ", ".join(validation.errors)
+
+func clear_remix(slot: int) -> void:
+    remix_profiles[slot] = {}
+    if remix_info.size() > slot:
+        remix_info[slot].text = ""
 
 func restart_round() -> void:
     if active or not result_panel.visible and not selection.visible:
@@ -1101,8 +1184,9 @@ func _unhandled_key_input(event: InputEvent) -> void:
         if event.keycode == KEY_R and not selection.visible:
             restart_round()
             return
-    if not active or paused or sim.mode != "manual": return
+    if not active or paused or (sim.mode != "manual" and sim.mode != "pve"): return
     for i in range(2):
+        if sim.mode == "pve" and i == 1: continue # In PvE, P2 is AI agent
         for action_type in ["standard", "special", "jump", "grab"]:
             if event.is_action_pressed("p%d_%s" % [i+1, action_type]): input_buffer[i][action_type] = true
 
@@ -1126,7 +1210,15 @@ func manual_commands() -> Array:
 
 func _physics_process(delta: float) -> void:
     if active and not paused and sim.result == -2:
-        var commands: Array = sim.agent_commands() if sim.mode == "autonomous" else manual_commands()
+        var commands: Array = []
+        if sim.mode == "autonomous":
+            commands = sim.agent_commands()
+        elif sim.mode == "pve":
+            var m_cmds := manual_commands()
+            var ai_cmds := sim.agent_commands()
+            commands = [m_cmds[0], ai_cmds[1]]
+        else:
+            commands = manual_commands()
         sim.tick(commands, delta)
         for event in sim.events:
             if event.type == "hit":

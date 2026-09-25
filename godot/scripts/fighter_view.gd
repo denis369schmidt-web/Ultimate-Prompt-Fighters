@@ -125,6 +125,16 @@ const AKAZA_HAKAMA_NORMAL = preload("res://assets/textures/skins/akaza_hakama_no
 const AKAZA_COMPASS_ALBEDO = preload("res://assets/textures/skins/akaza_compass_albedo.png")
 const AKAZA_COMPASS_EMISSION = preload("res://assets/textures/skins/akaza_compass_emission.png")
 
+# --- BLUE-EYES WHITE DRAGON TEXTURES ---
+const BLUE_EYES_SCALE_ALBEDO = preload("res://assets/textures/skins/blue_eyes_scale_albedo.png")
+const BLUE_EYES_SCALE_NORMAL = preload("res://assets/textures/skins/blue_eyes_scale_normal.png")
+const BLUE_EYES_WING_ALBEDO = preload("res://assets/textures/skins/blue_eyes_wing_albedo.png")
+const BLUE_EYES_WING_NORMAL = preload("res://assets/textures/skins/blue_eyes_wing_normal.png")
+const BLUE_EYES_CHEST_ALBEDO = preload("res://assets/textures/skins/blue_eyes_chest_albedo.png")
+const BLUE_EYES_CHEST_NORMAL = preload("res://assets/textures/skins/blue_eyes_chest_normal.png")
+const BLUE_EYES_BURST_ALBEDO = preload("res://assets/textures/skins/blue_eyes_burst_albedo.png")
+const BLUE_EYES_BURST_EMISSION = preload("res://assets/textures/skins/blue_eyes_burst_emission.png")
+
 # --- VFX PARTICLES ---
 const LAVA_EMBER_TEX = preload("res://assets/textures/vfx/lava_ember.png")
 const ELECTRIC_SPARK_TEX = preload("res://assets/textures/vfx/electric_spark.png")
@@ -142,6 +152,7 @@ var pulse_time := 0.0
 var shield: MeshInstance3D
 var sonic_spin_sphere: Node3D = null
 var akaza_compass_nodes: Array = []
+var blue_eyes_burst_beam: Node3D = null
 
 func setup(p: Dictionary) -> void:
 	profile = p
@@ -152,6 +163,8 @@ func setup(p: Dictionary) -> void:
 	elif p.family == "goku":
 		model.scale = Vector3.ONE * 0.01
 		model.rotation.y = PI
+	elif p.family == "blue_eyes":
+		model.scale = Vector3.ONE * 0.0115
 	else:
 		model.scale = Vector3.ONE * 0.01
 
@@ -278,6 +291,11 @@ func setup(p: Dictionary) -> void:
 		skin_glow_color = Color("00e5ff")
 		skin_metallic = 0.05
 		skin_roughness = 0.45
+	elif p.family == "blue_eyes":
+		triplanar_scale = Vector3(0.018, 0.018, 0.018)
+		skin_glow_color = Color("70d6ff")
+		skin_metallic = 0.35
+		skin_roughness = 0.28
 	else: # Ninja
 		triplanar_scale = Vector3(0.016, 0.016, 0.016)
 		if "fire" in p_text or "feuer" in p_text or "flam" in p_text or "lava" in p_text or element == "fire":
@@ -334,7 +352,7 @@ func setup(p: Dictionary) -> void:
 			var mat: StandardMaterial3D
 			if original is StandardMaterial3D:
 				mat = original.duplicate()
-			elif p.family in ["subzero", "pain", "goku", "luffy", "sonic"]:
+			elif p.family in ["subzero", "pain", "goku", "luffy", "sonic", "akaza", "blue_eyes"]:
 				# GLB imported materials may be BaseMaterial3D or null – create fresh one
 				mat = StandardMaterial3D.new()
 			else:
@@ -913,6 +931,70 @@ func setup(p: Dictionary) -> void:
 					mat.metallic = 0.0
 					mat.rim_enabled = true
 					mat.rim = 0.45
+			elif p.family == "blue_eyes":
+				if "Burst_Beam" in mesh.name:
+					mat.albedo_texture = BLUE_EYES_BURST_ALBEDO
+					mat.emission_enabled = true
+					mat.emission_texture = BLUE_EYES_BURST_EMISSION
+					mat.emission = Color("90e0ef")
+					mat.emission_energy_multiplier = 5.0
+					mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+					mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+					glow_materials.append(mat)
+					base_emissions.append(5.0)
+					blue_eyes_burst_beam = mesh
+					mesh.visible = false
+				elif "Burst_Core" in mesh.name:
+					mat.albedo_color = Color("d0f4de")
+					mat.emission_enabled = true
+					mat.emission = Color("00b4d8")
+					mat.emission_energy_multiplier = 4.5
+					glow_materials.append(mat)
+					base_emissions.append(4.5)
+				elif "Eye" in mesh.name:
+					mat.albedo_color = Color("caf0f8")
+					mat.emission_enabled = true
+					mat.emission = Color("00b4d8")
+					mat.emission_energy_multiplier = 3.5
+					mat.metallic = 0.20
+					mat.roughness = 0.08
+					glow_materials.append(mat)
+					base_emissions.append(3.5)
+				elif "Wing_Membrane" in mesh.name:
+					mat.albedo_texture = BLUE_EYES_WING_ALBEDO
+					mat.normal_enabled = true
+					mat.normal_texture = BLUE_EYES_WING_NORMAL
+					mat.normal_scale = 1.6
+					mat.roughness = 0.45
+					mat.metallic = 0.15
+					mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+				elif "Chest" in mesh.name:
+					mat.albedo_texture = BLUE_EYES_CHEST_ALBEDO
+					mat.normal_enabled = true
+					mat.normal_texture = BLUE_EYES_CHEST_NORMAL
+					mat.normal_scale = 1.8
+					mat.roughness = 0.35
+					mat.metallic = 0.30
+				elif "Horn" in mesh.name or "Brow" in mesh.name or "Fin" in mesh.name or "Blade" in mesh.name:
+					mat.albedo_color = Color("c5d5e5")
+					mat.roughness = 0.22
+					mat.metallic = 0.45
+					mat.rim_enabled = true
+					mat.rim = 0.60
+				elif "Claw" in mesh.name or "Spur" in mesh.name:
+					mat.albedo_color = Color("e0e8f0")
+					mat.roughness = 0.18
+					mat.metallic = 0.65
+				else:
+					mat.albedo_texture = BLUE_EYES_SCALE_ALBEDO
+					mat.normal_enabled = true
+					mat.normal_texture = BLUE_EYES_SCALE_NORMAL
+					mat.normal_scale = 1.7
+					mat.roughness = 0.32
+					mat.metallic = 0.28
+					mat.rim_enabled = true
+					mat.rim = 0.55
+					mat.rim_tint = 0.40
 			else: # Ninja
 				if "Eye" in mesh.name or "Visor" in mesh.name or "Conduit" in mesh.name or "PowerPort" in mesh.name or "GreaveGlow" in mesh.name or "BackNode" in mesh.name or "Center" in mesh.name:
 					# Sharp glowing cyber-shinobi energy nodes & assassin eye slits
@@ -1112,6 +1194,8 @@ func update_state(state: Dictionary, delta: float) -> void:
 		sonic_spin_sphere.visible = (pose == "SpecialAttack")
 	for cnode in akaza_compass_nodes:
 		cnode.visible = (pose == "SpecialAttack")
+	if blue_eyes_burst_beam:
+		blue_eyes_burst_beam.visible = (pose == "SpecialAttack")
 	if pose != current_pose and animation and clip_map.has(pose):
 		animation.play(clip_map[pose], 0.09)
 		current_pose = pose

@@ -29,11 +29,14 @@ const BLAST_ZONE_RIGHT := 9.5
 const BLAST_ZONE_BOTTOM := -4.2
 const BLAST_ZONE_TOP := 9.5
 
-# 3 Floating pass-through platforms in Battlefield layout
+# 6 Floating pass-through platforms across 4 vertical tiers in competitive tournament layout
 const PLATFORMS: Array = [
-	{"name": "plat_left",  "x1": -3.8, "x2": -1.4, "y": 1.50, "width": 2.4},
-	{"name": "plat_right", "x1":  1.4, "x2":  3.8, "y": 1.50, "width": 2.4},
-	{"name": "plat_top",   "x1": -1.2, "x2":  1.2, "y": 2.80, "width": 2.4},
+	{"name": "plat_low_left",   "x1": -4.2, "x2": -2.0, "y": 1.35, "width": 2.2},
+	{"name": "plat_low_right",  "x1":  2.0, "x2":  4.2, "y": 1.35, "width": 2.2},
+	{"name": "plat_mid_center", "x1": -1.2, "x2":  1.2, "y": 2.05, "width": 2.4},
+	{"name": "plat_high_left",  "x1": -3.4, "x2": -1.4, "y": 2.90, "width": 2.0},
+	{"name": "plat_high_right", "x1":  1.4, "x2":  3.4, "y": 2.90, "width": 2.0},
+	{"name": "plat_apex_top",   "x1": -0.9, "x2":  0.9, "y": 3.85, "width": 1.8},
 ]
 
 # Combo multiplier: 1.0 → 1.08 → 1.18 → 1.30 → 1.45
@@ -43,38 +46,38 @@ const COMBO_MULT: Array = [1.0, 1.08, 1.18, 1.30, 1.45]
 const DEFAULT_ITEMS: Array = [
 	{
 		"id": 0, "type": "light_crate", "name": "Leichte Kiste",
-		"start_x": -2.6, "start_y": 1.60, "x": -2.6, "y": 1.60,
+		"start_x": -3.1, "start_y": 1.45, "x": -3.1, "y": 1.45,
 		"vx": 0.0, "vy": 0.0, "weight": 0.60,
 		"state": "resting", # resting, carried, thrown, destroyed
 		"carrier": -1, "thrower": -1, "respawn": 0.0,
-		"damage": 12.0, "push": 0.65, "angle": 32.0, "fragile": true,
+		"damage": 12.0, "push": 0.35, "angle": 32.0, "fragile": true,
 		"explosive": false
 	},
 	{
 		"id": 1, "type": "heavy_rock", "name": "Schwerer Stein",
-		"start_x": -0.8, "start_y": 2.95, "x": -0.8, "y": 2.95,
+		"start_x": -2.4, "start_y": 3.00, "x": -2.4, "y": 3.00,
 		"vx": 0.0, "vy": 0.0, "weight": 1.40,
 		"state": "resting",
 		"carrier": -1, "thrower": -1, "respawn": 0.0,
-		"damage": 22.0, "push": 1.10, "angle": 45.0, "fragile": false,
+		"damage": 22.0, "push": 0.55, "angle": 45.0, "fragile": false,
 		"explosive": false
 	},
 	{
 		"id": 2, "type": "barrel", "name": "Holzfass",
-		"start_x": 2.6, "start_y": 1.60, "x": 2.6, "y": 1.60,
+		"start_x": 3.1, "start_y": 1.45, "x": 3.1, "y": 1.45,
 		"vx": 0.0, "vy": 0.0, "weight": 0.90,
 		"state": "resting",
 		"carrier": -1, "thrower": -1, "respawn": 0.0,
-		"damage": 16.0, "push": 0.85, "angle": 36.0, "fragile": false,
+		"damage": 16.0, "push": 0.42, "angle": 36.0, "fragile": false,
 		"explosive": false
 	},
 	{
 		"id": 3, "type": "explosive_barrel", "name": "Explosiv-Fass",
-		"start_x": 0.8, "start_y": 2.95, "x": 0.8, "y": 2.95,
+		"start_x": 0.0, "start_y": 3.95, "x": 0.0, "y": 3.95,
 		"vx": 0.0, "vy": 0.0, "weight": 0.88,
 		"state": "resting",
 		"carrier": -1, "thrower": -1, "respawn": 0.0,
-		"damage": 34.0, "push": 1.40, "angle": 52.0, "fragile": true,
+		"damage": 34.0, "push": 0.70, "angle": 52.0, "fragile": true,
 		"explosive": true, "explosion_radius": 2.6
 	}
 ]
@@ -256,17 +259,17 @@ func explode_item(it_idx: int) -> void:
 			var max_hp: float = maxf(1.0, f.profile.health)
 			var missing_hp_ratio: float = clampf(1.0 - (f.hp / max_hp), 0.0, 1.0)
 			var weight: float = clampf(float(f.profile.get("weight", 1.0)), 0.85, 1.35)
-			var launch_scale: float = 1.0 + (missing_hp_ratio * 2.4)
-			var impulse: float = (base_push * 13.0 * falloff * launch_scale) / weight
+			var launch_scale: float = 1.0 + (missing_hp_ratio * 1.5)
+			var impulse: float = (base_push * 8.125 * falloff * launch_scale) / weight
 
 			var diff: Vector2 = f_center - Vector2(exp_x, exp_y)
 			var dir_x: float = sign(diff.x) if abs(diff.x) > 0.05 else (1.0 if fi == 0 else -1.0)
 			f.vx = dir_x * impulse * 0.80
-			f.vy = maxf(impulse * 0.65, 4.5)
+			f.vy = maxf(impulse * 0.50, 2.4)
 			f.is_grounded = false
 			f.drop_through = 0.15
-			f.stun = clampf(0.40 + missing_hp_ratio * 0.35, 0.25, 0.70)
-			f.air_control_lock = f.stun * 0.75
+			f.stun = clampf(0.35 + missing_hp_ratio * 0.30, 0.20, 0.60)
+			f.air_control_lock = f.stun * 0.70
 			f.state = "HitStun"
 			f.pose = "HitReact"
 			f.pose_time = f.stun
@@ -289,24 +292,24 @@ func execute_throw(attacker_idx: int, throw_type: String) -> void:
 	var damage: float = 14.0 * (1.0 - target.profile.stats.defense * 0.006)
 	target.hp = maxf(0.0, target.hp - damage)
 
-	var launch_mult: float = 1.0 + (missing_hp_ratio * 2.2) + pow(missing_hp_ratio, 2.0) * 1.5
+	var launch_mult: float = 1.0 + (missing_hp_ratio * 1.5) + pow(missing_hp_ratio, 2.0) * 0.8
 
 	if throw_type == "forward":
-		var base_impulse := 8.75 * launch_mult / weight
+		var base_impulse := 5.50 * launch_mult / weight
 		target.vx = attacker.facing * base_impulse
-		target.vy = 3.6 * (1.0 + missing_hp_ratio * 0.7)
+		target.vy = 2.4 * (1.0 + missing_hp_ratio * 0.5)
 	elif throw_type == "back":
-		var base_impulse := 9.75 * launch_mult / weight
+		var base_impulse := 6.06 * launch_mult / weight
 		target.vx = -attacker.facing * base_impulse
-		target.vy = 3.8 * (1.0 + missing_hp_ratio * 0.7)
+		target.vy = 2.5 * (1.0 + missing_hp_ratio * 0.5)
 	elif throw_type == "up":
-		var base_impulse := 9.0 * launch_mult / weight
-		target.vx = attacker.facing * 1.5
+		var base_impulse := 5.62 * launch_mult / weight
+		target.vx = attacker.facing * 0.8
 		target.vy = base_impulse
 	else:
 		# Down throw / Neutral slam
-		target.vx = attacker.facing * 4.5 * launch_mult / weight
-		target.vy = 2.4
+		target.vx = attacker.facing * 2.81 * launch_mult / weight
+		target.vy = 1.6
 
 	target.is_grounded = false
 	target.drop_through = 0.15
@@ -437,7 +440,10 @@ func tick(commands: Array, dt: float = STEP) -> void:
 		if f.pose_time > 0:
 			f.pose_time = maxf(0.0, f.pose_time - dt)
 			if f.pose_time <= 0:
-				if f.state == "Throw" or f.state == "Attack":
+				if f.state == "Throw":
+					f.state = "Ready"
+				elif f.state == "Attack" and f.pending.is_empty():
+					# Safety fallback — pipeline should handle this, but catch stragglers
 					f.state = "Ready"
 				f.pose = "Idle"
 
@@ -535,12 +541,14 @@ func tick(commands: Array, dt: float = STEP) -> void:
 			var want_grab: bool = bool(cmd.get("grab", false))
 			var axis := clampf(float(cmd.get("move", 0)), -1.0, 1.0)
 
-			# Drop through platform
-			if want_block and f.y > 0.2 and f.is_grounded:
+			# Drop through platform ONLY when intentionally requested:
+			# If holding block (S / Down) AND pressing Jump (W / Up), OR if explicit drop command
+			var want_drop_down: bool = (want_block and want_jump) or bool(cmd.get("drop", false))
+			if want_drop_down and f.y > 0.2 and f.is_grounded:
 				f.is_grounded = false
 				f.y -= 0.12
 				f.vy = -3.0
-				f.drop_through = 0.35
+				f.drop_through = 0.40
 				events.append({"type": "drop_through", "actor": i})
 			elif want_block and f.is_grounded and f.carried_item < 0:
 				f.blocking = true
@@ -602,16 +610,16 @@ func tick(commands: Array, dt: float = STEP) -> void:
 			if f.vy <= 0.0:
 				if f.drop_through <= 0.0:
 					for plat in PLATFORMS:
-						if f.x >= plat.x1 and f.x <= plat.x2:
-							if prev_y >= plat.y - 0.06 and next_y <= plat.y:
+						if f.x >= plat.x1 - 0.15 and f.x <= plat.x2 + 0.15:
+							if prev_y >= plat.y - 0.15 and next_y <= plat.y + 0.20:
 								f.y = plat.y
 								f.vy = 0.0
 								f.is_grounded = true
 								f.air_jumps = 1
 								landed = true
 								break
-				if not landed and f.x >= STAGE_LEFT and f.x <= STAGE_RIGHT:
-					if prev_y >= -0.06 and next_y <= 0.0:
+				if not landed and f.x >= STAGE_LEFT - 0.20 and f.x <= STAGE_RIGHT + 0.20:
+					if prev_y >= -0.15 and next_y <= 0.20:
 						f.y = 0.0
 						f.vy = 0.0
 						f.is_grounded = true
@@ -622,15 +630,21 @@ func tick(commands: Array, dt: float = STEP) -> void:
 				f.y = next_y
 		elif f.is_grounded:
 			var on_ground := false
+			var target_plat_y := 0.0
 			if f.drop_through <= 0.0:
 				for plat in PLATFORMS:
-					if f.x >= plat.x1 and f.x <= plat.x2 and abs(f.y - plat.y) < 0.08:
+					if f.x >= plat.x1 - 0.15 and f.x <= plat.x2 + 0.15 and abs(f.y - plat.y) < 0.35:
 						on_ground = true
+						target_plat_y = plat.y
 						break
-			if not on_ground and f.x >= STAGE_LEFT and f.x <= STAGE_RIGHT and abs(f.y) < 0.08:
+			if not on_ground and f.x >= STAGE_LEFT - 0.20 and f.x <= STAGE_RIGHT + 0.20 and abs(f.y) < 0.35:
 				on_ground = true
+				target_plat_y = 0.0
 
-			if not on_ground:
+			if on_ground:
+				f.y = target_plat_y
+				f.vy = 0.0
+			else:
 				f.is_grounded = false
 
 		# Blast Zones & Ring Out
@@ -700,29 +714,51 @@ func tick(commands: Array, dt: float = STEP) -> void:
 			fighters[0].x -= dir * push_apart
 			fighters[1].x += dir * push_apart
 
-	# ── Contact resolution (Attacks) ───────────────────────────────────────────
+	# ── Contact resolution (Attacks — 3-Phase Pipeline) ────────────────────────
 	var contacts: Array = []
 	for i in range(2):
 		var f: Dictionary = fighters[i]
 		if f.pending.is_empty(): continue
 		f.pending.remaining -= dt
-		if f.pending.remaining <= 0 and not f.pending.hit_done:
-			f.pending.hit_done = true
-			var attack: Dictionary = f.pending
-			var target_f: Dictionary = fighters[1-i]
-			var dx: float = abs(target_f.x - f.x)
-			var dy: float = abs(target_f.y - f.y)
-			if dx <= attack.ability.range and dy <= 1.4:
-				contacts.append({"from": i, "to": 1-i, "attack": attack})
 
-			# Check if attack strikes an explosive item
-			for it_k in range(items.size()):
-				var it_obj: Dictionary = items[it_k]
-				if it_obj.state != "destroyed" and it_obj.get("explosive", false):
-					var it_dx: float = abs(it_obj.x - f.x)
-					var it_dy: float = abs(it_obj.y - f.y)
-					if it_dx <= attack.ability.range + 0.35 and it_dy <= 1.3:
-						explode_item(it_k)
+		# PHASE TRANSITIONS: windup → active → recovery → done
+		if f.pending.stage == "windup" and f.pending.remaining <= 0:
+			f.pending.stage = "active"
+			f.pending.remaining = f.pending.active_time
+			f.pose = "SpecialAttack" if f.pending.special else "Attack"
+
+		if f.pending.stage == "active":
+			# Hitbox is active — check for contact (once per active phase)
+			if not f.pending.hit_done:
+				f.pending.hit_done = true
+				var attack: Dictionary = f.pending
+				var target_f: Dictionary = fighters[1-i]
+				var dx: float = abs(target_f.x - f.x)
+				var dy: float = abs(target_f.y - f.y)
+				if dx <= attack.ability.range and dy <= 1.4:
+					contacts.append({"from": i, "to": 1-i, "attack": attack})
+
+				# Check if attack strikes an explosive item
+				for it_k in range(items.size()):
+					var it_obj: Dictionary = items[it_k]
+					if it_obj.state != "destroyed" and it_obj.get("explosive", false):
+						var it_dx: float = abs(it_obj.x - f.x)
+						var it_dy: float = abs(it_obj.y - f.y)
+						if it_dx <= attack.ability.range + 0.35 and it_dy <= 1.3:
+							explode_item(it_k)
+
+			if f.pending.remaining <= 0:
+				f.pending.stage = "recovery"
+				f.pending.remaining = f.pending.recovery_time
+				f.pose = "Idle"  # Recovery pose — vulnerable, can't cancel
+
+		if f.pending.stage == "recovery" and f.pending.remaining <= 0:
+			# Attack fully complete — return to Ready
+			f.pending = {}
+			if f.state == "Attack":
+				f.state = "Ready"
+			f.pose = "Idle"
+			f.pose_time = 0.0
 
 	for contact in contacts:
 		var attacker: Dictionary = fighters[contact.from]
@@ -803,8 +839,8 @@ func tick(commands: Array, dt: float = STEP) -> void:
 			var angle_rad: float = deg_to_rad(clampf(angle_deg, 15.0, 75.0))
 
 			var base_push: float = float(a.get("push", 0.25))
-			var total_impulse: float = (base_push * 13.0 * launch_scale * (1.35 if super_bonus > 1.0 else (1.15 if is_special else 1.0))) / weight
-			total_impulse = clampf(total_impulse, 1.5, 18.0)
+			var total_impulse: float = (base_push * 13.0 * launch_scale * (1.35 if super_bonus > 1.0 else (1.15 if is_special else 1.0)) * 0.625) / weight
+			total_impulse = clampf(total_impulse, 1.0, 11.25)
 
 			target.vx = attacker.facing * cos(angle_rad) * total_impulse
 			target.vy = sin(angle_rad) * total_impulse
@@ -817,6 +853,9 @@ func tick(commands: Array, dt: float = STEP) -> void:
 			target.state = "HitStun"
 			target.pose = "HitReact"
 			target.pose_time = stun_dur
+			# Clear any pending attack — hit interrupts attacks
+			if not target.pending.is_empty():
+				target.pending = {}
 
 			attacker.combo += 1
 			attacker.combo_timer = 2.0
