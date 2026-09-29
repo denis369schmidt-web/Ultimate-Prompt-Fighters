@@ -1,0 +1,934 @@
+extends Node
+## Story mode player: chapter menu, in-engine cutscenes (camera shots, dialogue, poses,
+## effects), quick-time events and story fights on the real combat simulation.
+## Content lives in story_data.gd; this script only plays it.
+
+const StoryData = preload("res://scripts/story_data.gd")
+const Prompt = preload("res://scripts/prompt_interpreter.gd")
+
+const SAVE_PATH := "user://story.cfg"
+const TYPE_SPEED := 48.0          # characters per second in dialogue
+const LETTERBOX_HEIGHT := 64.0
+## QTE keys use the gameplay actions of player 1 (player 2's keys are accepted too).
+const QTE_ACTIONS := ["jump", "standard", "special", "grab", "block"]
+## Starting percent applied by a quick-time event before a fight.
+const QTE_BONUS_PERCENT := 25.0
+const QTE_PENALTY_PERCENT := 20.0
+
+signal advanced
+signal qte_finished(success: bool)
+signal fight_done(win: bool)
+
+var main: Node
+var running := false
+var in_fight := false
+## Headless/testing: dialogue does not wait for input, QTEs resolve to auto_qte_success.
+var auto_advance := false
+var auto_qte_success := true
+var persist := true
+
+var chapter_index := -1
+var completed := 0                # number of finished chapters (unlocks the next one)
+var flags := {}                   # QTE results: flag -> bool
+var session := 0                  # bumped on abort; running coroutines stop
+var skipping := false             # ESC: fast-forward to the next fight
+var current_fight: Dictionary = {}
+var stage_ids: Array = []         # cast id per stage slot
+
+# Cinematic camera, tweened by shots and applied every frame.
+var cam_pos := Vector3(0, 2.4, 10.5)
+var cam_look := Vector3(0, 1.3, 0)
+var cam_shake := 0.0
+
+# QTE state
+var qte_active := false
+var qte: Dictionary = {}
+
+# UI
+var layer: CanvasLayer
+var letterbox_top: ColorRect
+var letterbox_bottom: ColorRect
+var fade_rect: ColorRect
+var flash_rect: ColorRect
+var title_box: VBoxContainer
+var title_label: Label
+var subtitle_label: Label
+var narrate_label: Label
+var dialog_panel: PanelContainer
+var dialog_portrait: TextureRect
+var dialog_name: Label
+var dialog_title: Label
+var dialog_text: RichTextLabel
+var dialog_hint: Label
+var qte_ring: QteRing
+var qte_label: Label
+var qte_count_label: Label
+var banner: Label
+var result_box: VBoxContainer
+var result_title: Label
+var result_hint: Label
+var menu_panel: PanelContainer
+var menu_list: VBoxContainer
+var pause_hint: Label
+var credits_label: Label
+var typing := false
+
+
+## Circular QTE timer with the key glyph in the middle.
+class QteRing extends Control:
+	var fraction := 1.0
+	var glyph := "F"
+	var color := Color("f7c844")
+	var pulse := 0.0
+
+	func _draw() -> void:
+		var c := size * 0.5
+		var r := minf(size.x, size.y) * 0.42
+		draw_circle(c, r + 10.0, Color(0, 0, 0, 0.55))
+		draw_arc(c, r, 0.0, TAU, 64, Color(1, 1, 1, 0.15), 10.0, true)
+		draw_arc(c, r, -PI * 0.5, -PI * 0.5 + TAU * fraction, 64, color, 10.0, true)
+		var font := get_theme_default_font()
+		var fs := int(r * 0.9 * (1.0 + pulse * 0.12))
+		var ts := font.get_string_size(glyph, HORIZONTAL_ALIGNMENT_CENTER, -1, fs)
+		draw_string(font, c + Vector2(-ts.x * 0.5, ts.y * 0.32), glyph, HORIZONTAL_ALIGNMENT_CENTER, -1, fs, Color.WHITE)
+
+
+func setup(main_node: Node) -> void:
+	main = main_node
+	_build_ui()
+	load_progress()
+
+# ─────────────────────────────────────────────────────────────── UI construction ──
+
+func _lbl(text: String, size: int, color: Color = Color("eef4ff")) -> Label:
+	var l := Label.new()
+	l.text = text
+	l.add_theme_font_size_override("font_size", size)
+	l.add_theme_color_override("font_color", color)
+	l.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
+	l.add_theme_constant_override("outline_size", 8)
+	return l
+
+func _style(bg: Color, border: Color, radius: int = 10) -> StyleBoxFlat:
+	var s := StyleBoxFlat.new()
+	s.bg_color = bg
+	s.border_color = border
+	s.set_border_width_all(2)
+	s.set_corner_radius_all(radius)
+	s.content_margin_left = 18
+	s.content_margin_right = 18
+	s.content_margin_top = 12
+	s.content_margin_bottom = 12
+	return s
+
+func _build_ui() -> void:
+	layer = CanvasLayer.new()
+	layer.layer = 10
+	add_child(layer)
+	var root := Control.new()
+	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	layer.add_child(root)
+
+	letterbox_top = ColorRect.new()
+	letterbox_top.color = Color.BLACK
+	letterbox_top.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
+	letterbox_top.offset_bottom = 0
+	letterbox_top.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(letterbox_top)
+	letterbox_bottom = ColorRect.new()
+	letterbox_bottom.color = Color.BLACK
+	letterbox_bottom.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
+	letterbox_bottom.offset_top = 0
+	letterbox_bottom.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(letterbox_bottom)
+
+	title_box = VBoxContainer.new()
+	title_box.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	title_box.custom_minimum_size = Vector2(900, 160)
+	title_box.position = Vector2(190, 250)
+	title_box.alignment = BoxContainer.ALIGNMENT_CENTER
+	title_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(title_box)
+	title_label = _lbl("", 64, Color("f7c844"))
+	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title_box.add_child(title_label)
+	subtitle_label = _lbl("", 30)
+	subtitle_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title_box.add_child(subtitle_label)
+	title_box.modulate.a = 0.0
+
+	narrate_label = _lbl("", 26, Color("f3ead8"))
+	narrate_label.position = Vector2(140, 250)
+	narrate_label.custom_minimum_size = Vector2(1000, 200)
+	narrate_label.size = Vector2(1000, 200)
+	narrate_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	narrate_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	narrate_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	narrate_label.modulate.a = 0.0
+	root.add_child(narrate_label)
+
+	dialog_panel = PanelContainer.new()
+	dialog_panel.position = Vector2(110, 470)
+	dialog_panel.custom_minimum_size = Vector2(1060, 170)
+	dialog_panel.add_theme_stylebox_override("panel", _style(Color(0.02, 0.03, 0.06, 0.92), Color("49def4")))
+	root.add_child(dialog_panel)
+	var drow := HBoxContainer.new()
+	drow.add_theme_constant_override("separation", 18)
+	dialog_panel.add_child(drow)
+	var pframe := PanelContainer.new()
+	pframe.custom_minimum_size = Vector2(132, 132)
+	pframe.add_theme_stylebox_override("panel", _style(Color("0b111c"), Color("34445b"), 8))
+	drow.add_child(pframe)
+	dialog_portrait = TextureRect.new()
+	dialog_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	dialog_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	dialog_portrait.custom_minimum_size = Vector2(110, 110)
+	pframe.add_child(dialog_portrait)
+	var dcol := VBoxContainer.new()
+	dcol.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	drow.add_child(dcol)
+	var nrow := HBoxContainer.new()
+	nrow.add_theme_constant_override("separation", 12)
+	dcol.add_child(nrow)
+	dialog_name = _lbl("", 24, Color("49def4"))
+	nrow.add_child(dialog_name)
+	dialog_title = _lbl("", 14, Color("9bb5cf"))
+	dialog_title.size_flags_vertical = Control.SIZE_SHRINK_END
+	nrow.add_child(dialog_title)
+	dialog_text = RichTextLabel.new()
+	dialog_text.bbcode_enabled = false
+	dialog_text.fit_content = true
+	dialog_text.scroll_active = false
+	dialog_text.custom_minimum_size = Vector2(840, 80)
+	dialog_text.add_theme_font_size_override("normal_font_size", 21)
+	dialog_text.add_theme_color_override("default_color", Color("eef4ff"))
+	dcol.add_child(dialog_text)
+	dialog_hint = _lbl("▶ ENTER / LEERTASTE  ·  ESC ÜBERSPRINGEN", 11, Color("7f93ad"))
+	dialog_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	dcol.add_child(dialog_hint)
+	dialog_panel.hide()
+
+	qte_label = _lbl("", 30, Color("ffffff"))
+	qte_label.position = Vector2(140, 150)
+	qte_label.size = Vector2(1000, 60)
+	qte_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	qte_label.hide()
+	root.add_child(qte_label)
+	qte_ring = QteRing.new()
+	qte_ring.position = Vector2(560, 230)
+	qte_ring.size = Vector2(160, 160)
+	qte_ring.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	qte_ring.hide()
+	root.add_child(qte_ring)
+	qte_count_label = _lbl("", 22, Color("f7c844"))
+	qte_count_label.position = Vector2(140, 400)
+	qte_count_label.size = Vector2(1000, 40)
+	qte_count_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	qte_count_label.hide()
+	root.add_child(qte_count_label)
+
+	banner = _lbl("", 30, Color("f7c844"))
+	banner.position = Vector2(140, 200)
+	banner.size = Vector2(1000, 60)
+	banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	banner.modulate.a = 0.0
+	root.add_child(banner)
+
+	result_box = VBoxContainer.new()
+	result_box.position = Vector2(240, 250)
+	result_box.custom_minimum_size = Vector2(800, 180)
+	result_box.alignment = BoxContainer.ALIGNMENT_CENTER
+	result_box.hide()
+	root.add_child(result_box)
+	result_title = _lbl("", 72, Color("f7c844"))
+	result_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	result_box.add_child(result_title)
+	result_hint = _lbl("", 20)
+	result_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	result_box.add_child(result_hint)
+
+	pause_hint = _lbl("STORY: [Q] Kapitel verlassen", 16, Color("f472b6"))
+	pause_hint.position = Vector2(500, 200)
+	pause_hint.hide()
+	root.add_child(pause_hint)
+
+	credits_label = _lbl("", 26, Color("f3ead8"))
+	credits_label.position = Vector2(140, 720)
+	credits_label.size = Vector2(1000, 1200)
+	credits_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	credits_label.hide()
+	root.add_child(credits_label)
+
+	flash_rect = ColorRect.new()
+	flash_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	flash_rect.color = Color(1, 1, 1, 0)
+	flash_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(flash_rect)
+	fade_rect = ColorRect.new()
+	fade_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	fade_rect.color = Color(0, 0, 0, 0)
+	fade_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(fade_rect)
+
+	_build_menu(root)
+
+func _build_menu(root: Control) -> void:
+	menu_panel = PanelContainer.new()
+	menu_panel.position = Vector2(290, 60)
+	menu_panel.custom_minimum_size = Vector2(700, 600)
+	menu_panel.add_theme_stylebox_override("panel", _style(Color(0.02, 0.025, 0.05, 0.97), Color("f472b6"), 14))
+	menu_panel.hide()
+	root.add_child(menu_panel)
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 8)
+	menu_panel.add_child(v)
+	var head := _lbl("📖 STORYMODUS", 16, Color("f472b6"))
+	v.add_child(head)
+	var t := _lbl("PROMPT FIGHTER – " + StoryData.TITLE, 30, Color("f7c844"))
+	v.add_child(t)
+	var sub := _lbl("Eine Welt aus Worten wird gelöscht. Nur der letzte Promptgeborene kann die letzte Zeile schützen.", 13, Color("bfcee1"))
+	sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	sub.custom_minimum_size.x = 660
+	v.add_child(sub)
+	menu_list = VBoxContainer.new()
+	menu_list.add_theme_constant_override("separation", 5)
+	v.add_child(menu_list)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	v.add_child(row)
+	var cont := _menu_button("▶ WEITERSPIELEN", Color("4ade80"), func(): start_chapter(mini(completed, StoryData.chapter_count() - 1)))
+	row.add_child(cont)
+	var back := _menu_button("ZURÜCK", Color("ef4444"), close_menu)
+	row.add_child(back)
+
+func _menu_button(text: String, color: Color, cb: Callable) -> Button:
+	var b := Button.new()
+	b.text = text
+	b.custom_minimum_size = Vector2(0, 40)
+	b.focus_mode = Control.FOCUS_NONE
+	b.add_theme_font_size_override("font_size", 16)
+	b.add_theme_stylebox_override("normal", _style(Color("14202e"), color.darkened(0.3), 8))
+	b.add_theme_stylebox_override("hover", _style(Color("22364a"), color, 8))
+	b.add_theme_stylebox_override("pressed", _style(Color("2c4760"), color, 8))
+	b.add_theme_stylebox_override("disabled", _style(Color("0c1118"), Color("222a35"), 8))
+	b.pressed.connect(cb)
+	return b
+
+func _refresh_menu() -> void:
+	for c in menu_list.get_children(): c.queue_free()
+	for k in range(StoryData.chapter_count()):
+		var ch: Dictionary = StoryData.CHAPTERS[k]
+		var unlocked: bool = k <= completed
+		var done: bool = k < completed
+		var mark := "✓" if done else ("▶" if unlocked else "🔒")
+		var idx := k
+		var b := _menu_button("%s  KAPITEL %d  ·  %s" % [mark, k + 1, ch.title.to_upper() if unlocked else "???"],
+			Color("f7c844") if unlocked else Color("334155"), func(): start_chapter(idx))
+		b.disabled = not unlocked
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		menu_list.add_child(b)
+
+func open_menu() -> void:
+	_refresh_menu()
+	menu_panel.show()
+	main.sound("jump")
+
+func close_menu() -> void:
+	menu_panel.hide()
+
+# ─────────────────────────────────────────────────────────────── progress ──
+
+func load_progress() -> void:
+	if not persist: return
+	var cfg := ConfigFile.new()
+	if cfg.load(SAVE_PATH) == OK:
+		completed = clampi(int(cfg.get_value("story", "completed", 0)), 0, StoryData.chapter_count())
+		flags = cfg.get_value("story", "flags", {})
+
+func save_progress() -> void:
+	if not persist or DisplayServer.get_name() == "headless": return
+	var cfg := ConfigFile.new()
+	cfg.set_value("story", "completed", completed)
+	cfg.set_value("story", "flags", flags)
+	cfg.save(SAVE_PATH)
+
+# ─────────────────────────────────────────────────────────────── chapter flow ──
+
+func start_chapter(index: int) -> void:
+	if index < 0 or index >= StoryData.chapter_count(): return
+	close_menu()
+	session += 1
+	running = true
+	in_fight = false
+	skipping = false
+	chapter_index = index
+	main.sound("start")
+	_run_chapter(index, session)
+
+func _alive(my_session: int) -> bool:
+	return running and my_session == session
+
+func _run_chapter(index: int, my_session: int) -> void:
+	var steps: Array = StoryData.CHAPTERS[index].steps
+	await fade(1.0, 0.25)
+	_set_letterbox(true, 0.01)
+	for step in steps:
+		if not _alive(my_session): return
+		await run_step(step, my_session)
+	if not _alive(my_session): return
+	completed = maxi(completed, index + 1)
+	save_progress()
+	await fade(1.0, 0.6)
+	_end_story_session()
+	if index + 1 < StoryData.chapter_count():
+		open_menu()
+
+## Leaves the story and returns to fighter selection.
+func abort() -> void:
+	session += 1
+	_end_story_session()
+
+func _end_story_session() -> void:
+	running = false
+	in_fight = false
+	qte_active = false
+	skipping = false
+	get_tree().paused = false
+	_hide_overlays()
+	_set_letterbox(false, 0.2)
+	fade(0.0, 0.4)
+	main.show_selection()
+
+func _hide_overlays() -> void:
+	dialog_panel.hide()
+	qte_ring.hide()
+	qte_label.hide()
+	qte_count_label.hide()
+	result_box.hide()
+	credits_label.hide()
+	pause_hint.hide()
+	title_box.modulate.a = 0.0
+	narrate_label.modulate.a = 0.0
+	banner.modulate.a = 0.0
+
+func run_step(step: Dictionary, my_session: int) -> void:
+	match str(step.get("t", "")):
+		"stage": _stage(step)
+		"title": await _title(step, my_session)
+		"narrate": await _narrate(step.text, my_session)
+		"say": await _say(step, my_session)
+		"cam": await _cam(step, my_session)
+		"move": await _move(step, my_session)
+		"pose": await _pose(step, my_session)
+		"face": _fighter(int(step.who)).facing = int(step.facing)
+		"fx": _fx(step)
+		"vanish": _set_visible(int(step.who), false)
+		"appear": _set_visible(int(step.who), true)
+		"wait": await wait(float(step.get("time", 0.5)), my_session)
+		"qte": await _qte_step(step, my_session)
+		"fight": await _fight(step, my_session)
+		"credits": await _credits(my_session)
+		_: push_warning("Unknown story step: %s" % str(step))
+
+# ─────────────────────────────────────────────────────────────── helpers ──
+
+func chapter_title() -> String:
+	if chapter_index < 0: return ""
+	return "KAPITEL %d: %s" % [chapter_index + 1, str(StoryData.CHAPTERS[chapter_index].title).to_upper()]
+
+static func cast_profile(id: String, slot: int) -> Dictionary:
+	var c: Dictionary = StoryData.CAST[id]
+	var p: Dictionary = Prompt.interpret(c.prompt, slot)
+	p.name = c.name
+	return p
+
+func _fighter(i: int) -> Dictionary:
+	return main.sim.fighters[i] if i >= 0 and i < main.sim.fighters.size() else {}
+
+func _set_visible(i: int, v: bool) -> void:
+	if i < main.views.size() and is_instance_valid(main.views[i]):
+		main.views[i].visible = v
+
+## Waits real time; returns early when skipping or aborted.
+func wait(seconds: float, my_session: int) -> void:
+	var t := 0.0
+	while t < seconds and _alive(my_session) and not skipping and not auto_advance:
+		await get_tree().process_frame
+		t += get_process_delta_time()
+
+func fade(to_alpha: float, time: float) -> void:
+	var tw := create_tween()
+	tw.tween_property(fade_rect, "color:a", to_alpha, time)
+	await tw.finished
+
+func _set_letterbox(on: bool, time: float) -> void:
+	var tw := create_tween().set_parallel(true)
+	tw.tween_property(letterbox_top, "offset_bottom", LETTERBOX_HEIGHT if on else 0.0, time)
+	tw.tween_property(letterbox_bottom, "offset_top", -LETTERBOX_HEIGHT if on else 0.0, time)
+
+func _wait_advance(my_session: int) -> void:
+	if auto_advance or skipping: return
+	await advanced
+
+# ─────────────────────────────────────────────────────────────── step types ──
+
+func _stage(step: Dictionary) -> void:
+	stage_ids.clear()
+	var p_list: Array = []
+	for k in range(step.cast.size()):
+		var entry: Dictionary = step.cast[k]
+		stage_ids.append(entry.id)
+		p_list.append(cast_profile(entry.id, k))
+	main.prepare_cutscene_stage(p_list, StoryData.CHAPTERS[chapter_index].arena)
+	for k in range(step.cast.size()):
+		var f: Dictionary = _fighter(k)
+		f.x = float(step.cast[k].x)
+		f.y = 0.0
+		f.facing = int(step.cast[k].get("facing", 1))
+		f.pose = "Idle"
+		if k < main.views.size():
+			main.views[k].update_state(f, 1.0)
+			main.views[k].reset_physics_interpolation()
+	fade(0.0, 0.35)
+	_set_letterbox(true, 0.3)
+
+func _title(step: Dictionary, my_session: int) -> void:
+	title_label.text = step.text
+	subtitle_label.text = step.get("sub", "")
+	var tw := create_tween()
+	tw.tween_property(title_box, "modulate:a", 1.0, 0.5)
+	main.sound("start")
+	await wait(2.2, my_session)
+	var tw2 := create_tween()
+	tw2.tween_property(title_box, "modulate:a", 0.0, 0.4)
+
+func _narrate(text: String, my_session: int) -> void:
+	narrate_label.text = text
+	var tw := create_tween()
+	tw.tween_property(narrate_label, "modulate:a", 1.0, 0.4)
+	await _wait_advance(my_session)
+	var tw2 := create_tween()
+	tw2.tween_property(narrate_label, "modulate:a", 0.0, 0.25)
+	if not auto_advance and not skipping: await tw2.finished
+
+func _say(step: Dictionary, my_session: int) -> void:
+	var c: Dictionary = StoryData.CAST.get(step.who, {})
+	var col := Color(str(c.get("color", "49def4")))
+	dialog_name.text = str(c.get("name", step.who))
+	dialog_name.add_theme_color_override("font_color", col)
+	dialog_title.text = str(c.get("title", ""))
+	dialog_panel.add_theme_stylebox_override("panel", _style(Color(0.02, 0.03, 0.06, 0.92), col))
+	var prompt: String = str(c.get("prompt", ""))
+	if prompt.is_empty():
+		dialog_portrait.texture = null
+	else:
+		dialog_portrait.texture = main.portrait_for_family(Prompt.interpret(prompt, 0).family)
+	dialog_text.text = step.text
+	dialog_text.visible_characters = 0
+	dialog_panel.show()
+	if not auto_advance and not skipping:
+		typing = true
+		var total: int = step.text.length()
+		var shown := 0.0
+		while typing and shown < total and _alive(my_session):
+			await get_tree().process_frame
+			shown += get_process_delta_time() * TYPE_SPEED
+			dialog_text.visible_characters = int(shown)
+		typing = false
+	dialog_text.visible_characters = -1
+	await _wait_advance(my_session)
+	dialog_panel.hide()
+
+## Camera shots are computed from the current stage positions.
+func _cam(step: Dictionary, my_session: int) -> void:
+	var shot: String = str(step.get("shot", "wide"))
+	var who: int = int(step.get("who", 0))
+	var f: Dictionary = _fighter(who)
+	var x: float = float(f.get("x", 0.0))
+	var target_pos := Vector3(0, 2.4, 10.5)
+	var target_look := Vector3(0, 1.3, 0)
+	match shot:
+		"wide":
+			target_pos = Vector3(0, 2.6, 11.5)
+			target_look = Vector3(0, 1.3, 0)
+		"sky":
+			target_pos = Vector3(0, 7.5, 15.0)
+			target_look = Vector3(0, 2.4, 0)
+		"close":
+			var side: float = float(f.get("facing", 1))
+			target_pos = Vector3(x + side * 1.1, 1.75, 3.4)
+			target_look = Vector3(x, 1.45, 0)
+		"low":
+			target_pos = Vector3(x - float(f.get("facing", 1)) * 0.6, 0.45, 3.6)
+			target_look = Vector3(x, 1.8, 0)
+		"two":
+			var x2: float = float(_fighter(int(step.get("who2", 1))).get("x", 0.0))
+			var mid: float = (x + x2) * 0.5
+			var span: float = absf(x2 - x)
+			target_pos = Vector3(mid, 1.9, 4.2 + span * 0.9)
+			target_look = Vector3(mid, 1.3, 0)
+	var time: float = float(step.get("time", 1.0))
+	if time <= 0.02 or auto_advance or skipping:
+		cam_pos = target_pos
+		cam_look = target_look
+		return
+	var tw := create_tween().set_parallel(true).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_property(self, "cam_pos", target_pos, time)
+	tw.tween_property(self, "cam_look", target_look, time)
+	await wait(time * 0.6, my_session)
+
+func _move(step: Dictionary, my_session: int) -> void:
+	var i: int = int(step.who)
+	var f: Dictionary = _fighter(i)
+	if f.is_empty(): return
+	var from_x: float = f.x
+	var to_x: float = float(step.x)
+	var time: float = maxf(0.05, float(step.get("time", 1.0)))
+	f.facing = 1 if to_x > from_x else -1
+	f.pose = "Move"
+	var t := 0.0
+	while t < time and _alive(my_session) and not skipping and not auto_advance:
+		await get_tree().physics_frame
+		t += get_physics_process_delta_time()
+		f.x = lerpf(from_x, to_x, clampf(t / time, 0.0, 1.0))
+	f.x = to_x
+	f.pose = "Idle"
+
+func _pose(step: Dictionary, my_session: int) -> void:
+	var f: Dictionary = _fighter(int(step.who))
+	if f.is_empty(): return
+	f.pose = str(step.pose)
+	await wait(float(step.get("time", 0.8)), my_session)
+	if not str(step.pose) in ["Defeat", "Victory"]:
+		f.pose = "Idle"
+
+func _fx(step: Dictionary) -> void:
+	var kind: String = str(step.kind)
+	var who: int = int(step.get("who", 0))
+	match kind:
+		"flash":
+			flash_rect.color.a = 0.9
+			create_tween().tween_property(flash_rect, "color:a", 0.0, 0.6)
+			main.sound("electric")
+		"shake":
+			cam_shake = 0.6
+			main.sound("lava")
+		"burst":
+			if who < main.sim.fighters.size():
+				main.hit_effect(who, true, true)
+				main.super_effect(who)
+			cam_shake = 0.4
+			main.sound("hit")
+		"ink":
+			_ink_burst(who)
+			cam_shake = 0.3
+			main.sound("lava")
+
+## Black-violet ink particles bursting from a corrupted fighter.
+func _ink_burst(who: int) -> void:
+	var f: Dictionary = _fighter(who)
+	if f.is_empty(): return
+	var p := CPUParticles3D.new()
+	p.one_shot = true
+	p.emitting = false
+	p.amount = 60
+	p.lifetime = 1.4
+	p.explosiveness = 0.85
+	p.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE
+	p.emission_sphere_radius = 0.5
+	p.direction = Vector3(0, 1, 0)
+	p.spread = 70.0
+	p.initial_velocity_min = 1.5
+	p.initial_velocity_max = 4.0
+	p.gravity = Vector3(0, -2.5, 0)
+	p.scale_amount_min = 0.6
+	p.scale_amount_max = 1.6
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+	mat.vertex_color_use_as_albedo = true
+	var quad := QuadMesh.new()
+	quad.size = Vector2(0.16, 0.16)
+	quad.material = mat
+	p.mesh = quad
+	var grad := Gradient.new()
+	grad.set_color(0, Color(0.35, 0.05, 0.6, 1.0))
+	grad.set_color(1, Color(0.02, 0.0, 0.05, 0.0))
+	p.color_ramp = grad
+	main.add_child(p)
+	p.position = Vector3(f.x, f.y + 1.1, 0.2)
+	p.emitting = true
+	get_tree().create_timer(2.0).timeout.connect(p.queue_free)
+
+# ─────────────────────────────────────────────────────────────── quick-time events ──
+
+## Display name of the key bound to a gameplay action for player 1.
+static func key_name(action: String) -> String:
+	var a := "p1_" + action
+	if InputMap.has_action(a):
+		for ev in InputMap.action_get_events(a):
+			if ev is InputEventKey:
+				var code: int = ev.physical_keycode if ev.physical_keycode != 0 else ev.keycode
+				return OS.get_keycode_string(code)
+	return action.to_upper()
+
+## Starts a QTE. Kinds: press (one key in time), mash (count presses in time),
+## sequence (each key in order, each with its own time window).
+func begin_qte(step: Dictionary) -> void:
+	qte = {
+		"kind": str(step.get("kind", "press")),
+		"keys": step.get("keys", ["standard"]),
+		"index": 0,
+		"count": 0,
+		"need": int(step.get("count", 1)),
+		"window": float(step.get("time", 1.2)),
+		"left": float(step.get("time", 1.2)),
+	}
+	qte_active = true
+	_qte_refresh()
+
+func _qte_refresh() -> void:
+	var key: String = qte.keys[mini(qte.index, qte.keys.size() - 1)]
+	qte_ring.glyph = key_name(key)
+	qte_ring.fraction = clampf(qte.left / qte.window, 0.0, 1.0)
+	qte_ring.queue_redraw()
+	if qte.kind == "mash":
+		qte_count_label.text = "%d / %d" % [qte.count, qte.need]
+	elif qte.kind == "sequence":
+		qte_count_label.text = "%d / %d" % [qte.index, qte.keys.size()]
+	else:
+		qte_count_label.text = ""
+
+## Feeds one pressed action into the running QTE.
+func qte_press(action: String) -> void:
+	if not qte_active: return
+	var expected: String = qte.keys[mini(qte.index, qte.keys.size() - 1)]
+	qte_ring.pulse = 1.0
+	if action != expected:
+		if qte.kind != "mash": _qte_end(false)
+		return
+	match qte.kind:
+		"press":
+			_qte_end(true)
+		"mash":
+			qte.count += 1
+			main.sound("block")
+			if qte.count >= qte.need: _qte_end(true)
+		"sequence":
+			qte.index += 1
+			main.sound("block")
+			if qte.index >= qte.keys.size():
+				_qte_end(true)
+			else:
+				qte.left = qte.window
+	if qte_active: _qte_refresh()
+
+func qte_tick(dt: float) -> void:
+	if not qte_active: return
+	qte.left -= dt
+	qte_ring.pulse = maxf(0.0, qte_ring.pulse - dt * 6.0)
+	if qte.left <= 0.0:
+		_qte_end(false)
+	else:
+		_qte_refresh()
+
+func _qte_end(success: bool) -> void:
+	if not qte_active: return
+	qte_active = false
+	qte_ring.color = Color("4ade80") if success else Color("ef4444")
+	qte_ring.fraction = 1.0
+	qte_ring.queue_redraw()
+	main.sound("victory" if success else "hit")
+	qte_finished.emit(success)
+
+func _qte_step(step: Dictionary, my_session: int) -> void:
+	var success: bool = auto_qte_success
+	if not auto_advance and not skipping:
+		qte_label.text = step.get("text", "")
+		qte_ring.color = Color("f7c844")
+		qte_label.show()
+		qte_ring.show()
+		qte_count_label.show()
+		begin_qte(step)
+		success = await qte_finished
+		await wait(0.5, my_session)
+		qte_label.hide()
+		qte_ring.hide()
+		qte_count_label.hide()
+	elif skipping:
+		return # skipped QTEs count neither as success nor as failure
+	if step.has("flag"): flags[step.flag] = success
+	var branch: Array = step.get("success" if success else "fail", [])
+	for sub in branch:
+		if not _alive(my_session): return
+		await run_step(sub, my_session)
+
+# ─────────────────────────────────────────────────────────────── fights ──
+
+func _fight(step: Dictionary, my_session: int) -> void:
+	skipping = false
+	current_fight = step
+	while _alive(my_session):
+		_start_fight(step)
+		var win: bool = await fight_done
+		if not _alive(my_session): return
+		if win:
+			await _show_result("SIEG!", "", 1.6, my_session)
+			result_box.hide()
+			return
+		result_title.text = "NIEDERLAGE"
+		result_title.add_theme_color_override("font_color", Color("ef4444"))
+		result_hint.text = "[ENTER] NOCHMAL VERSUCHEN   ·   [ESC] ZUM KAPITELMENÜ"
+		result_box.show()
+		if auto_advance: return
+		var retry: bool = await _await_retry_choice()
+		result_box.hide()
+		if not retry:
+			abort()
+			open_menu()
+			return
+
+var _retry_choice := -1
+
+func _await_retry_choice() -> bool:
+	_retry_choice = -1
+	while _retry_choice < 0 and running:
+		await get_tree().process_frame
+	return _retry_choice == 1
+
+func _start_fight(step: Dictionary) -> void:
+	var p_list: Array = []
+	for k in range(step.cast.size()):
+		p_list.append(cast_profile(step.cast[k], k))
+	_hide_overlays()
+	_set_letterbox(false, 0.25)
+	fade(0.0, 0.2)
+	main.begin_match(p_list, "pve", 3)
+	var sim = main.sim
+	var lives: Array = step.get("lives", [])
+	for k in range(mini(lives.size(), sim.fighters.size())):
+		sim.fighters[k].lives = int(lives[k])
+	if step.has("teams"): sim.set_teams(step.teams)
+	var mods: Dictionary = step.get("mods", {})
+	for key in mods:
+		var k: int = int(key)
+		if k < sim.fighters.size():
+			sim.fighters[k].power_mult = float(mods[key].get("power", 1.0))
+			sim.fighters[k].kb_taken_mult = float(mods[key].get("kb", 1.0))
+	# A won QTE softens the enemies up, a lost one costs the player some percent.
+	var flag: String = str(step.get("qte", ""))
+	if flags.has(flag):
+		if flags[flag]:
+			for f in sim.fighters:
+				if f.team != 0: f.damage_percent = QTE_BONUS_PERCENT
+		else:
+			sim.fighters[0].damage_percent = QTE_PENALTY_PERCENT
+	in_fight = true
+	main.show_status(str(step.get("goal", "")), 4.0)
+	show_banner(str(step.get("goal", "KAMPF!")))
+
+func show_banner(text: String) -> void:
+	banner.text = text
+	var tw := create_tween()
+	tw.tween_property(banner, "modulate:a", 1.0, 0.3)
+	tw.tween_interval(1.8)
+	tw.tween_property(banner, "modulate:a", 0.0, 0.5)
+
+## Called by main when the story fight's simulation reports a result.
+func on_fight_finished(result: int) -> void:
+	if not in_fight: return
+	in_fight = false
+	var win: bool = result >= 0 and main.sim.fighters[result].team == 0
+	fight_done.emit(win)
+
+func retry_fight() -> void:
+	if in_fight and not current_fight.is_empty():
+		_start_fight(current_fight)
+
+func _show_result(title: String, hint: String, time: float, my_session: int) -> void:
+	result_title.text = title
+	result_title.add_theme_color_override("font_color", Color("f7c844"))
+	result_hint.text = hint
+	result_box.show()
+	await wait(time, my_session)
+
+func _credits(my_session: int) -> void:
+	_hide_overlays()
+	await fade(1.0, 1.0)
+	credits_label.text = "\n".join([
+		"PROMPT FIGHTER", StoryData.TITLE, "", "",
+		"VOLT – der letzte Promptgeborene", "AURA – Hüterin des Lichthains", "KORSAR – Kapitän der Salzkrähe",
+		"SIR KALDEN · CINDER BASTION · DREYAR · WARROK", "SCHATTEN-VOLT", "NOVA, die einst NULLA hieß", "",
+		"und ARIA, die Schreiberin", "", "", "Danke fürs Spielen.", "", "Jeder Prompt ist eine neue Seite."])
+	credits_label.position.y = 720
+	credits_label.show()
+	if auto_advance: return
+	var tw := create_tween()
+	tw.tween_property(credits_label, "position:y", -900.0, 22.0)
+	await wait(22.5, my_session)
+	credits_label.hide()
+
+# ─────────────────────────────────────────────────────────────── frame & input ──
+
+func _process(delta: float) -> void:
+	if running and main.cinematic and main.camera:
+		var shake := Vector3.ZERO
+		if cam_shake > 0.0:
+			cam_shake = maxf(0.0, cam_shake - delta * 1.6)
+			shake = Vector3(randf_range(-1, 1), randf_range(-1, 1), 0) * cam_shake * 0.25
+		main.camera.position = cam_pos + shake
+		main.camera.look_at(cam_look + shake * 0.5)
+	if qte_active: qte_tick(delta)
+	pause_hint.visible = running and in_fight and main.paused
+
+func _input(event: InputEvent) -> void:
+	if menu_panel.visible and event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_ESCAPE:
+			close_menu()
+		elif event.keycode in [KEY_ENTER, KEY_KP_ENTER]:
+			start_chapter(mini(completed, StoryData.chapter_count() - 1))
+		get_viewport().set_input_as_handled() # the selection screen below must not react
+		return
+	if not running: return
+	# Retry / give up after a lost fight.
+	if result_box.visible and _retry_choice == -1 and event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode in [KEY_ENTER, KEY_KP_ENTER, KEY_SPACE]:
+			_retry_choice = 1
+			get_viewport().set_input_as_handled()
+		elif event.keycode == KEY_ESCAPE:
+			_retry_choice = 0
+			get_viewport().set_input_as_handled()
+		return
+	if in_fight:
+		if main.paused and event is InputEventKey and event.pressed and event.keycode == KEY_Q:
+			abort()
+			open_menu()
+			get_viewport().set_input_as_handled()
+		return
+	if qte_active:
+		for action in QTE_ACTIONS:
+			for pl in ["p1_", "p2_"]:
+				if InputMap.has_action(pl + action) and event.is_action_pressed(pl + action, false, true):
+					qte_press(action)
+					get_viewport().set_input_as_handled()
+					return
+		return
+	var pressed_advance := false
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_ESCAPE:
+			skipping = true
+			typing = false
+			advanced.emit()
+			get_viewport().set_input_as_handled()
+			return
+		pressed_advance = event.keycode in [KEY_ENTER, KEY_KP_ENTER, KEY_SPACE, KEY_F, KEY_K]
+	elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		pressed_advance = not menu_panel.visible
+	if pressed_advance:
+		if typing:
+			typing = false
+		else:
+			advanced.emit()
+		get_viewport().set_input_as_handled()

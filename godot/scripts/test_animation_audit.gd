@@ -27,7 +27,9 @@ func _init() -> void:
 		["blue_eyes", "Weißer Drache mit eiskaltem Blick Burst Stream Yu-Gi-Oh"],
 		["anubis", "Jackal God Anubis wielding dual Khopesh"],
 		["specter", "Void Specter crystal phantom warrior with void lance"],
-		["phoenix", "Phoenix Empress with feather armor and phoenix glaive"]
+		["phoenix", "Phoenix Empress with feather armor and phoenix glaive"],
+		["frieza", "Frieza Final Form Emperor Death Beam Supernova Dragon Ball Z"],
+		["charizard", "Glurak Flammen-Drache Drachenschwingen Feuersturm Pokemon"]
 	]
 
 	var all_pass := true

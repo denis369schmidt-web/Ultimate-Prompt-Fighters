@@ -25,11 +25,13 @@ func _initialize():
 		{"key": "tanjiro", "prompt": "Tanjiro Kamado Hinokami Kagura Nichirin Hanafuda Checkered Haori"},
 		{"key": "sonic", "prompt": "Sonic the Hedgehog Blue Blur Super Spin Dash Sega"},
 		{"key": "akaza", "prompt": "Akaza Upper Rank 3 Hakai Satsu Compass Needle Kimetsu"},
-		{"key": "blue_eyes", "prompt": "Weißer Drache mit eiskaltem Blick Burst Stream Yu-Gi-Oh"}
+		{"key": "blue_eyes", "prompt": "Weißer Drache mit eiskaltem Blick Burst Stream Yu-Gi-Oh"},
+		{"key": "frieza", "prompt": "Frieza Final Form Emperor Death Beam Supernova Dragon Ball Z"},
+		{"key": "charizard", "prompt": "Glurak Flammen-Drache Drachenschwingen Feuersturm Pokemon"}
 	]
 	
 	print("==================================================")
-	print("TESTING ALL 20 CHARACTERS (PROMPT -> SIM -> VIEW)")
+	print("TESTING ALL 22 CHARACTERS (PROMPT -> SIM -> VIEW)")
 	print("==================================================")
 	
 	var all_ok := true
@@ -62,7 +64,7 @@ func _initialize():
 		
 	print("==================================================")
 	if all_ok:
-		print("ALL 20 CHARACTERS ARE FULLY PLAYABLE!")
+		print("ALL 22 CHARACTERS ARE FULLY PLAYABLE!")
 	else:
 		print("SOME CHARACTERS FAILED VALIDATION!")
 	print("==================================================")

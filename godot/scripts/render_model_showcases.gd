@@ -192,22 +192,32 @@ func render_all() -> void:
 		sky.sky_material = sky_mat
 		env.environment.sky = sky
 		env.environment.sky_rotation = Vector3(0, deg_to_rad(90), 0)
-		env.environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-		env.environment.ambient_light_color = Color("223348")
-		env.environment.ambient_light_energy = 0.95
+		env.environment.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
+		env.environment.ambient_light_energy = 0.85
+		env.environment.ambient_light_sky_contribution = 0.70
 		env.environment.glow_enabled = true
-		env.environment.glow_intensity = 0.90
-		env.environment.glow_bloom = 0.30
-		env.environment.glow_blend_mode = Environment.GLOW_BLEND_MODE_SCREEN
+		env.environment.glow_intensity = 0.85
+		env.environment.glow_bloom = 0.20
+		env.environment.glow_blend_mode = Environment.GLOW_BLEND_MODE_SOFTLIGHT
+		env.environment.glow_hdr_threshold = 1.02
+		env.environment.glow_hdr_scale = 1.8
+		env.environment.volumetric_fog_enabled = true
+		env.environment.volumetric_fog_density = 0.010
+		env.environment.volumetric_fog_albedo = Color(0.2, 0.25, 0.35)
 		env.environment.ssao_enabled = true
+		env.environment.ssao_radius = 1.8
+		env.environment.ssao_intensity = 2.6
+		env.environment.ssr_enabled = true
+		env.environment.ssr_max_steps = 64
 		env.environment.adjustment_enabled = true
 		env.environment.adjustment_contrast = 1.10
 		env.environment.adjustment_saturation = 1.15
 		env.environment.tonemap_mode = Environment.TONE_MAPPER_ACES
 		scene.add_child(env)
 
-		# Floor
+		# Floor with SSR-friendly wet/polished sheen on Layer 1 only
 		var floor_mesh = MeshInstance3D.new()
+		floor_mesh.layers = 1
 		var plane = PlaneMesh.new()
 		plane.size = Vector2(24, 24)
 		floor_mesh.mesh = plane
@@ -215,26 +225,40 @@ func render_all() -> void:
 		f_mat.albedo_texture = floor_tex
 		f_mat.normal_enabled = true
 		f_mat.normal_texture = floor_norm
-		f_mat.normal_scale = 1.6
+		f_mat.normal_scale = 2.2
 		f_mat.uv1_scale = Vector3(4, 4, 4)
-		f_mat.roughness = 0.82
+		f_mat.roughness = 0.42
+		f_mat.metallic = 0.15
+		f_mat.rim_enabled = true
+		f_mat.rim = 0.35
 		floor_mesh.material_override = f_mat
 		scene.add_child(floor_mesh)
 
-		# Direct Sun Key Light
+		# Direct Sun Key Light (illuminates both arena and fighters)
 		var light = DirectionalLight3D.new()
+		light.light_cull_mask = 1 | 2
 		light.rotation_degrees = sc_info.sun_rot
 		light.light_color = sc_info.sun_col
-		light.light_energy = 2.1
+		light.light_energy = 2.0
 		light.shadow_enabled = true
+		light.shadow_bias = 0.015
 		light.shadow_blur = 1.4
 		scene.add_child(light)
+
+		# Dedicated 3-Point Rim / Kicker Light (Isolated to Layer 2: Fighters only, zero floor sheen!)
+		var rim = DirectionalLight3D.new()
+		rim.light_cull_mask = 2
+		rim.rotation_degrees = Vector3(145, 25, 0)
+		rim.light_color = sc_info.sun_col.lerp(Color.WHITE, 0.5)
+		rim.light_energy = 1.75
+		rim.shadow_enabled = false
+		scene.add_child(rim)
 
 		# Soft Fill Light
 		var fill = DirectionalLight3D.new()
 		fill.rotation_degrees = Vector3(25, -140, 0)
 		fill.light_color = Color("85a5cc")
-		fill.light_energy = 0.95
+		fill.light_energy = 0.75
 		scene.add_child(fill)
 
 		# Primary fighter
