@@ -1,5 +1,37 @@
 # Testbericht – Godot-Migration
 
+## Aktueller Lauf (2026-09-30)
+
+Befehl je Suite: `godot --headless --path godot -s tests/test_<suite>.gd`, Ergebnis in `PFU_TEST_SUMMARY`.
+
+| Suite | Bestanden | Fehlgeschlagen |
+|---|---|---|
+| game | 42 | 0 |
+| mechanics | 36 | 0 |
+| combat_plus | 100 | 0 |
+| roster | 148 | 0 |
+| story | 41 | 0 |
+| progression | 26 | 0 |
+| kits | 142 | 0 |
+| bosses (neu) | 34 | 0 |
+| **Summe** | **569** | **0** |
+
+Stand nach Schritt 9. `test_bosses.gd`: kein Friendly Fire im 2 gegen 2, jeder Boss (Lebensleiste, mehr Helden = mehr Leben,
+schwebt, kein Knockback, mindestens 3 Angriffsmuster mit Vorwarnung, verletzt Helden), Phase 2, Sieg der Helden,
+Sieg des Bosses (alle Helden raus / Zeit), KI-Helden kämpfen gegen den Boss, Menüablauf (Team-Modus-Knopf,
+3-gegen-1-Stärkung, Boss-Menü, Boss-Arena, Engelkörper, Boss-Rush weiter zu Ophaniel, zurück zur normalen Arena).
+
+`test_kits.gd` prüft auf dem echten Kampfkern: Kit-Profile und Physik (Sprunghöhe Ninja > Warrok), vollständige eigene
+Movesets, exklusive Signaturen und eindeutige Finisher-Codes, Eingabe jedes Finisher-Codes, Mal + Blitzschlag,
+Speerwurf/Rückruf/Fangen, Lavapfütze + Glut + Kernschmelze, Enterhaken/Pistole/Kanone, Schildwall (Block, Reflexion,
+Rücken offen), Iaido, Titanensprung (Boden ja, Luft nein), Rüstung, Down-Specials, KI trifft mit jedem Kit.
+Angepasste Alt-Tests: Schildtest nutzt die Schildgröße des Kämpfers, Fast-Fall-Test startet über freier Fläche,
+Kontertest wartet auf die aktive Haltung.
+
+Gerenderte Prüfung: `tests/render_kits.gd` (Kampf + Finisher aller 7 Kit-Kämpfer) ohne Skriptfehler.
+
+---
+
 Datum: 2026-09-18. Engine: Godot 4.7.2 stable (ed1daf0bf). Aktiver Code in `godot/`; keine Python-Nachbildung als Nachweis für diesen Build.
 
 ## Automatisierte Engine-Tests

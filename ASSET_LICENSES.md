@@ -14,22 +14,31 @@ Diese Charaktere und Assets sind vollständig eigenständig erstellt oder basier
 - **Void Specter** (`specter`): Eigene Kristallphantom-Meshes, Amethyst-PBR.
 - **Phoenix Empress** (`phoenix`): Mythologisches Thema, eigene Gefieder-Geometrie & PBR.
 
-### B. Nicht-kommerzielle private Prototyp-Charaktere (Private Research / Fan Prototype Only)
-Die folgenden 6 Charaktere enthalten Hommagen an bekannte Franchises und sind **ausschließlich für private Testzwecke, Prototyping und Forschungsdemonstrationen** bestimmt. Sie dürfen **nicht** in einem kommerziellen Build ausgeliefert werden:
-1. **Son Goku** (Dragon Ball / Akira Toriyama / Bird Studio / Shueisha / Toei Animation)
-2. **Sub-Zero** (Mortal Kombat / NetherRealm Studios / Warner Bros. Games)
-3. **Pain / Nagato** (Naruto / Masashi Kishimoto / Shueisha / Studio Pierrot)
-4. **Monkey D. Ruffy** (One Piece / Eiichiro Oda / Shueisha / Toei Animation)
-5. **Sonic the Hedgehog** (Sonic Team / SEGA Corporation)
-6. **Akaza / Hakuji** (Demon Slayer: Kimetsu no Yaiba / Koyoharu Gotouge / Shueisha / Ufotable)
+### B. Eigene Helden (ersetzen die früheren Fan-Prototypen)
+Die früheren Fan-Prototypen (Figuren fremder Marken) sind **vollständig entfernt**. Ihre Modelle, Texturen,
+Screenshots und Entwickler-Skripte liegen in `_quarantine_ip/` außerhalb des Godot-Projekts; dieser Ordner wird
+weder importiert noch exportiert und steht in `.gitignore`. An ihre Stelle treten 16 eigene Figuren:
+Kairo, Varakh, Xylar, Glaciem, Oryn, Tobi, Jubei, Ren, Amethya, Bruno, Hikaru, Zip, Raiga, Albion, Pyrax, Lepora.
 
-*Hinweis für Produktions-Release:* Ein Preprocessor-Flag oder separates Build-Target schließt die `non-commercial`-Charaktere für den kommerziellen App-Store-Build automatisch aus.
+- **Namen, Movesets, Finisher, Texte:** eigene Erfindungen (`fighter_kits.gd`, `prompt_interpreter.gd`, `signatures.gd`).
+- **Aussehen:** komplett im Code erzeugt (`scripts/hero_gear.gd`, `shaders/hero_recolor.gdshader`): Umfärbung
+  der Kleidung in eine eigene Palette, prozedurale Ausrüstung (Heiligenschein, Kronen, Umhänge, Runenringe,
+  Donnertrommeln, Membranflügel, Hörner, Jets, Gauntlets …), generierte Texturen (Rauschen, Runen, Adern) und Effekte.
+- **Körper:** Mixamo-Charaktere (siehe Abschnitt 2), nur als Basis unter der eigenen Ausrüstung.
+- **Effekt-Texturen:** `godot/scripts/generate_vfx_assets.py` (PIL, selbst erzeugt).
+- Ein Test (`tests/test_roster.gd`) prüft, dass kein sichtbarer Text und keine Figuren-ID fremde Marken enthält
+  und fremde Namen im Prompt keine eigenen Helden mehr auswählen.
 
 ---
 
 ## 2. 3D-Werkzeuge & Basis-Meshes
 - **Blender 4.5.5 LTS**: GNU General Public License (GPL). Zur Modellierung, Rigging und GLTF-Export.
 - **Human Base Meshes Bundle (Blender Studio)**: Creative Commons CC0 Public Domain. Alle abgeleiteten Rigs und Basistopologien sind frei modifizierbar.
+- **Mixamo (Adobe)**: Charaktere und Animationen aus `godot/assets/models/mixamo/` – laut Adobe-Bedingungen
+  lizenzfrei für persönliche, kommerzielle und gemeinnützige Projekte einschließlich Spielen; nicht als
+  eigenständige Asset-Dateien weiterverteilen.
+- **Tripo-Scans** (`godot/assets/models/tripo_*.glb`): Herkunft/Lizenz vor einem kommerziellen Release je Modell
+  prüfen (offener Punkt).
 - **Godot Engine 4.7.2 stable**: MIT License (Copyright (c) 2014-present Godot Engine contributors).
 
 ---

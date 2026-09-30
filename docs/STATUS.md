@@ -1,6 +1,18 @@
 # Prompt Fighter Ultimate — Projektstatus
 
-> Letztes Update: 2026-09-25
+> Letztes Update: 2026-09-30
+
+## Aktueller Stand (2026-09-30)
+
+- **49 Kämpfer** (+ Fusionskammer), 8 Arenen, Storymodus, bis zu 4 Spieler, Gamepads mit Xbox-Standardbelegung.
+- **Kämpfer-Individualisierung** nach `docs/ROSTER_INVENTORY.md`: Kit-System fertig (`scripts/fighter_kits.gd`);
+  **Paket 1 fertig** (Volt Ninja, Boltar, Magmor, Seraphine, Cardinal, Kommandant, Warrok): eigene Physik, eigenes Moveset,
+  exklusive Signatur-Mechanik, eigener Finisher-Film. **Paket 2 fertig** (Kairo, Varakh, Xylar, Ren, Amethya, Oryn, Bruno). Offen: Pakete 3–7 (35 Kämpfer).
+- **Team-Modi** 2 gegen 2 und 3 gegen 1; **Bosskampf** gegen drei Engel-Bosse (Keruvim, Ophaniel, Seraphael) mit eigenen Boss-Arenen und Boss-Rush.
+- Fortschrittssystem (`scripts/progression.gd`) getestet, aber noch nicht im Spiel eingebunden.
+- Tests: 569/569 (Suiten game, mechanics, combat_plus, roster, story, progression, kits, bosses). Details in `docs/CHANGELOG.md`.
+
+Die folgenden Abschnitte beschreiben den älteren Stand vom 2026-09-25.
 
 ## Projektübersicht
 

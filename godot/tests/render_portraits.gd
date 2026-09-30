@@ -75,11 +75,19 @@ func run() -> void:
 			view.update_state({"x": 0.0, "y": 0.0, "facing": 1, "pose": "Idle", "blocking": false}, 1.0 / 60.0)
 			view.model.rotation.y = 0.35
 			await process_frame
-		var head: Vector3 = head_point(view)
-		var height: float = maxf(0.8, head.y)
-		var target := head + Vector3(0, -0.2 * height / 1.8, 0)
-		cam.position = target + Vector3(0.12, 0.04, 1.55 * height / 1.8)
-		cam.look_at(target)
+		var box: AABB = view._model_bounds()
+		if not (view.bone_map.has("left_arm") and view.bone_map.has("right_arm")) and box.size.x > box.size.y * 0.9:
+			# Creatures (quadrupeds, wide scans): frame the upper two thirds of the whole body.
+			var target := Vector3(box.get_center().x, box.position.y + box.size.y * 0.62, 0)
+			var span: float = maxf(box.size.y * 0.8, box.size.x * 0.75)
+			cam.position = target + Vector3(0.1, 0.1, span * 0.5 / tan(deg_to_rad(cam.fov * 0.5)) + box.size.z * 0.5)
+			cam.look_at(target)
+		else:
+			var head: Vector3 = head_point(view)
+			var height: float = maxf(0.8, head.y)
+			var target := head + Vector3(0, -0.2 * height / 1.8, 0)
+			cam.position = target + Vector3(0.12, 0.04, 1.55 * height / 1.8)
+			cam.look_at(target)
 		await process_frame
 		await RenderingServer.frame_post_draw
 		var img: Image = root.get_viewport().get_texture().get_image()

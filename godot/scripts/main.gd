@@ -6,6 +6,11 @@ const FighterView = preload("res://scripts/fighter_view.gd")
 const Remixer = preload("res://scripts/character_remixer.gd")
 const StoryModeScript = preload("res://scripts/story_mode.gd")
 const ArenaBuilder = preload("res://scripts/arena_builder.gd")
+const Bosses = preload("res://scripts/bosses.gd")
+const Backgrounds = preload("res://scripts/backgrounds.gd")
+const Progression = preload("res://scripts/progression.gd")
+const Rewards = preload("res://scripts/rewards.gd")
+const BossModels = preload("res://scripts/boss_models.gd")
 const WeaponModels = preload("res://scripts/weapon_models.gd")
 const CYAN := Color("49def4")
 const ORANGE := Color("ff925b")
@@ -32,26 +37,10 @@ const PORTRAITS = {
     "storm": preload("res://assets/textures/ui/portrait_storm.png"),
     "toxic": preload("res://assets/textures/ui/portrait_toxic.png"),
     "cyber": preload("res://assets/textures/ui/portrait_cyber.png"),
-    "sonic": preload("res://assets/textures/ui/portrait_sonic.png"),
-    "akaza": preload("res://assets/textures/ui/portrait_akaza.png"),
-    "blue_eyes": preload("res://assets/textures/ui/portrait_blue_eyes.png"),
-    "naruto": preload("res://assets/textures/ui/portrait_naruto.png"),
-    "vegeta": preload("res://assets/textures/ui/portrait_vegeta.png"),
-    "zoro": preload("res://assets/textures/ui/portrait_zoro.png"),
-    "saitama": preload("res://assets/textures/ui/portrait_saitama.png"),
-    "tanjiro": preload("res://assets/textures/ui/portrait_tanjiro.png"),
-    "sasuke": preload("res://assets/textures/ui/portrait_sasuke.png"),
-    "frieza": preload("res://assets/textures/ui/portrait_frieza.png"),
-    "charizard": preload("res://assets/textures/ui/portrait_charizard.png"),
-    "goku": preload("res://assets/textures/characters/thumbs/thumb_goku.png"),
-    "subzero": preload("res://assets/textures/characters/thumbs/thumb_subzero.png"),
-    "pain": preload("res://assets/textures/characters/thumbs/thumb_pain.png"),
-    "luffy": preload("res://assets/textures/characters/thumbs/thumb_luffy.png"),
     "anubis": preload("res://assets/textures/characters/thumbs/thumb_anubis.png"),
     "specter": preload("res://assets/textures/characters/thumbs/thumb_specter.png"),
     "phoenix": preload("res://assets/textures/characters/thumbs/thumb_phoenix.png"),
     "golden_golem": preload("res://assets/textures/characters/thumbs/thumb_golden_golem.png"),
-    "tripo_fran_statue": preload("res://assets/textures/characters/thumbs/thumb_tripo_fran_statue.png"),
     "tripo_fantasy_female": preload("res://assets/textures/characters/thumbs/thumb_tripo_fantasy_female.png"),
     "tripo_nyx_harvester": preload("res://assets/textures/characters/thumbs/thumb_tripo_nyx_harvester.png"),
     "tripo_cat_girl": preload("res://assets/textures/characters/thumbs/thumb_tripo_cat_girl.png"),
@@ -80,7 +69,8 @@ const PORTRAITS = {
 const HIT_SPARK = preload("res://assets/textures/vfx/hit_spark.png")
 const ELECTRIC_SPARK = preload("res://assets/textures/vfx/electric_spark.png")
 
-const ARENAS = {
+## Arena definitions. Shop arenas (backgrounds.gd) are added at start-up.
+var ARENAS = {
     "blood_moon": {
         "name": "BLOOD MOON TERRACE",
         "sky": preload("res://assets/textures/arenas/sky2_blood_moon.png"),
@@ -161,6 +151,54 @@ const ARENAS = {
         "sun_rot": Vector3(-40, 25, 0),
         "ambient_color": Color("3b5b7a"),
         "fire_color": Color("9be7ff")
+    },
+    "hell_gate": {
+        "name": "HÖLLENTOR · LIMBUS", "boss": true,
+        "sky": preload("res://assets/textures/arenas/sky2_blood_moon.png"),
+        "thumb": null, "floor": null, "floor_em": null, "floor_norm": null,
+        "sun_color": Color("ff8a6a"), "sun_rot": Vector3(-35, 10, 0), "ambient_color": Color("3a1410"), "fire_color": Color("b91c1c")
+    },
+    "hell_flames": {
+        "name": "KREIS DER FLAMMEN", "boss": true,
+        "sky": preload("res://assets/textures/arenas/sky2_blood_moon.png"),
+        "thumb": null, "floor": null, "floor_em": null, "floor_norm": null,
+        "sun_color": Color("ffa070"), "sun_rot": Vector3(-35, 10, 0), "ambient_color": Color("4a1a0c"), "fire_color": Color("ff5a1f")
+    },
+    "hell_city": {
+        "name": "STADT DIS", "boss": true,
+        "sky": preload("res://assets/textures/arenas/sky2_blood_moon.png"),
+        "thumb": null, "floor": null, "floor_em": null, "floor_norm": null,
+        "sun_color": Color("ff9a6a"), "sun_rot": Vector3(-35, 10, 0), "ambient_color": Color("3a1810"), "fire_color": Color("f97316")
+    },
+    "cocytus": {
+        "name": "COCYTUS · DER EISSEE", "boss": true,
+        "sky": preload("res://assets/textures/arenas/sky2_blood_moon.png"),
+        "thumb": null, "floor": null, "floor_em": null, "floor_norm": null,
+        "sun_color": Color("c7e0ff"), "sun_rot": Vector3(-35, 10, 0), "ambient_color": Color("22324a"), "fire_color": Color("7dd3fc")
+    },
+    "heaven_spheres": {
+        "name": "HIMMELSSPHÄREN", "boss": true,
+        "sky": preload("res://assets/textures/arenas/sky2_blood_moon.png"),
+        "thumb": null, "floor": null, "floor_em": null, "floor_norm": null,
+        "sun_color": Color("e6ecff"), "sun_rot": Vector3(-35, 10, 0), "ambient_color": Color("3a4260"), "fire_color": Color("bfe3ff")
+    },
+    "heaven_gate": {
+        "name": "HIMMELSPFORTE", "boss": true,
+        "sky": preload("res://assets/textures/arenas/sky2_blood_moon.png"),
+        "thumb": null, "floor": null, "floor_em": null, "floor_norm": null,
+        "sun_color": Color("ffd6a0"), "sun_rot": Vector3(-35, -20, 0), "ambient_color": Color("6a5238"), "fire_color": Color("ffb13b")
+    },
+    "wheel_heaven": {
+        "name": "RÄDERHIMMEL", "boss": true,
+        "sky": preload("res://assets/textures/arenas/sky2_blood_moon.png"),
+        "thumb": null, "floor": null, "floor_em": null, "floor_norm": null,
+        "sun_color": Color("ffe6a8"), "sun_rot": Vector3(-45, 30, 0), "ambient_color": Color("4a4030"), "fire_color": Color("ffd24a")
+    },
+    "empyrean": {
+        "name": "EMPYREUM", "boss": true,
+        "sky": preload("res://assets/textures/arenas/sky2_blood_moon.png"),
+        "thumb": null, "floor": null, "floor_em": null, "floor_norm": null,
+        "sun_color": Color("ff9a7a"), "sun_rot": Vector3(-30, 10, 0), "ambient_color": Color("4a1810"), "fire_color": Color("ff3b1f")
     },
     "neon_metropolis": {
         "name": "NEON METROPOLIS",
@@ -260,6 +298,53 @@ var projectile_nodes: Dictionary = {}
 var battle_hud_top: PanelContainer
 var battle_hud_bottom: PanelContainer
 var player_count: int = 2
+## Player progress: XP, level, coins, bought start screen backgrounds (progression.gd).
+var progression = Progression.new()
+var last_reward_text := ""
+## Start screen (title) with the chosen background; its painted menu becomes real buttons.
+var title_screen: Control
+var title_bg_fill: TextureRect
+var title_bg: TextureRect
+var title_hotspots: Array = []
+var title_highlight: Panel
+var title_index := 0
+var title_info: Label
+var title_panel: PanelContainer      # shop / options / credits overlay on the start screen
+var title_panel_kind := ""
+var shop_buttons: Array = []
+var shop_index := 0
+## Start screen stage: "splash" (press start) or "menu" (the painted main menu).
+var title_stage := "splash"
+var splash_cover: Panel
+var splash_label: Label
+var splash_tween: Tween
+## Controller navigation for every menu panel: a glowing frame jumps between buttons.
+var nav_layer: CanvasLayer
+var nav_frame: Panel
+var nav_focus: Button = null
+var menu_return_title := false   # boss/story menu opened from the main menu: B goes back there
+var shop_arena_index := -1
+var shop_tab := "backgrounds"     # backgrounds | weapons | skins | chest
+var chest_rng := RandomNumberGenerator.new()
+var chest_result := ""
+var wheel_cells: Array = []
+var wheel_result := ""
+var wheel_spinning := false
+## Versus layout: "1v1", "ffa" (4 players each alone), "2v2", "3v1" (the lone fighter is stronger).
+const TEAM_MODES := ["1v1", "ffa", "2v2", "3v1"]
+var team_mode := "1v1"
+## Boss mode: heroes (team 0) against an angel boss (bosses.gd).
+var boss_active := false
+var boss_rush := false
+var boss_id := ""
+var pre_boss_arena := ""
+var boss_menu: PanelContainer
+var boss_menu_buttons: Array = []
+var boss_menu_index := 0
+var boss_bar: Control
+var boss_bar_fill: ColorRect
+var boss_bar_label: Label
+var next_boss_button: Button
 var player_slot_boxes: Array = []
 
 var active_picker := 0
@@ -304,6 +389,10 @@ func _ready() -> void:
         if arg == "--smoke": smoke = true
         if arg == "--capture-selection": capture_selection = true
         if arg.begins_with("--capture-dir="): capture_dir = arg.trim_prefix("--capture-dir=")
+    progression.persist = DisplayServer.get_name() != "headless" and not smoke
+    progression.load_progress()
+    chest_rng.randomize()
+    _register_shop_arenas()
     setup_inputs()
     setup_world()
     setup_player_markers()
@@ -312,6 +401,8 @@ func _ready() -> void:
     restore_prompts()
     refresh_previews()
     update_mk_grid_visuals()
+    # Start screen at launch (not in smoke/capture runs and headless tests, which drive the game directly).
+    if not smoke and not capture_selection and DisplayServer.get_name() != "headless": show_title("splash")
     get_window().focus_exited.connect(func():
         if active and sim.mode == "manual" and not smoke: paused = true)
     story = StoryModeScript.new()
@@ -324,8 +415,11 @@ func _ready() -> void:
         await capture("godot-selection.png")
         get_tree().quit()
 
-## Keyboard: P1 left side, P2 right side. Gamepads: device k controls player k+1
-## (A attack, B special, X/Y jump, RB grab, LB/triggers shield, stick/d-pad move).
+## Keyboard: P1 left side, P2 right side. Gamepads: device k controls player k+1, with the
+## genre-standard Xbox layout: left stick / d-pad move (flick up = jump), A attack, B special,
+## X / Y jump, LB / RB grab, LT / RT shield, right stick = smash attacks (aerials in the air),
+## Menu (☰) pause, View (⧉) back. Menus: d-pad / stick move the cursor, A choose, B back,
+## Y random fighter, Menu start.
 const KEYBOARD_MAP := {
     "p1_left": [KEY_A], "p1_right": [KEY_D], "p1_jump": [KEY_W], "p1_up": [KEY_W], "p1_down": [KEY_S],
     "p1_block": [KEY_Q], "p1_standard": [KEY_F], "p1_special": [KEY_G], "p1_grab": [KEY_E],
@@ -354,6 +448,7 @@ func setup_inputs() -> void:
         _pad_axis(pre + "down", pi, JOY_AXIS_LEFT_Y, 1.0)
         _pad_axis(pre + "block", pi, JOY_AXIS_TRIGGER_LEFT, 1.0)
         _pad_axis(pre + "block", pi, JOY_AXIS_TRIGGER_RIGHT, 1.0)
+        _pad_button(pre + "grab", pi, JOY_BUTTON_LEFT_SHOULDER)
         _pad_button(pre + "left", pi, JOY_BUTTON_DPAD_LEFT)
         _pad_button(pre + "right", pi, JOY_BUTTON_DPAD_RIGHT)
         _pad_button(pre + "up", pi, JOY_BUTTON_DPAD_UP)
@@ -363,7 +458,6 @@ func setup_inputs() -> void:
         _pad_button(pre + "jump", pi, JOY_BUTTON_X)
         _pad_button(pre + "jump", pi, JOY_BUTTON_Y)
         _pad_button(pre + "grab", pi, JOY_BUTTON_RIGHT_SHOULDER)
-        _pad_button(pre + "block", pi, JOY_BUTTON_LEFT_SHOULDER)
 
 func _pad_button(action: String, device: int, button: JoyButton) -> void:
     var ev := InputEventJoypadButton.new()
@@ -539,13 +633,30 @@ func update_projectiles() -> void:
         var spec: Dictionary = pr.get("spec", {})
         var shape: String = str(spec.get("shape", pr.kind))
         var col: Color = spec.get("color", PLAYER_COLORS[int(pr.owner) % PLAYER_COLORS.size()])
+        if node == null and shape == "clone" and bool(spec.get("echo", false)) and int(pr.owner) < sim.fighters.size():
+            node = FighterView.new()
+            add_child(node)
+            node.setup(sim.fighters[pr.owner].profile)
+            for m in node.find_children("*", "MeshInstance3D", true, false):
+                m.transparency = 0.45
+            node.set_meta("last_pillar_x", pr.x - 99.0)
+            projectile_nodes[pr.id] = node
+        if node is FighterView:
+            var owner_f: Dictionary = sim.fighters[pr.owner]
+            var ghost_pose: String = "Dash" if not pr.get("echoing", false) else (str(owner_f.pose) if owner_f.state == "Attack" else "Idle")
+            node.update_state({"x": pr.x, "y": pr.y - 0.9, "facing": sim._facing_from(int(pr.owner), float(pr.x)),
+                "pose": ghost_pose, "blocking": false}, get_process_delta_time())
+            continue
         if node == null:
             node = WeaponModels.projectile(shape, col)
             node.set_meta("last_pillar_x", pr.x - 99.0)
             add_child(node)
             projectile_nodes[pr.id] = node
         node.position = Vector3(pr.x, pr.y, 0.3)
-        if shape in ["saber", "boomerang", "scythe", "glitch"]:
+        if pr.has("size_now"): node.scale = Vector3.ONE * float(pr.size_now) / float(spec.get("size", 0.3))
+        if pr.get("stuck", false) or pr.get("pooled", false):
+            pass # stuck in the floor / lying on it
+        elif shape in ["saber", "boomerang", "scythe", "glitch"]:
             node.rotation.z -= 0.35
         elif shape in ["pillar", "bone"]:
             # Eruption: pillars burst out of the ground along the path.
@@ -716,7 +827,7 @@ func apply_arena(id: String) -> void:
     var sky_mat := PanoramaSkyMaterial.new()
     # Photographed HDR (Poly Haven) for real light and reflections; the sharp tonemapped
     # panorama is shown by the arena's sky dome. Falls back to the painted sky.
-    var theme: Dictionary = ArenaBuilder.THEMES.get(id, {})
+    var theme: Dictionary = ArenaBuilder.theme_for(id)
     var hdr_path := "res://assets/polyhaven/hdri/%s_2k.hdr" % theme.get("sky", "")
     sky_mat.panorama = load(hdr_path) if ResourceLoader.exists(hdr_path) else a.sky
     sky.radiance_size = Sky.RADIANCE_SIZE_256
@@ -739,7 +850,8 @@ func apply_arena(id: String) -> void:
 
     # Bright daylight / snow arenas need less exposure than night arenas.
     world_env.environment.tonemap_exposure = {"imperial_colosseum": 0.8, "frozen_summit": 0.78, "gladiator_fortress": 0.9,
-        "volcano_sanctum": 0.9, "pirate_galleon": 0.95}.get(id, 1.05)
+        "volcano_sanctum": 0.9, "pirate_galleon": 0.95,
+        "heaven_gate": 0.72, "wheel_heaven": 0.85, "empyrean": 0.95, "heaven_spheres": 0.85, "cocytus": 0.85}.get(id, float(a.get("exposure", 1.05)))
     sunlight.rotation_degrees = a.sun_rot
     sunlight.light_color = a.sun_color
     sunlight.light_energy = 1.35
@@ -893,7 +1005,7 @@ func setup_ui() -> void:
     bottom.add_theme_stylebox_override("panel", panel_style(Color(0.025,0.042,0.075,0.94)))
     var footer := HBoxContainer.new()
     bottom.add_child(footer)
-    var keys := label("P1  A/D · W Sprung/↑ · S ↓ · Q Schild · F Schlag (halten = Smash · auf Waffe = aufheben) · G Spezial (Luft: DASH) · E Greifen/Werfen   |   P2  Pfeile · I Schild · K · L · O   |   🎮 Gamepads: A Schlag · B Spezial · X/Y Sprung · LB Schild · RB Greifen", 11)
+    var keys := label("🎮 MENÜ: Steuerkreuz Kämpfer · A wählen · Y Zufall · X Bosse · LB/RB Arena · ⧉ Modus · R3 Teams · ☰ KAMPF · B Hauptmenü   |   KAMPF: A Schlag · B Spezial · X/Y Sprung · LB/RB Greifen · LT/RT Schild · R-Stick Smash · ☰ Pause   |   ⌨ P1 A/D W S Q F G E · P2 Pfeile I K L O", 11)
     keys.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     footer.add_child(keys)
     footer.add_child(button("↻  R", CYAN, restart_round))
@@ -954,7 +1066,18 @@ func setup_ui() -> void:
     btn_story.add_theme_font_size_override("font_size", 12)
     top_h.add_child(btn_story)
 
-    var btn_players := button("👥 2 SPIELER (1v1)", Color("38bdf8"), _toggle_player_count)
+    var btn_home := button("🏠 MENÜ", Color("fbbf24"), show_title)
+    btn_home.custom_minimum_size = Vector2(90, 34)
+    btn_home.add_theme_font_size_override("font_size", 12)
+    top_h.add_child(btn_home)
+
+    var btn_boss := button("👁 BOSSKAMPF", Color("ff5a1f"), open_boss_menu)
+    btn_boss.name = "BtnBoss"
+    btn_boss.custom_minimum_size = Vector2(130, 34)
+    btn_boss.add_theme_font_size_override("font_size", 12)
+    top_h.add_child(btn_boss)
+
+    var btn_players := button("👥 1 GEGEN 1", Color("38bdf8"), _toggle_player_count)
     btn_players.name = "BtnPlayerCount"
     btn_players.custom_minimum_size = Vector2(150, 34)
     btn_players.add_theme_font_size_override("font_size", 12)
@@ -1042,6 +1165,7 @@ func setup_ui() -> void:
     arena_row.add_theme_constant_override("v_separation", 3)
     center_box.add_child(arena_row)
     for aid in ARENAS:
+        if ARENAS[aid].get("boss", false): continue # boss levels are reached through the boss mode
         var abtn := Button.new()
         abtn.text = ARENAS[aid].name.left(10)
         abtn.custom_minimum_size = Vector2(68, 20)
@@ -1051,52 +1175,61 @@ func setup_ui() -> void:
         var target_aid: String = aid
         abtn.pressed.connect(func(): apply_arena(target_aid))
         arena_row.add_child(abtn)
+    var shop_btn := Button.new()
+    shop_btn.text = "★ SHOP-ARENA"
+    shop_btn.custom_minimum_size = Vector2(80, 20)
+    shop_btn.add_theme_font_size_override("font_size", 8)
+    shop_btn.add_theme_color_override("font_color", Color("fbbf24"))
+    shop_btn.add_theme_stylebox_override("normal", panel_style(Color("2b1f08"), Color("fbbf24"), 1, 4))
+    shop_btn.focus_mode = Control.FOCUS_NONE
+    shop_btn.pressed.connect(_cycle_shop_arena)
+    arena_row.add_child(shop_btn)
 
     _refresh_option_buttons.call_deferred()
 
     # 5. 40-FIGHTER PRESETS (2 ROWS OF 20 CARDS)
     mk_presets = [
         {"id": "ninja", "name": "VOLT NINJA", "prompt": "Blitzschneller Schattenninja mit elektrischen Klingen"},
-        {"id": "golem", "name": "LAVA GOLEM", "prompt": "Gepanzerter Lavagolem mit brennenden Fäusten"},
-        {"id": "valkyrie", "name": "VALKYRIE", "prompt": "Strahlende Moe Valkyrie Paladin Kriegerin mit Lichtflügeln und Rapier"},
-        {"id": "dragon", "name": "IGNIS DRAKE", "prompt": "Mächtiger Cyber Drachenritter mit flammendem Drachen-Großschwert"},
-        {"id": "goku", "name": "KAIRO", "prompt": "Kairo der Sturmmönch mit Solar-Kanone"},
-        {"id": "vegeta", "name": "VARAKH", "prompt": "Varakh der Sternenprinz mit Nova-Strahl"},
-        {"id": "frieza", "name": "XYLAR", "prompt": "Xylar der Leerenkaiser mit Nadelstrahl"},
-        {"id": "subzero", "name": "GLACIEM", "prompt": "Glaciem die Frostassassine mit Eissplitter"},
-        {"id": "pain", "name": "ORYN", "prompt": "Oryn der Schwerkraftprophet mit Abstoßungswelle"},
-        {"id": "luffy", "name": "TOBI", "prompt": "Tobi der Gummikapitän mit Schleuderfaust"},
-        {"id": "zoro", "name": "JUBEI", "prompt": "Jubei der Dreiklingen-Wanderer mit Tigerschnitt"},
-        {"id": "naruto", "name": "REN", "prompt": "Ren der Wirbelfuchs mit Spiralkern"},
-        {"id": "sasuke", "name": "KAGE", "prompt": "Kage der Donnerklinge mit Tausend Funken"},
-        {"id": "saitama", "name": "BRUNO", "prompt": "Bruno der Einschlag-Held mit Ernstfall-Schlag"},
-        {"id": "tanjiro", "name": "HIKARU", "prompt": "Hikaru der Sonnentänzer mit Morgenrotschnitt"},
-        {"id": "sonic", "name": "ZIP", "prompt": "Zip der Tempoigel mit Turbo-Rolle"},
-        {"id": "akaza", "name": "RAIGA", "prompt": "Raiga der Kompassdämon mit Kompassnova"},
-        {"id": "blue_eyes", "name": "ALBION", "prompt": "Albion der Silberwyrm mit Sturmstrahl"},
-        {"id": "charizard", "name": "PYRAX", "prompt": "Pyrax die Glutwyvern mit Glutsturm"},
-        {"id": "anubis", "name": "ANUBIS", "prompt": "Jackal God Anubis wielding dual Khopesh"},
-        {"id": "specter", "name": "SPECTER", "prompt": "Void Specter crystal phantom warrior with void lance"},
-        {"id": "phoenix", "name": "PHOENIX", "prompt": "Phoenix Empress with feather armor and phoenix glaive"},
-        {"id": "golden_golem", "name": "GOLD GOLEM", "prompt": "Golden Armored Golem ancient guardian titan Tripo"},
-        {"id": "tripo_fran_statue", "name": "FRAN VIERA", "prompt": "Fran rabbit warrior huntress bow Tripo"},
+        {"id": "golem", "name": "MAGMOR", "prompt": "Gepanzerter Lavagolem mit brennenden Fäusten"},
+        {"id": "valkyrie", "name": "BOLTAR", "prompt": "Strahlende Moe Valkyrie Paladin Kriegerin mit Lichtflügeln und Rapier"},
+        {"id": "dragon", "name": "TEMPLAR", "prompt": "Mächtiger Cyber Drachenritter mit flammendem Drachen-Großschwert"},
+        {"id": "kairo", "name": "KAIRO", "prompt": "Kairo der Sturmmönch mit Solar-Kanone"},
+        {"id": "varakh", "name": "VARAKH", "prompt": "Varakh der Scharlachfürst mit Nova-Strahl"},
+        {"id": "xylar", "name": "XYLAR", "prompt": "Xylar der Leerenkaiser mit Nadelstrahl"},
+        {"id": "glaciem", "name": "GLACIEM", "prompt": "Glaciem die Frostassassine mit Eissplitter"},
+        {"id": "oryn", "name": "ORYN", "prompt": "Oryn der Schwerkraftprophet mit Abstoßungswelle"},
+        {"id": "tobi", "name": "TOBI", "prompt": "Tobi der Federfaust-Raufbold mit Schleuderfaust"},
+        {"id": "jubei", "name": "JUBEI", "prompt": "Jubei der Windklingen-Wanderer mit Sturmschnitt"},
+        {"id": "ren", "name": "REN", "prompt": "Ren die Kirschkriegerin mit Blütenwirbel"},
+        {"id": "amethya", "name": "AMETHYA", "prompt": "Amethya die Donnerhexe mit Amethystblitz"},
+        {"id": "bruno", "name": "BRUNO", "prompt": "Bruno der Einschlag-Held mit Meteorfaust"},
+        {"id": "hikaru", "name": "HIKARU", "prompt": "Hikaru der Glutklingen-Wanderer mit Morgenrotschnitt"},
+        {"id": "zip", "name": "ZIP", "prompt": "Zip der Blitzkurier mit Turbo-Sprint"},
+        {"id": "raiga", "name": "RAIGA", "prompt": "Raiga die Donnerfaust mit Sternschlag"},
+        {"id": "albion", "name": "ALBION", "prompt": "Albion der Silberwyrm mit Sturmstrahl"},
+        {"id": "pyrax", "name": "PYRAX", "prompt": "Pyrax die Glutwyvern mit Glutsturm"},
+        {"id": "anubis", "name": "AURUM", "prompt": "Jackal God Anubis wielding dual Khopesh"},
+        {"id": "specter", "name": "RAVENNA", "prompt": "Void Specter crystal phantom warrior with void lance"},
+        {"id": "phoenix", "name": "SCARLET", "prompt": "Phoenix Empress with feather armor and phoenix glaive"},
+        {"id": "golden_golem", "name": "BRUNHILD", "prompt": "Golden Armored Golem ancient guardian titan Tripo"},
+        {"id": "lepora", "name": "LEPORA", "prompt": "Lepora die Mondjägerin mit Mondbogen"},
         {"id": "tripo_fantasy_female", "name": "THORN WITCH", "prompt": "Thorn Sorceress dark magic Tripo"},
         {"id": "tripo_nyx_harvester", "name": "NYX HARVESTER", "prompt": "Nyx Harvester of Souls demon scythe reaper Tripo"},
-        {"id": "tripo_cat_girl", "name": "KITSUNE", "prompt": "Cat Girl Kitsune Warrior blade Tripo"},
-        {"id": "tripo_dragon_blue", "name": "BLUE WYRM", "prompt": "Blue Wyrm Frost Dragon beast Tripo"},
+        {"id": "tripo_cat_girl", "name": "SHIRA", "prompt": "Cat Girl Kitsune Warrior blade Tripo"},
+        {"id": "tripo_dragon_blue", "name": "FROSTWYRM", "prompt": "Blue Wyrm Frost Dragon beast Tripo"},
         {"id": "tripo_white_sci", "name": "CYBORG MECH", "prompt": "White Cyborg Android Mech warrior Tripo"},
         {"id": "tripo_skeleton_dog", "name": "REAPER HOUND", "prompt": "Reaper Skeleton Hound nether beast"},
         {"id": "tripo_wooden_forest", "name": "TREANT GOLEM", "prompt": "Ancient Treant Wood Golem nature Tripo"},
         {"id": "tripo_nine_tailed", "name": "CELESTIAL FOX", "prompt": "Celestial Nine Tailed Fox Kyuubi spirit Tripo"},
-        {"id": "tripo_quadruped_tree", "name": "SYLVAN BEAST", "prompt": "Sylvan Beast Treant quadruped creature Tripo"},
-        {"id": "steel_knight", "name": "STEEL KNIGHT", "prompt": "Steel Knight Ritter in Vollplatte mit eisernem Schild"},
+        {"id": "tripo_quadruped_tree", "name": "MOSSBACK", "prompt": "Sylvan Beast Treant quadruped creature Tripo"},
+        {"id": "steel_knight", "name": "CARDINAL", "prompt": "Steel Knight Ritter in Vollplatte mit eisernem Schild"},
         {"id": "vanguard_soldier", "name": "VANGUARD", "prompt": "Vanguard Soldat mit Cyber-Rüstung und Photonenkanone"},
         {"id": "sorceress_medea", "name": "SORCERESS", "prompt": "Sorceress Medea Erzmagierin mit astraler Dunkelmagie"},
-        {"id": "skeleton_reaper", "name": "REAPER", "prompt": "Skeleton Reaper Untoter Seelenernter mit Knochensense"},
+        {"id": "skeleton_reaper", "name": "FLAYER", "prompt": "Skeleton Reaper Untoter Seelenernter mit Knochensense"},
         {"id": "mutant_titan", "name": "MUTANT", "prompt": "Mutant Titan kolossaler Koloss mit Giftschlag"},
         {"id": "swat_specops", "name": "SWAT AGENT", "prompt": "SWAT SpecOps Taktischer Agent mit Schockgranaten"},
-        {"id": "samurai_dreyar", "name": "SAMURAI", "prompt": "Samurai Dreyar Meister mit Wind-Klingen und Sturm-Schritten"},
-        {"id": "pirate_captain", "name": "KORSAR", "prompt": "Korsar Corsair Piratenkapitän mit Entermesser und Donnerbüchse"},
+        {"id": "samurai_dreyar", "name": "KOMMANDANT", "prompt": "Samurai Dreyar Meister mit Wind-Klingen und Sturm-Schritten"},
+        {"id": "pirate_captain", "name": "SERAPHINE", "prompt": "Korsar Corsair Piratenkapitän mit Entermesser und Donnerbüchse"},
         {"id": "vampire_lord", "name": "VLAD", "prompt": "Vampirfürst Vlad Gothic Lord mit Blut-Magie und Fledermaus-Schwarm"},
         {"id": "wizard_sorcerer", "name": "PYRUS", "prompt": "Erzmagier Pyrus Feuerzauberer mit Meteorschlag und Flammenstab"},
         {"id": "warrok_brute", "name": "WARROK", "prompt": "Warrok Koloss Urzeitlicher Berserker mit Knochenkeule und Erdbeben"},
@@ -1175,6 +1308,12 @@ func setup_ui() -> void:
         badge_p2.visible = false
         card.add_child(badge_p2)
 
+        var cursor_frame := Panel.new()
+        cursor_frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+        cursor_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        cursor_frame.visible = false
+        card.add_child(cursor_frame)
+
         var p_idx := idx
         card.mouse_entered.connect(func():
             _on_card_hovered(p_idx)
@@ -1192,7 +1331,7 @@ func setup_ui() -> void:
         )
 
         mk_grid.add_child(card)
-        mk_card_buttons.append({"button": card, "badge_p1": badge_p1, "badge_p2": badge_p2})
+        mk_card_buttons.append({"button": card, "badge_p1": badge_p1, "badge_p2": badge_p2, "cursor": cursor_frame})
 
     # 7. FUSIONSKAMMER MODAL STUDIO
     _setup_fusionskammer_modal()
@@ -1208,6 +1347,9 @@ func setup_ui() -> void:
     result_label = label("", 26)
     result_box.add_child(result_label)
     result_box.add_child(button("REVANCHE  ·  R", CYAN, restart_round))
+    next_boss_button = button("NÄCHSTER BOSS ▶  (A)", Color("ff5a1f"), next_boss)
+    result_box.add_child(next_boss_button)
+    next_boss_button.hide()
     result_box.add_child(button("Neue Prompts", ORANGE, show_selection))
     result_panel.hide()
 
@@ -1399,7 +1541,7 @@ func signature_effect(index: int, mech: String, color: Color) -> void:
     var fx: float = float(f.facing)
     var center := Vector3(f.x, f.y + 1.1, 0.35)
     match mech:
-        "beam":
+        "beam", "charge_beam":
             var beam_len: float = float(f.pending.get("ability", {}).get("range", 6.0)) if f.pending.has("ability") else 6.0
             var core := _beam(center + Vector3(fx * 0.5, 0, 0), center + Vector3(fx * (beam_len + 0.5), 0, 0), color, 0.45)
             _fade_free(core, 0.35)
@@ -1412,14 +1554,14 @@ func signature_effect(index: int, mech: String, color: Color) -> void:
                 shock_ring(center + Vector3(0, -0.4 + k * 0.4, 0), color, 3.0 + k)
             spark_burst(center, color, 40, 7.0, 0.1)
             sound("lava")
-        "dash":
+        "dash", "trail_dash":
             for k in range(5):
                 spark_burst(center - Vector3(fx * k * 0.4, 0, 0), color, 8, 3.0, 0.08)
             sound("electric")
         "barrage":
             spark_burst(center + Vector3(fx * 1.0, 0, 0), color, 40, 6.0, 0.08)
             sound("hit")
-        "power":
+        "power", "one_punch":
             shock_ring(center + Vector3(fx * 1.2, 0, 0), color, 4.5)
             flash_screen(color, 0.25)
             camera_shake = 1.0
@@ -1431,8 +1573,34 @@ func signature_effect(index: int, mech: String, color: Color) -> void:
             spark_burst(center, color, 60, 8.0, 0.12)
             announce("WUT!", color, 0.4)
             sound("lava")
-        "eruption", "meteor", "mine", "turret", "projectile", "clone":
+        "eruption", "meteor", "mine", "turret", "projectile", "clone", "mark", "javelin", "magma", "board", "volley", "nova", "shadow_clone", "singularity":
             spark_burst(center + Vector3(fx * 0.6, 0, 0), color, 14, 4.0, 0.08)
+        "mark_strike":
+            flash_screen(color, 0.3)
+            camera_shake = 0.6
+            sound("electric")
+        "recall":
+            shock_ring(center, color, 1.4)
+        "meltdown":
+            for k in range(3):
+                shock_ring(center + Vector3(0, -0.5 + k * 0.5, 0), color, 5.0 + k * 1.5)
+            spark_burst(center, color, 90, 11.0, 0.14)
+            flash_screen(color, 0.5)
+            announce("KERNSCHMELZE!", color, 0.5)
+            camera_shake = 1.4
+            sound("lava")
+        "cannon":
+            announce("FEUER!", color, 0.35)
+            sound("lava")
+        "bulwark":
+            shock_ring(center + Vector3(fx * 0.6, 0, 0), color, 1.6)
+            sound("block")
+        "iai":
+            shock_ring(Vector3(f.x, f.y + 0.1, 0.3), color, 2.2)
+        "leap_slam":
+            spark_burst(Vector3(f.x, f.y + 0.2, 0.3), color, 24, 5.0, 0.1)
+            announce("WAAARGH!", color, 0.35)
+            sound("jump")
         "teleport":
             pass
 
@@ -1627,7 +1795,7 @@ func screen_blood(strength: float = 1.0) -> void:
 
 ## Finishers. With blood on: burned to ash, frozen and shattered, exploded by
 ## lightning, limbs torn off by the void, decapitation. With blood off they stay clean.
-func play_finisher(winner: int, loser: int, kind: String, fin_name: String) -> void:
+func play_finisher(winner: int, loser: int, kind: String, fin_name: String, variant: String = "") -> void:
     if finisher_running or loser >= views.size(): return
     finisher_running = true
     cinematic = true
@@ -1656,7 +1824,11 @@ func play_finisher(winner: int, loser: int, kind: String, fin_name: String) -> v
     wf.pose = {"inferno": "Beam", "frost": "Thrust", "storm": "Summon", "void": "Cast"}.get(kind, "HeavySlash" if not wf.weapon.is_empty() else "HeavyPunch")
     await _wait(0.4)
     announce(fin_name + "!", Color("ffb020"), 0.8)
+    # Fighters with their own finisher (fighter_kits.gd) play their variant; the rest use the element finisher.
+    if await _finisher_variant(variant, winner, loser, center, floor_y, side, flesh): kind = "__done"
     match kind:
+        "__done":
+            pass
         "inferno":
             sound("lava")
             lf.pose = "HitReact"
@@ -1801,10 +1973,480 @@ func play_finisher(winner: int, loser: int, kind: String, fin_name: String) -> v
     cinematic = false
     finisher_running = false
     if active and sim.result >= 0 and (story == null or not story.running):
-        result_label.text = "SPIELER %d GEWINNT!\nFINISHER: %s" % [sim.result + 1, fin_name]
+        result_label.text = "%s\nFINISHER: %s" % [winner_text(), fin_name]
         result_panel.show()
 
 ## KO at the blast zone: light pillar pointing back into the stage, sparks, flash, slow-mo.
+## Animates one number of a fighter dictionary over time (tweens only work on objects).
+## Called without await it runs alongside the rest of the cinematic.
+func _tween_dict(d: Dictionary, key: String, to: float, time: float) -> void:
+    var from: float = float(d[key])
+    var t := 0.0
+    while t < time:
+        await get_tree().process_frame
+        t += get_process_delta_time()
+        d[key] = lerpf(from, to, clampf(t / time, 0.0, 1.0))
+
+## Own finisher per fighter (variant from fighter_kits.gd). Returns false for unknown variants.
+func _finisher_variant(variant: String, winner: int, loser: int, center: Vector3, floor_y: float, side: float, flesh: Color) -> bool:
+    var lf: Dictionary = sim.fighters[loser]
+    var wf: Dictionary = sim.fighters[winner]
+    var lv = views[loser]
+    match variant:
+        "ninja":
+            # Raijin execution: six lightning blinks through the opponent, then everything falls apart.
+            sound("electric")
+            for k in range(6):
+                var s2: float = 1.0 if k % 2 == 0 else -1.0
+                wf.x = lf.x + s2 * 1.2
+                wf.facing = -int(s2)
+                wf.pose = "Attack" if k % 2 == 0 else "Kick"
+                var cut := _beam(center + Vector3(-1.3, randf_range(-0.7, 0.7), 0.45), center + Vector3(1.3, randf_range(-0.7, 0.7), 0.45), Color("aef8ff"), 0.07)
+                _fade_free(cut, 0.3)
+                spark_burst(center, Color("49def4"), 18, 7.0, 0.08)
+                lf.pose = "HitReact"
+                sound("hit")
+                await _wait(0.12)
+            wf.x = lf.x - side * 1.8
+            wf.facing = int(side)
+            wf.pose = "Idle"
+            await _wait(0.6)
+            flash_screen(Color("dff7ff"), 0.6)
+            camera_shake = 1.0
+            sound("electric")
+            if gore_on and lv.has_bone("head"):
+                for key in ["head", "left_arm", "right_arm", "left_leg", "right_leg"]:
+                    if not lv.has_bone(key): continue
+                    var at: Vector3 = lv.bone_world(key)
+                    lv.gore_hide_bone(key)
+                    gib(at, Vector3(randf_range(-4, 4), randf_range(3, 7), 0), flesh, 0.22, floor_y)
+                    blood_spray(at, Vector3(randf_range(-1, 1), 1, 0), 30, 6.0)
+                blood_pool(lf.x, floor_y, 2.4)
+                screen_blood(0.8)
+                lf.pose = "Defeat"
+            else:
+                lv.visible = false
+                spark_burst(center, Color("e0f7ff"), 90, 12.0, 0.12)
+            return true
+        "valkyrie":
+            # Judgement of light: a giant spear of light falls from the sky onto the opponent.
+            wf.pose = "Summon"
+            await _wait(0.4)
+            var column := _beam(Vector3(lf.x, 16.0, 0.3), Vector3(lf.x, floor_y, 0.3), Color("fff3b0"), 0.2)
+            _fade_free(column, 1.2)
+            await _wait(0.25)
+            var spear := _beam(Vector3(lf.x, floor_y + 12.0, 0.3), Vector3(lf.x, floor_y + 8.0, 0.3), Color("ffe26a"), 0.35)
+            var tw := create_tween()
+            tw.tween_property(spear, "position:y", spear.position.y - 9.5, 0.28).set_ease(Tween.EASE_IN)
+            await _wait(0.28)
+            _fade_free(spear, 0.6)
+            flash_screen(Color("fff8d6"), 0.8)
+            shock_ring(center, Color("ffe26a"), 6.0)
+            camera_shake = 1.2
+            sound("electric")
+            if gore_on:
+                blood_spray(center, Vector3(0, 1, 0), 120, 10.0)
+                for k in range(10):
+                    gib(center + Vector3(randf_range(-0.3, 0.3), randf_range(-0.5, 0.5), 0), Vector3(randf_range(-6, 6), randf_range(2, 8), 0), flesh, randf_range(0.12, 0.28), floor_y)
+                blood_pool(lf.x, floor_y, 2.2)
+                screen_blood(0.7)
+            lv.visible = false
+            spark_burst(center, Color("ffe26a"), 120, 9.0, 0.14)
+            return true
+        "golem":
+            # Volcano grave: the ground opens and the opponent sinks into rising lava.
+            wf.pose = "Slam"
+            camera_shake = 0.8
+            sound("lava")
+            for k in range(5):
+                erupt_pillar(Vector3(lf.x + (k - 2) * 0.7, floor_y - 0.4, 0.2), Color("ff6d2b"), false)
+            lf.pose = "HitReact"
+            _tween_dict(lf, "y", floor_y - 2.6, 1.3)
+            for k in range(8):
+                var lava := _beam(Vector3(lf.x + randf_range(-0.6, 0.6), floor_y - 0.3, 0.25), Vector3(lf.x, floor_y + 2.0 + k * 0.25, 0.25), Color("ff5a1f").lerp(Color("ffd060"), k / 8.0), 0.35)
+                _fade_free(lava, 1.0)
+                lv.char_body((k + 1) / 8.0)
+                spark_burst(Vector3(lf.x, floor_y + 0.3, 0.3), Color("ff7a2a"), 20, 6.0, 0.1)
+                await _wait(0.16)
+            var geyser := _beam(Vector3(lf.x, floor_y - 0.5, 0.3), Vector3(lf.x, floor_y + 9.0, 0.3), Color("ffb347"), 0.9)
+            _fade_free(geyser, 0.9)
+            flash_screen(Color("ff7a2a"), 0.5)
+            camera_shake = 1.2
+            if gore_on:
+                for k in range(8):
+                    gib(Vector3(lf.x, floor_y + 0.5, 0.2), Vector3(randf_range(-3, 3), randf_range(6, 11), 0), Color(0.08, 0.04, 0.03), randf_range(0.12, 0.25), floor_y)
+            lv.visible = false
+            lf.y = floor_y
+            return true
+        "pirate":
+            # Broadside: three cannonballs fly in from off screen.
+            wf.pose = "Summon"
+            announce("FEUER FREI!", Color("fbbf24"), 0.5)
+            await _wait(0.35)
+            for k in range(3):
+                var ball: Node3D = WeaponModels.projectile("cannonball", Color("fbbf24"))
+                add_child(ball)
+                var from := Vector3(lf.x - side * 14.0, lf.y + 0.6 + k * 0.4, 0.3)
+                ball.position = from
+                var fly := create_tween()
+                fly.tween_property(ball, "position", center + Vector3(0, -0.4 + k * 0.4, 0), 0.32)
+                sound("lava")
+                await _wait(0.32)
+                ball.queue_free()
+                spark_burst(center, Color("fbbf24"), 50, 10.0, 0.14)
+                shock_ring(center, Color("fb923c"), 3.0 + k)
+                flash_screen(Color("fb923c"), 0.35)
+                camera_shake = 0.9 + k * 0.2
+                lf.pose = "HitReact"
+                lf.x += side * 0.5
+                if gore_on:
+                    blood_spray(center, Vector3(side, 0.6, 0), 40, 8.0)
+                await _wait(0.18)
+            if gore_on:
+                for k in range(12):
+                    gib(center + Vector3(randf_range(-0.3, 0.3), randf_range(-0.5, 0.6), 0), Vector3(side * randf_range(3, 9), randf_range(2, 8), 0), flesh, randf_range(0.12, 0.3), floor_y)
+                blood_pool(lf.x, floor_y, 2.4)
+                screen_blood(0.9)
+                lv.visible = false
+            else:
+                var start_x: float = lf.x
+                var t := 0.0
+                while t < 0.8:
+                    await get_tree().process_frame
+                    t += get_process_delta_time()
+                    lf.x = start_x + side * 9.0 * t
+                    lf.y = floor_y + 6.0 * t
+                lv.visible = false
+            return true
+        "knight":
+            # Shield judge: three shield bashes, then a leaping shield slam that flattens the opponent.
+            for k in range(3):
+                wf.pose = "Attack"
+                await _wait(0.12)
+                views[winner].shield_flash()
+                spark_burst(center + Vector3(-side * 0.5, 0, 0), Color("e2e8f0"), 24, 6.0, 0.08)
+                lf.pose = "HitReact"
+                lf.x += side * 0.35
+                wf.x += side * 0.35
+                camera_shake = 0.5
+                sound("block")
+                wf.pose = "Block"
+                await _wait(0.2)
+            center = Vector3(lf.x, lf.y + 1.0, 0.0)
+            var jump_from: float = wf.y
+            _tween_dict(wf, "y", jump_from + 3.2, 0.3)
+            _tween_dict(wf, "x", lf.x, 0.3)
+            wf.pose = "Rise"
+            await _wait(0.35)
+            wf.pose = "Stomp"
+            _tween_dict(wf, "y", floor_y + 0.4, 0.14)
+            await _wait(0.14)
+            flash_screen(Color.WHITE, 0.5)
+            shock_ring(Vector3(lf.x, floor_y + 0.2, 0.3), Color("e2e8f0"), 5.0)
+            camera_shake = 1.4
+            sound("hit")
+            var squash := create_tween()
+            squash.tween_property(lv, "scale", Vector3(1.4, 0.12, 1.4), 0.12)
+            if gore_on:
+                blood_spray(Vector3(lf.x, floor_y + 0.2, 0.3), Vector3(0, 1, 0), 120, 8.0)
+                blood_pool(lf.x, floor_y, 3.0)
+                screen_blood(0.8)
+            await _wait(0.6)
+            wf.y = floor_y
+            wf.x = lf.x - side * 1.3
+            lv.visible = false
+            lv.scale = Vector3.ONE
+            return true
+        "samurai":
+            # Thousand cuts: darkness, a storm of slashes, the blade returns to its sheath.
+            wf.pose = "Charge"
+            create_tween().tween_property(screen_flash, "color", Color(0, 0, 0, 0.8), 0.25)
+            await _wait(0.3)
+            wf.x = lf.x + side * 1.9
+            wf.facing = int(side)
+            for k in range(14):
+                var ang: float = randf() * PI
+                var off := Vector3(cos(ang), sin(ang), 0) * 1.8
+                _fade_free(_beam(center - off + Vector3(0, 0, 0.5), center + off + Vector3(0, 0, 0.5), Color("f0fffc"), 0.05), 0.5)
+                if k % 3 == 0: sound("hit")
+                await _wait(0.05)
+            await _wait(0.5)
+            create_tween().tween_property(screen_flash, "color", Color(0, 0, 0, 0.35), 0.2)
+            announce("…", Color("99f6e4"), 0.3)
+            sound("block") # the blade clicks into the sheath
+            await _wait(0.4)
+            flash_screen(Color("e6fffa"), 0.6)
+            camera_shake = 1.0
+            if gore_on and lv.has_bone("head"):
+                for key in ["head", "left_arm", "right_arm", "left_leg", "right_leg"]:
+                    if not lv.has_bone(key): continue
+                    var at: Vector3 = lv.bone_world(key)
+                    lv.gore_hide_bone(key)
+                    gib(at, Vector3(randf_range(-3, 3), randf_range(2, 6), 0), flesh, 0.2, floor_y)
+                blood_fountain(center + Vector3(0, 0.5, 0), Vector3(0, 1, 0), 1.6)
+                blood_spray(center, Vector3(0, 1, 0), 100, 9.0)
+                blood_pool(lf.x, floor_y, 2.8)
+                screen_blood(1.0)
+                await _wait(0.6)
+                lf.pose = "Defeat"
+            else:
+                lv.visible = false
+                spark_burst(center, Color("99f6e4"), 100, 10.0, 0.12)
+            return true
+        "warrok":
+            # Earth breaker: lifted high overhead, then smashed into the ground.
+            wf.pose = "Roar"
+            sound("lava")
+            await _wait(0.3)
+            wf.x = lf.x - side * 0.8
+            lf.pose = "HitReact"
+            _tween_dict(lf, "y", floor_y + 3.4, 0.45)
+            wf.pose = "Rise"
+            await _wait(0.6)
+            wf.pose = "Slam"
+            _tween_dict(lf, "y", floor_y, 0.12)
+            await _wait(0.12)
+            center = Vector3(lf.x, floor_y + 0.5, 0.0)
+            flash_screen(Color.WHITE, 0.55)
+            shock_ring(center, Color("f97316"), 7.0)
+            for k in range(6):
+                erupt_pillar(Vector3(lf.x + (k - 2.5) * 0.9, floor_y - 0.4, 0.2), Color("f97316"), false)
+            camera_shake = 1.6
+            sound("hit")
+            lf.pose = "Defeat"
+            if gore_on:
+                for k in range(14):
+                    gib(center, Vector3(randf_range(-7, 7), randf_range(3, 9), 0), flesh, randf_range(0.12, 0.3), floor_y)
+                blood_spray(center, Vector3(0, 1, 0), 140, 11.0)
+                blood_pool(lf.x, floor_y, 3.0)
+                screen_blood(1.0)
+                lv.visible = false
+            await _wait(0.5)
+            return true
+        "kairo":
+            # Solar flood: charging aura, then a beam that swallows the opponent.
+            wf.pose = "Charge"
+            sound("electric")
+            for k in range(4):
+                shock_ring(Vector3(wf.x, wf.y + 1.0, 0.3), Color("7dd3fc"), 1.5 + k * 0.6)
+                await _wait(0.15)
+            wf.pose = "Beam"
+            var fl1 := _beam(Vector3(wf.x + side * 0.5, wf.y + 1.2, 0.35), Vector3(wf.x + side * 16.0, wf.y + 1.2, 0.35), Color("7dd3fc"), 1.4)
+            var fl2 := _beam(Vector3(wf.x + side * 0.5, wf.y + 1.2, 0.4), Vector3(wf.x + side * 16.0, wf.y + 1.2, 0.4), Color("e0f7ff"), 0.6)
+            flash_screen(Color("dff7ff"), 0.7)
+            camera_shake = 1.3
+            lf.pose = "HitReact"
+            for k in range(6):
+                lv.char_body((k + 1) / 6.0)
+                spark_burst(center, Color("bae6fd"), 20, 9.0, 0.1)
+                await _wait(0.12)
+            _fade_free(fl1, 0.5)
+            _fade_free(fl2, 0.4)
+            if gore_on:
+                for k in range(8):
+                    gib(center, Vector3(side * randf_range(4, 10), randf_range(1, 5), 0), Color(0.08, 0.05, 0.04), randf_range(0.12, 0.24), floor_y)
+            lv.visible = false
+            return true
+        "varakh":
+            # Star fall: a rain of ki shots from above, then one big blast.
+            wf.pose = "Summon"
+            wf.y = floor_y + 1.5
+            for k in range(10):
+                var from := Vector3(lf.x + randf_range(-3, 3), floor_y + 9.0, 0.3)
+                _fade_free(_beam(from, Vector3(lf.x + randf_range(-0.4, 0.4), floor_y + 0.5, 0.3), Color("ffe838"), 0.12), 0.25)
+                spark_burst(center, Color("fde047"), 14, 7.0, 0.08)
+                lf.pose = "HitReact" if k % 2 == 0 else "Dazed"
+                camera_shake = 0.5
+                if k % 3 == 0: sound("electric")
+                await _wait(0.09)
+            wf.pose = "Cast"
+            await _wait(0.3)
+            flash_screen(Color("fff7c2"), 0.8)
+            shock_ring(center, Color("ffe838"), 7.0)
+            spark_burst(center, Color("ffe838"), 120, 12.0, 0.14)
+            camera_shake = 1.5
+            sound("lava")
+            if gore_on:
+                for k in range(12):
+                    gib(center, Vector3(randf_range(-8, 8), randf_range(3, 10), 0), flesh, randf_range(0.12, 0.3), floor_y)
+                blood_pool(lf.x, floor_y, 2.6)
+                screen_blood(0.8)
+            lv.visible = false
+            wf.y = floor_y
+            return true
+        "xylar":
+            # Supernova: a giant orb crushes the opponent into the ground.
+            wf.pose = "Summon"
+            var nova: Node3D = WeaponModels.projectile("orb", Color("c084fc"))
+            add_child(nova)
+            gore_nodes.append(nova)
+            nova.position = Vector3(wf.x, wf.y + 3.0, 0.3)
+            nova.scale = Vector3.ONE * 0.3
+            create_tween().tween_property(nova, "scale", Vector3.ONE * 5.0, 1.0)
+            sound("lava")
+            await _wait(1.0)
+            var drop := create_tween()
+            drop.tween_property(nova, "position", center, 0.45).set_ease(Tween.EASE_IN)
+            await _wait(0.45)
+            lf.pose = "HitReact"
+            camera_shake = 1.2
+            await _wait(0.3)
+            flash_screen(Color("e9d5ff"), 0.9)
+            shock_ring(center, Color("c084fc"), 9.0)
+            spark_burst(center, Color("d8b4fe"), 140, 13.0, 0.15)
+            create_tween().tween_property(nova, "scale", Vector3.ONE * 0.01, 0.25)
+            camera_shake = 1.7
+            if gore_on:
+                blood_spray(center, Vector3(0, 1, 0), 120, 11.0)
+                blood_pool(lf.x, floor_y, 3.0)
+                screen_blood(0.9)
+            lv.visible = false
+            return true
+        "ren":
+            # Shadow army: clones surround the opponent and pummel, then a spiral core blast.
+            var ghosts: Array = []
+            for k in range(6):
+                var gv = FighterView.new()
+                add_child(gv)
+                gv.setup(wf.profile)
+                for m in gv.find_children("*", "MeshInstance3D", true, false):
+                    m.transparency = 0.4
+                ghosts.append(gv)
+                gore_nodes.append(gv)
+            sound("jump")
+            for round_k in range(4):
+                for k in range(ghosts.size()):
+                    var ang: float = TAU * k / ghosts.size() + round_k * 0.4
+                    var gx: float = lf.x + cos(ang) * 1.3
+                    ghosts[k].update_state({"x": gx, "y": floor_y + maxf(0.0, sin(ang)) * 1.2, "facing": 1 if gx < lf.x else -1,
+                        "pose": ["Attack", "Kick", "Uppercut"][(k + round_k) % 3], "blocking": false}, 0.1)
+                spark_burst(center, Color("ff9b3d"), 30, 8.0, 0.1)
+                lf.pose = "HitReact"
+                camera_shake = 0.6
+                sound("hit")
+                await _wait(0.22)
+            wf.pose = "SpecialAttack"
+            wf.x = lf.x - side * 1.0
+            var core: Node3D = WeaponModels.projectile("orb", Color("7dd3fc"))
+            add_child(core)
+            gore_nodes.append(core)
+            core.position = center
+            create_tween().tween_property(core, "scale", Vector3.ONE * 3.5, 0.4)
+            await _wait(0.4)
+            flash_screen(Color("dbeafe"), 0.7)
+            shock_ring(center, Color("7dd3fc"), 7.0)
+            camera_shake = 1.4
+            sound("lava")
+            for gv in ghosts: gv.visible = false
+            core.visible = false
+            if gore_on:
+                for k in range(12):
+                    gib(center, Vector3(side * randf_range(3, 10), randf_range(2, 8), 0), flesh, randf_range(0.12, 0.3), floor_y)
+                blood_spray(center, Vector3(side, 0.5, 0), 100, 10.0)
+                blood_pool(lf.x, floor_y, 2.4)
+                screen_blood(0.8)
+            lv.visible = false
+            return true
+        "amethya":
+            # Thunder plunge: a lightning thrust straight through, then the sky answers.
+            wf.pose = "Charge"
+            for k in range(3):
+                spark_burst(Vector3(wf.x, wf.y + 1.0, 0.3), Color("60d5ff"), 20, 5.0, 0.07)
+                sound("electric")
+                await _wait(0.15)
+            var from_x: float = wf.x
+            wf.x = lf.x + side * 1.3
+            wf.pose = "Dash"
+            _fade_free(_beam(Vector3(from_x, floor_y + 1.1, 0.4), Vector3(wf.x, floor_y + 1.1, 0.4), Color("bfefff"), 0.18), 0.5)
+            flash_screen(Color.WHITE, 0.5)
+            lf.pose = "HitReact"
+            if gore_on: blood_spray(center, Vector3(side, 0.3, 0), 80, 9.0)
+            await _wait(0.6)
+            for k in range(3):
+                _fade_free(_beam(Vector3(lf.x + randf_range(-0.5, 0.5), 15.0, 0.3), Vector3(lf.x, floor_y, 0.3), Color("9be7ff"), 0.3), 0.25)
+                flash_screen(Color("e0f7ff"), 0.5)
+                camera_shake = 1.0
+                sound("electric")
+                await _wait(0.2)
+            if gore_on:
+                for k in range(12):
+                    gib(center, Vector3(randf_range(-7, 7), randf_range(3, 9), 0), flesh, randf_range(0.12, 0.3), floor_y)
+                blood_pool(lf.x, floor_y, 2.4)
+                screen_blood(0.9)
+            lv.visible = false
+            spark_burst(center, Color("e0f7ff"), 100, 12.0, 0.12)
+            return true
+        "oryn":
+            # Planet bind: rocks are drawn to the opponent and crush it into a sphere.
+            wf.pose = "Summon"
+            _tween_dict(lf, "y", floor_y + 3.0, 0.8)
+            sound("lava")
+            var rocks: Array = []
+            for k in range(14):
+                var rock := MeshInstance3D.new()
+                var bm := BoxMesh.new()
+                bm.size = Vector3.ONE * randf_range(0.3, 0.7)
+                rock.mesh = bm
+                var rm := StandardMaterial3D.new()
+                rm.albedo_color = Color(0.3, 0.26, 0.24)
+                rock.material_override = rm
+                add_child(rock)
+                gore_nodes.append(rock)
+                var ang: float = TAU * k / 14.0
+                rock.position = Vector3(lf.x + cos(ang) * 7.0, floor_y + 3.0 + sin(ang) * 5.0, 0.2)
+                rocks.append(rock)
+            await _wait(0.6)
+            for rock in rocks:
+                create_tween().tween_property(rock, "position", Vector3(lf.x, floor_y + 4.0, 0.2) + (rock.position - Vector3(lf.x, floor_y + 4.0, 0.2)).normalized() * 0.5, 0.7).set_ease(Tween.EASE_IN)
+            lf.pose = "HitReact"
+            await _wait(0.7)
+            camera_shake = 1.3
+            flash_screen(Color("9900ee"), 0.5)
+            sound("hit")
+            shock_ring(Vector3(lf.x, floor_y + 4.0, 0.3), Color("c084fc"), 4.0)
+            lv.visible = false
+            if gore_on:
+                blood_spray(Vector3(lf.x, floor_y + 4.0, 0.3), Vector3(0, -1, 0), 90, 6.0)
+                blood_pool(lf.x, floor_y, 2.0)
+            await _wait(0.5)
+            for rock in rocks:
+                create_tween().tween_property(rock, "position:y", floor_y + 0.2, 0.4).set_ease(Tween.EASE_IN)
+            await _wait(0.4)
+            camera_shake = 1.0
+            lf.y = floor_y
+            return true
+        "bruno":
+            # The serious punch: one hit, the clouds split.
+            wf.pose = "Charge"
+            announce("…", Color("ffd23f"), 0.3)
+            await _wait(0.6)
+            wf.pose = "HeavyPunch"
+            await _wait(0.12)
+            flash_screen(Color.WHITE, 1.0)
+            slow_motion(0.2, 0.4)
+            camera_shake = 2.0
+            sound("hit")
+            shock_ring(center, Color("ffd23f"), 12.0)
+            _fade_free(_beam(center, center + Vector3(side * 30.0, 6.0, 0), Color("fff7cc"), 1.6), 0.8)
+            if gore_on:
+                for k in range(16):
+                    gib(center, Vector3(side * randf_range(8, 16), randf_range(0, 6), 0), flesh, randf_range(0.12, 0.3), floor_y)
+                blood_spray(center, Vector3(side, 0.2, 0), 160, 16.0)
+                screen_blood(1.0)
+                lv.visible = false
+            else:
+                var start_x: float = lf.x
+                var t := 0.0
+                while t < 0.7:
+                    await get_tree().process_frame
+                    t += get_process_delta_time()
+                    lf.x = start_x + side * 30.0 * t
+                    lf.y = floor_y + 12.0 * t
+                lv.visible = false
+            await _wait(0.6)
+            return true
+    return false
+
 func ko_blast(index: int, x: float, y: float) -> void:
     var col: Color = PLAYER_COLORS[index % PLAYER_COLORS.size()]
     var px: float = clampf(x, Combat.BLAST_ZONE_LEFT + 1.0, Combat.BLAST_ZONE_RIGHT - 1.0)
@@ -1862,15 +2504,12 @@ func _refresh_option_buttons() -> void:
         if b is Button: b.text = texts[n]
 
 func _toggle_player_count() -> void:
-    player_count = 4 if player_count == 2 else 2
+    team_mode = TEAM_MODES[(TEAM_MODES.find(team_mode) + 1) % TEAM_MODES.size()]
+    player_count = 2 if team_mode == "1v1" else 4
     var btn = selection.find_child("BtnPlayerCount", true, false)
     if btn is Button:
-        if player_count == 4:
-            btn.text = "👥 4 SPIELER (FFA)"
-            btn.add_theme_color_override("font_color", Color("c084fc"))
-        else:
-            btn.text = "👥 2 SPIELER (1v1)"
-            btn.add_theme_color_override("font_color", Color("38bdf8"))
+        btn.text = {"1v1": "👥 1 GEGEN 1", "ffa": "👥 4 SPIELER (FFA)", "2v2": "👥 TEAM 2 GEGEN 2", "3v1": "👥 TEAM 3 GEGEN 1"}[team_mode]
+        btn.add_theme_color_override("font_color", {"1v1": Color("38bdf8"), "ffa": Color("c084fc"), "2v2": Color("4ade80"), "3v1": Color("fb923c")}[team_mode])
     for pi in range(player_slot_boxes.size()):
         player_slot_boxes[pi].visible = (pi < player_count)
     refresh_previews()
@@ -1896,6 +2535,7 @@ func refresh_previews() -> void:
         p_list.append(p)
     sim.start(p_list, "manual")
     rebuild_fighters()
+    _apply_p1_skin()
     update_hud()
 
 ## Creates fighter views for the current match. Views whose profile is unchanged are
@@ -1927,9 +2567,14 @@ func start_round(mode: String) -> void:
     for pi in range(player_count):
         var p: Dictionary = remix_profiles[pi] if (pi < remix_profiles.size() and not remix_profiles[pi].is_empty()) else Prompt.interpret(prompts[pi].text, pi)
         p_list.append(p)
+    if boss_active:
+        start_boss(boss_id, boss_rush)
+        return
     begin_match(p_list, mode, stock_count)
     # Finishers in versus matches with exactly two fighters left at the end.
     sim.finishers_enabled = finishers_on and not smoke
+    apply_team_setup()
+    _apply_loadout()
 
 ## Starts a match with ready-made profiles (used by versus and the story mode).
 func begin_match(p_list: Array, mode: String, lives: int = 3) -> void:
@@ -1942,6 +2587,8 @@ func begin_match(p_list: Array, mode: String, lives: int = 3) -> void:
     player_count = p_list.size()
     sim.start(p_list, null, mode, lives)
     sim.ai_level = ai_level
+    last_reward_text = ""
+    progression.begin_match(str(p_list[0].get("family", "")) if not p_list.is_empty() else "", mode)
     for v in views:
         if is_instance_valid(v): v.reset_gore()
     sim.finishers_enabled = false
@@ -2002,7 +2649,1053 @@ func restart_round() -> void:
     elif result_panel.visible:
         start_round(sim.mode)
 
+# ── Controller navigation for menu panels ──
+
+## The topmost menu panel the controller currently drives (null = none).
+func _nav_context() -> Control:
+    if title_panel != null and title_panel.visible: return title_panel
+    if story != null and story.menu_panel.visible: return story.menu_panel
+    if _boss_menu_open(): return boss_menu
+    return null
+
+func _nav_buttons(root: Control) -> Array:
+    var out: Array = []
+    for b in root.find_children("*", "Button", true, false):
+        if b.is_visible_in_tree() and not b.disabled: out.append(b)
+    return out
+
+## D-pad moves the focus to the nearest button in that direction, A presses it.
+func _nav_pad(b: int, root: Control) -> void:
+    var dir := Vector2.ZERO
+    match b:
+        JOY_BUTTON_DPAD_UP: dir = Vector2.UP
+        JOY_BUTTON_DPAD_DOWN: dir = Vector2.DOWN
+        JOY_BUTTON_DPAD_LEFT: dir = Vector2.LEFT
+        JOY_BUTTON_DPAD_RIGHT: dir = Vector2.RIGHT
+        JOY_BUTTON_A:
+            if nav_focus != null and is_instance_valid(nav_focus) and nav_focus.is_visible_in_tree():
+                sound("start")
+                nav_focus.emit_signal("pressed")
+            return
+        _: return
+    _nav_move(root, dir)
+
+func _nav_move(root: Control, dir: Vector2) -> void:
+    var btns: Array = _nav_buttons(root)
+    if btns.is_empty(): return
+    if nav_focus == null or not is_instance_valid(nav_focus) or not btns.has(nav_focus):
+        nav_focus = btns[0]
+    else:
+        var c: Vector2 = nav_focus.get_global_rect().get_center()
+        var best: Button = null
+        var best_score := INF
+        for other in btns:
+            if other == nav_focus: continue
+            var d: Vector2 = other.get_global_rect().get_center() - c
+            var along: float = d.dot(dir)
+            if along <= 4.0: continue
+            var score: float = along + absf(d.cross(dir)) * 2.5
+            if score < best_score:
+                best_score = score
+                best = other
+        if best != null: nav_focus = best
+    var p: Node = nav_focus.get_parent()
+    while p != null:
+        if p is ScrollContainer:
+            (p as ScrollContainer).ensure_control_visible(nav_focus)
+            break
+        p = p.get_parent()
+    sound("jump")
+
+## Keeps the focus frame on the focused button (drawn above every menu layer).
+func _update_nav_frame() -> void:
+    if nav_layer == null:
+        nav_layer = CanvasLayer.new()
+        nav_layer.layer = 90
+        add_child(nav_layer)
+        nav_frame = Panel.new()
+        nav_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        var st := StyleBoxFlat.new()
+        st.bg_color = Color(1.0, 0.82, 0.3, 0.1)
+        st.border_color = Color("fde68a")
+        st.set_border_width_all(3)
+        st.set_corner_radius_all(8)
+        st.shadow_color = Color(1.0, 0.7, 0.2, 0.6)
+        st.shadow_size = 12
+        nav_frame.add_theme_stylebox_override("panel", st)
+        nav_layer.add_child(nav_frame)
+    var ctx: Control = _nav_context()
+    if ctx == null or nav_focus == null or not is_instance_valid(nav_focus) or not nav_focus.is_visible_in_tree() or not ctx.is_ancestor_of(nav_focus):
+        nav_frame.visible = false
+        return
+    var r: Rect2 = nav_focus.get_global_rect()
+    nav_frame.visible = true
+    nav_frame.position = r.position - Vector2(5, 5)
+    nav_frame.size = r.size + Vector2(10, 10)
+
+## Next arena for LB/RB in the fighter selection (classic and bought shop arenas).
+func _step_arena(step: int) -> void:
+    var list: Array = []
+    for aid in ARENAS:
+        if ARENAS[aid].get("boss", false) or not Backgrounds.arena_unlocked(progression, aid): continue
+        list.append(aid)
+    var k: int = wrapi(list.find(current_arena) + step, 0, list.size())
+    apply_arena(list[k])
+    show_status("ARENA: %s   ·   LB / RB wechseln" % ARENAS[list[k]].name, 1.6)
+
+# ── Coins, shop arenas, start screen ──
+
+## Shop loadout: bought weapons join the arena spawns, P1 holds the start weapon, wears the skin.
+func _apply_loadout() -> void:
+    sim.weapon_pool = Rewards.weapon_pool(progression, Combat.base_weapons())
+    if progression.start_weapon != "" and sim.mode != "autonomous": sim.give_weapon(0, progression.start_weapon)
+    _apply_p1_skin()
+
+func _apply_p1_skin() -> void:
+    if views.is_empty() or not is_instance_valid(views[0]) or views[0].profile.has("boss"): return
+    if story != null and story.running: return
+    var look: String = str(Rewards.skin(progression.skin).get("look", "")) if progression.skin != "" else ""
+    BossModels.apply_skin(views[0].model, look)
+
+func _register_shop_arenas() -> void:
+    for bg in Backgrounds.LIST:
+        ARENAS[Backgrounds.arena_id(bg)] = {
+            "name": bg.name, "shop": bg.id, "sky": ARENAS["blood_moon"].sky, "thumb": null, "floor": null, "floor_em": null, "floor_norm": null,
+            "sun_color": (bg.tint as Color).lightened(0.4), "sun_rot": Vector3(-40, 20, 0), "ambient_color": (bg.tint as Color).darkened(0.55),
+            "fire_color": bg.trim, "exposure": Backgrounds.exposure(bg)}
+
+## Next bought shop arena (the button in the arena row).
+func _cycle_shop_arena() -> void:
+    var owned: Array = []
+    for bg in Backgrounds.LIST:
+        if Backgrounds.is_unlocked(progression, bg.id): owned.append(Backgrounds.arena_id(bg))
+    shop_arena_index = (shop_arena_index + 1) % owned.size()
+    apply_arena(owned[shop_arena_index])
+    show_status("★ SHOP-ARENA: %s  (%d von %d freigeschaltet – mehr im Shop)" % [ARENAS[owned[shop_arena_index]].name, owned.size(), Backgrounds.LIST.size()])
+
+## XP and coins for a finished match (story fights included, AI-vs-AI not).
+func _grant_match_rewards(result: int) -> void:
+    if not progression.is_tracking(): return
+    var bonus := 0
+    if boss_active and result >= 0 and not sim.fighters[result].is_boss:
+        bonus = 100 + 25 * maxi(0, _rush_list().find(boss_id))
+    var r: Dictionary = progression.end_match(result, bonus, {"bounty": _bounty()})
+    if r.is_empty(): return
+    if int(r.level) > int(r.level_before):
+        announce("LEVEL UP!  %d" % int(r.level), Color("fde047"), 1.2)
+        flash_screen(Color("fde047"), 0.35)
+    last_reward_text = "\n+%d XP  ·  +%d 🪙  ·  LEVEL %d%s" % [int(r.total), int(r.coins), int(r.level), "  ·  RANG %s!" % r.rank if r.rank_up else ""]
+    last_reward_text += "\nKAMPFNOTE %s  (MÜNZEN ×%.2f)  ·  LIGA %s %+d  (%d LP)%s" % [r.grade, float(r.grade_mult), r.league, int(r.lp_change), int(r.rank_points),
+        "  ·  2× XP-BOOST" if r.boosted else ""]
+    for line in r.extras: last_reward_text += "\n" + str(line)
+    if int(r.win_streak) >= 2: last_reward_text += "\n🔥 SIEGESSERIE %d  ·  MÜNZEN ×%.1f" % [int(r.win_streak), float(r.streak_bonus)]
+    if int(r.level_coins) > 0: last_reward_text += "\n⭐ LEVEL-UP-BONUS +%d 🪙" % int(r.level_coins)
+    var open_tiers: int = Rewards.path_tier(progression) - progression.path_claimed
+    last_reward_text += "\n🏆 RUHMESPFAD STUFE %d · %d/%d XP%s" % [Rewards.path_tier(progression), int(progression.xp) % Rewards.PATH_XP, Rewards.PATH_XP,
+        "  ·  BELOHNUNG WARTET!" if open_tiers > 0 else "  ·  nächste: " + Rewards.reward_text(Rewards.path_reward(Rewards.path_tier(progression) + 1))]
+    for a in r.achievements: show_status("🏆 ERFOLG: %s – %s" % [a.title, a.text], 3.0)
+    if title_info: _refresh_title_info()
+
+## Fighter family with today's bounty.
+func _bounty() -> String:
+    var fams: Array = []
+    for pr in mk_presets:
+        if pr.id != "fusionskammer": fams.append(pr.id)
+    return Rewards.bounty_family(Progression.today(), fams)
+
+func _current_bg() -> Dictionary:
+    var bg: Dictionary = Backgrounds.find(progression.menu_bg)
+    if bg.is_empty() or not Backgrounds.is_unlocked(progression, bg.id): bg = Backgrounds.LIST[0]
+    return bg
+
+func _build_title_screen() -> void:
+    title_screen = Control.new()
+    title_screen.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    root_ui.add_child(title_screen)
+    var black := ColorRect.new()
+    black.color = Color.BLACK
+    black.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    title_screen.add_child(black)
+    title_bg_fill = TextureRect.new()
+    title_bg_fill.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    title_bg_fill.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+    title_bg_fill.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+    title_bg_fill.modulate = Color(0.3, 0.3, 0.34)
+    title_screen.add_child(title_bg_fill)
+    title_bg = TextureRect.new()
+    title_bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    title_bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+    title_bg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+    title_bg.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+    title_screen.add_child(title_bg)
+    title_highlight = Panel.new()
+    title_highlight.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    title_screen.add_child(title_highlight)
+    title_hotspots.clear()
+    for k in range(Backgrounds.MENU_ITEMS.size()):
+        var hb := Button.new()
+        hb.flat = true
+        hb.focus_mode = Control.FOCUS_NONE
+        for st in ["normal", "hover", "pressed", "focus"]: hb.add_theme_stylebox_override(st, StyleBoxEmpty.new())
+        var idx := k
+        hb.mouse_entered.connect(func():
+            title_index = idx
+            _layout_title())
+        hb.pressed.connect(func(): _title_activate(idx))
+        title_screen.add_child(hb)
+        title_hotspots.append(hb)
+    splash_cover = Panel.new()
+    splash_cover.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    var sc_style := StyleBoxFlat.new()
+    sc_style.bg_color = Color(0.0, 0.0, 0.02, 0.82)
+    sc_style.set_corner_radius_all(18)
+    sc_style.shadow_color = Color(0, 0, 0, 0.85)
+    sc_style.shadow_size = 40
+    splash_cover.add_theme_stylebox_override("panel", sc_style)
+    title_screen.add_child(splash_cover)
+    splash_label = label("▶  DRÜCKE START  ◀", 34, Color("fde68a"))
+    splash_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    splash_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+    splash_label.add_theme_color_override("font_outline_color", Color.BLACK)
+    splash_label.add_theme_constant_override("outline_size", 10)
+    splash_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    title_screen.add_child(splash_label)
+    var splash_click := Button.new()
+    splash_click.flat = true
+    splash_click.name = "SplashClick"
+    splash_click.focus_mode = Control.FOCUS_NONE
+    splash_click.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    for st in ["normal", "hover", "pressed", "focus"]: splash_click.add_theme_stylebox_override(st, StyleBoxEmpty.new())
+    splash_click.pressed.connect(func(): if title_stage == "splash": _enter_main_menu())
+    title_screen.add_child(splash_click)
+    title_info = label("", 14, Color("fde68a"))
+    title_info.position = Vector2(20, 12)
+    title_screen.add_child(title_info)
+    var hint := label("↑ ↓ / Maus wählen  ·  ENTER / A bestätigen  ·  Hintergründe und Arenen im SHOP", 11, Color("cbd5e1"))
+    hint.position = Vector2(20, 694)
+    title_screen.add_child(hint)
+    title_screen.resized.connect(_layout_title)
+
+func _refresh_title_info() -> void:
+    var lv: int = progression.level()
+    var hooks := ""
+    if Rewards.login_ready(progression, Progression.today()): hooks += "   ·   🎁 TAGESBELOHNUNG BEREIT (EXTRAS)"
+    if Rewards.path_tier(progression) > progression.path_claimed: hooks += "   ·   🏆 RUHMESPFAD-BELOHNUNG!"
+    if progression.chests > 0: hooks += "   ·   🎁 %d FREIE TRUHE(N)" % progression.chests
+    if Rewards.wheel_free(progression, Progression.today()): hooks += "   ·   🎡 GRATIS-DREH"
+    title_info.text = "🪙 %d   ·   LEVEL %d »%s«   ·   🏅 %s   ·   🔥 SERIE %d   ·   📚 %d %%%s" % [progression.coins, lv, Rewards.title_name(progression),
+        Rewards.league_name(progression.rank_points), progression.win_streak, int(Rewards.collection(progression, Backgrounds.LIST) * 100), hooks]
+
+## Places the menu buttons over the menu painted into the background.
+func _layout_title() -> void:
+    if title_screen == null: return
+    var bg: Dictionary = _current_bg()
+    var tex: Texture2D = title_bg.texture
+    if tex == null: return
+    var area: Vector2 = title_screen.size if title_screen.size.x > 10 else Vector2(1280, 720)
+    var ts: Vector2 = tex.get_size()
+    var sc: float = minf(area.x / ts.x, area.y / ts.y)
+    var disp: Vector2 = ts * sc
+    var off: Vector2 = (area - disp) * 0.5
+    var m: Array = bg.menu
+    var x0: float = off.x + float(m[0]) * disp.x
+    var x1: float = off.x + float(m[2]) * disp.x
+    var y0: float = off.y + float(m[1]) * disp.y
+    var row: float = (float(m[3]) - float(m[1])) * disp.y / Backgrounds.MENU_ITEMS.size()
+    for k in range(title_hotspots.size()):
+        title_hotspots[k].position = Vector2(x0 - 6, y0 + row * k)
+        title_hotspots[k].size = Vector2(x1 - x0 + 12, row)
+    title_highlight.position = Vector2(x0 - 10, y0 + row * title_index + 1)
+    title_highlight.size = Vector2(x1 - x0 + 20, row - 2)
+    var hs := StyleBoxFlat.new()
+    hs.bg_color = Color(bg.trim.r, bg.trim.g, bg.trim.b, 0.16)
+    hs.border_color = (bg.trim as Color).lightened(0.3)
+    hs.set_border_width_all(2)
+    hs.set_corner_radius_all(6)
+    hs.shadow_color = Color(bg.trim.r, bg.trim.g, bg.trim.b, 0.6)
+    hs.shadow_size = 10
+    title_highlight.add_theme_stylebox_override("panel", hs)
+    # Splash: the painted menu is covered, "press start" pulses where it was.
+    var splash: bool = title_stage == "splash"
+    splash_cover.visible = splash
+    splash_label.visible = splash
+    title_highlight.visible = not splash
+    for h in title_hotspots: h.visible = not splash
+    var click: Control = title_screen.get_node_or_null("SplashClick")
+    if click: click.visible = splash
+    var ys: float = off.y + float(m[1]) * disp.y
+    var ye: float = off.y + float(m[3]) * disp.y
+    splash_cover.position = Vector2(x0 - 40, ys - 20)
+    splash_cover.size = Vector2(x1 - x0 + 80, ye - ys + 40)
+    splash_label.position = Vector2(minf(x0 - 160, (x0 + x1) * 0.5 - 260), (ys + ye) * 0.5 - 30)
+    splash_label.size = Vector2(maxf(x1 - x0 + 320, 520), 60)
+
+## stage: "splash" (press start, at launch) or "menu" (straight into the main menu).
+func show_title(stage: String = "menu") -> void:
+    title_stage = stage
+    if title_screen == null: _build_title_screen()
+    var bg: Dictionary = _current_bg()
+    var tex: Texture2D = load(Backgrounds.image_path(bg))
+    title_bg.texture = tex
+    title_bg_fill.texture = tex
+    _close_title_panel()
+    _refresh_title_info()
+    title_screen.show()
+    menu_return_title = false
+    _layout_title.call_deferred()
+    if splash_tween: splash_tween.kill()
+    if title_stage == "splash":
+        splash_tween = create_tween().set_loops()
+        splash_tween.tween_property(splash_label, "modulate:a", 0.25, 0.7)
+        splash_tween.tween_property(splash_label, "modulate:a", 1.0, 0.7)
+
+func _enter_main_menu() -> void:
+    title_stage = "menu"
+    if Rewards.login_ready(progression, Progression.today()) and DisplayServer.get_name() != "headless":
+        _open_title_panel.call_deferred("daily")
+    if splash_tween: splash_tween.kill()
+    splash_label.modulate.a = 1.0
+    flash_screen(_current_bg().trim, 0.25)
+    sound("start")
+    _layout_title()
+
+func hide_title() -> void:
+    if title_screen: title_screen.hide()
+
+func _title_activate(idx: int) -> void:
+    if title_stage == "splash":
+        _enter_main_menu()
+        return
+    sound("start")
+    match Backgrounds.MENU_ITEMS[idx]:
+        "story":
+            hide_title()
+            story.open_menu()
+            menu_return_title = true
+        "versus": hide_title()
+        "extras": _open_title_panel("extras")
+        "options": _open_title_panel("options")
+        "shop": _open_title_panel("shop")
+        "credits": _open_title_panel("credits")
+
+func _title_pad(b: int) -> void:
+    if title_stage == "splash":
+        _enter_main_menu()
+        return
+    if title_panel != null and title_panel.visible:
+        if b == JOY_BUTTON_B or b == JOY_BUTTON_BACK: _close_title_panel()
+        else: _nav_pad(b, title_panel)
+        return
+    if b == JOY_BUTTON_B or b == JOY_BUTTON_BACK:
+        show_title("splash")
+        return
+    match b:
+        JOY_BUTTON_DPAD_UP, JOY_BUTTON_DPAD_LEFT: title_index = wrapi(title_index - 1, 0, Backgrounds.MENU_ITEMS.size())
+        JOY_BUTTON_DPAD_DOWN, JOY_BUTTON_DPAD_RIGHT: title_index = wrapi(title_index + 1, 0, Backgrounds.MENU_ITEMS.size())
+        JOY_BUTTON_A, JOY_BUTTON_START: _title_activate(title_index)
+    _layout_title()
+    sound("jump")
+
+func _close_title_panel() -> void:
+    if title_panel:
+        title_panel.queue_free()
+        title_panel = null
+    title_panel_kind = ""
+
+func _open_title_panel(kind: String) -> void:
+    _close_title_panel()
+    title_panel_kind = kind
+    title_panel = PanelContainer.new()
+    title_panel.position = Vector2(90, 50)
+    title_panel.custom_minimum_size = Vector2(1100, 620)
+    title_panel.add_theme_stylebox_override("panel", panel_style(Color(0.02, 0.03, 0.05, 0.96), _current_bg().trim, 2, 12))
+    title_screen.add_child(title_panel)
+    var v := VBoxContainer.new()
+    v.add_theme_constant_override("separation", 10)
+    title_panel.add_child(v)
+    match kind:
+        "shop": _fill_shop(v)
+        "options": _fill_options(v)
+        "credits": _fill_credits(v)
+        "extras": _fill_extras(v)
+        "daily": _fill_daily(v)
+        "path": _fill_path(v)
+        "tasks": _fill_tasks(v)
+        "collection": _fill_collection(v)
+        "league": _fill_league(v)
+        "wheel": _fill_wheel(v)
+        "titles": _fill_titles(v)
+    var back := button("ZURÜCK  ·  ESC / B", Color("64748b"), _close_title_panel)
+    v.add_child(back)
+
+func _fill_shop(v: VBoxContainer) -> void:
+    v.add_child(label("🛒 SHOP  ·  🪙 %d MÜNZEN  ·  🎁 %d FREIE TRUHEN" % [progression.coins, progression.chests], 22, Color("fbbf24")))
+    var tabs := HBoxContainer.new()
+    tabs.add_theme_constant_override("separation", 8)
+    v.add_child(tabs)
+    for t in [["backgrounds", "🖼 HINTERGRÜNDE & ARENEN"], ["weapons", "⚔ WAFFEN"], ["skins", "✨ SKINS"], ["chest", "🎁 GLÜCKSTRUHE"]]:
+        var tab_id: String = t[0]
+        var tb := button(("▶ " if shop_tab == tab_id else "") + str(t[1]), Color("fbbf24") if shop_tab == tab_id else Color("64748b"), func():
+            shop_tab = tab_id
+            _open_title_panel("shop"))
+        tb.custom_minimum_size = Vector2(250, 36)
+        tb.add_theme_font_size_override("font_size", 13)
+        tabs.add_child(tb)
+    match shop_tab:
+        "weapons": _fill_shop_items(v, "weapons")
+        "skins": _fill_shop_items(v, "skins")
+        "chest": _fill_chest(v)
+        _: _fill_shop_backgrounds(v)
+
+func _fill_shop_backgrounds(v: VBoxContainer) -> void:
+    v.add_child(label("Jeder Hintergrund ist ein eigenes Startmenü – und schaltet seine spielbare Arena frei. Münzen gibt es für jeden Kampf, Bosse und Story-Kapitel.", 12, Color("cbd5e1")))
+    var scroll := ScrollContainer.new()
+    scroll.custom_minimum_size = Vector2(1060, 420)
+    scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+    v.add_child(scroll)
+    var grid := GridContainer.new()
+    grid.columns = 4
+    grid.add_theme_constant_override("h_separation", 10)
+    grid.add_theme_constant_override("v_separation", 10)
+    scroll.add_child(grid)
+    shop_buttons.clear()
+    for bg in Backgrounds.LIST:
+        var card := VBoxContainer.new()
+        card.custom_minimum_size = Vector2(255, 0)
+        grid.add_child(card)
+        var thumb := TextureRect.new()
+        thumb.custom_minimum_size = Vector2(255, 140)
+        thumb.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+        thumb.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+        thumb.texture = load(Backgrounds.image_path(bg))
+        card.add_child(thumb)
+        var owned: bool = Backgrounds.is_unlocked(progression, bg.id)
+        var active_bg: bool = _current_bg().id == bg.id
+        if not owned: thumb.modulate = Color(0.45, 0.45, 0.5)
+        card.add_child(label("%s  ·  ARENA ✓" % bg.name if owned else "%s  ·  + ARENA" % bg.name, 13, bg.trim))
+        var text := "✓ AKTIV" if active_bg else ("ALS STARTMENÜ" if owned else "🔒 KAUFEN  ·  🪙 %d" % int(bg.price))
+        var id: String = bg.id
+        var b := button(text, bg.trim if owned else Color("fbbf24"), func(): _shop_press(id))
+        b.custom_minimum_size.y = 34
+        b.add_theme_font_size_override("font_size", 13)
+        if not owned and progression.coins < int(bg.price): b.modulate = Color(0.6, 0.6, 0.6)
+        card.add_child(b)
+        shop_buttons.append(b)
+    _highlight_shop()
+
+## Weapons and skins: cards with rarity, price and buy / equip.
+func _fill_shop_items(v: VBoxContainer, kind: String) -> void:
+    var weapons: bool = kind == "weapons"
+    v.add_child(label("Gekaufte Waffen erscheinen in jeder Arena. Eine davon hältst du als STARTWAFFE zu Beginn jedes Kampfes." if weapons
+        else "Skins verwandeln deinen Kämpfer (Spieler 1) – jeder Kämpfer, jede Arena. Pfad-Skins gibt es nur im Ruhmespfad.", 12, Color("cbd5e1")))
+    var scroll := ScrollContainer.new()
+    scroll.custom_minimum_size = Vector2(1060, 420)
+    scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+    v.add_child(scroll)
+    var grid := GridContainer.new()
+    grid.columns = 4
+    grid.add_theme_constant_override("h_separation", 10)
+    grid.add_theme_constant_override("v_separation", 10)
+    scroll.add_child(grid)
+    for item in (Rewards.WEAPONS if weapons else Rewards.SKINS):
+        var rar: Array = Rewards.RARITY[item.rarity]
+        var card := PanelContainer.new()
+        card.custom_minimum_size = Vector2(255, 150)
+        card.add_theme_stylebox_override("panel", panel_style(Color(0.04, 0.05, 0.08, 0.95), rar[1], 2, 8))
+        grid.add_child(card)
+        var cv := VBoxContainer.new()
+        card.add_child(cv)
+        var owned: bool = Rewards.owns_weapon(progression, item.id) if weapons else Rewards.owns_skin(progression, item.id)
+        var equipped: bool = (progression.start_weapon == item.id) if weapons else (progression.skin == item.id)
+        cv.add_child(label(("⚔ " if weapons else "✨ ") + str(item.name), 16, rar[1]))
+        cv.add_child(label(str(rar[0]) + ("  ·  " + str(item.info) if weapons else ""), 11, Color("cbd5e1")))
+        if not weapons:
+            var sw := ColorRect.new()
+            sw.custom_minimum_size = Vector2(230, 26)
+            sw.color = {"gold": Color("d4a93a"), "silver": Color("cbd5e1"), "marble": Color("f1ede4"), "emerald": Color("34d399"), "frost": Color("bae6fd"),
+                "obsidian": Color("3b1d1a"), "neon": Color("f0abfc"), "shadow": Color("1e1b2e"), "lava": Color("f97316"), "crystal": Color("67e8f9"),
+                "ghost": Color("e2e8f0"), "galaxy": Color("312e81"), "celestial": Color("fde68a"), "infernal": Color("b91c1c")}.get(item.look, Color.GRAY)
+            cv.add_child(sw)
+        var id: String = item.id
+        var text: String
+        if equipped: text = "✓ AUSGERÜSTET (ablegen)"
+        elif owned: text = "ALS STARTWAFFE" if weapons else "ANLEGEN"
+        elif item.has("path"): text = "🏆 RUHMESPFAD STUFE %d" % int(item.path)
+        else: text = "🔒 KAUFEN  ·  🪙 %d" % int(item.price)
+        var b := button(text, rar[1], func(): _shop_item_press(kind, id))
+        b.custom_minimum_size.y = 34
+        b.add_theme_font_size_override("font_size", 13)
+        if not owned and (item.has("path") or progression.coins < int(item.price)): b.modulate = Color(0.6, 0.6, 0.6)
+        cv.add_child(b)
+
+func _shop_item_press(kind: String, id: String) -> void:
+    var weapons: bool = kind == "weapons"
+    var owned: bool = Rewards.owns_weapon(progression, id) if weapons else Rewards.owns_skin(progression, id)
+    if owned:
+        if weapons: Rewards.equip_weapon(progression, "" if progression.start_weapon == id else id)
+        else: Rewards.equip_skin(progression, "" if progression.skin == id else id)
+        sound("jump")
+        _apply_p1_skin()
+    elif (Rewards.buy_weapon(progression, id) if weapons else Rewards.buy_skin(progression, id)):
+        sound("victory")
+        flash_screen(Color("fbbf24"), 0.35)
+        if weapons: Rewards.equip_weapon(progression, id)
+        else: Rewards.equip_skin(progression, id)
+        show_status("🎉 FREIGESCHALTET UND AUSGERÜSTET!", 2.0)
+        _apply_p1_skin()
+    else:
+        sound("block")
+        show_status("🔒 Nicht genug Münzen – oder nur im Ruhmespfad erhältlich.", 2.0)
+    _open_title_panel("shop")
+
+func _fill_chest(v: VBoxContainer) -> void:
+    v.add_child(label("Die Glückstruhe enthält Münzen, Skins, Waffen oder sogar Hintergründe. Doppelte Gegenstände werden zu Münzen.", 12, Color("cbd5e1")))
+    v.add_child(label("🎁  GLÜCKSTRUHE", 40, Color("fbbf24")))
+    v.add_child(label("Chancen: 50 % Münzen · 25 % Skin · 17 % Waffe · 8 % Hintergrund", 14, Color("e2e8f0")))
+    var free_text := "🎁 KOSTENLOS ÖFFNEN (%d übrig)" % progression.chests if progression.chests > 0 else "🎁 ÖFFNEN  ·  🪙 %d" % Rewards.CHEST_PRICE
+    var ob := button(free_text, Color("fbbf24"), _open_chest)
+    ob.custom_minimum_size = Vector2(520, 70)
+    ob.add_theme_font_size_override("font_size", 22)
+    v.add_child(ob)
+    var res := label(chest_result, 26, Color("fde68a"))
+    res.name = "ChestResult"
+    v.add_child(res)
+    var boost := button("⚡ XP-BOOSTER: 2× XP für 3 Kämpfe  ·  🪙 %d   (aktiv: %d)" % [Rewards.BOOST_PRICE, progression.boost_matches], Color("38bdf8"), func():
+        if Rewards.buy_boost(progression):
+            sound("victory")
+            show_status("⚡ XP-BOOSTER AKTIV: 2× XP für %d Kämpfe" % progression.boost_matches, 2.0)
+        else: sound("block")
+        _open_title_panel("shop"))
+    boost.custom_minimum_size.y = 46
+    v.add_child(boost)
+    v.add_child(label("Freie Truhen: Tag 7 im Login-Kalender, jede 5. Stufe, Ruhmespfad.", 12, Color("94a3b8")))
+
+func _open_chest() -> void:
+    var r: Dictionary = Rewards.open_chest(progression, chest_rng, Backgrounds.LIST)
+    if r.is_empty():
+        sound("block")
+        show_status("🔒 Nicht genug Münzen für die Glückstruhe.", 2.0)
+        return
+    # Short reveal: names flicker past, then the prize.
+    var res: Label = title_panel.find_child("ChestResult", true, false)
+    var names: Array = ["120 🪙", "SKIN GALAXIE", "WAFFE DONNERHAMMER", "400 🪙", "SKIN NEONPULS", "HINTERGRUND DOJO", "90 🪙"]
+    for k in range(10):
+        if res: res.text = "… %s …" % names[k % names.size()]
+        sound("jump")
+        await _wait(0.06 + k * 0.012)
+    var rarity := "L" if str(r.kind) in ["skin", "weapon", "background"] else "S"
+    chest_result = "✨ GEWONNEN: %s ✨" % Rewards.reward_text(r)
+    flash_screen(Rewards.RARITY[rarity][1], 0.5)
+    sound("victory")
+    _open_title_panel("shop")
+
+func _highlight_shop() -> void:
+    for k in range(shop_buttons.size()):
+        var b: Button = shop_buttons[k]
+        b.add_theme_color_override("font_color", Color("ffffff") if k == shop_index else Color("cbd5e1"))
+        b.scale = Vector2.ONE * (1.04 if k == shop_index else 1.0)
+
+func _shop_press(id: String) -> void:
+    var bg: Dictionary = Backgrounds.find(id)
+    if Backgrounds.is_unlocked(progression, id):
+        Backgrounds.select(progression, id)
+        sound("jump")
+        show_title()
+        _open_title_panel("shop")
+        return
+    if Backgrounds.buy(progression, id):
+        sound("victory")
+        flash_screen(bg.trim, 0.4)
+        show_status("🎉 %s FREIGESCHALTET – Startmenü und Arena!" % bg.name, 2.5)
+        Backgrounds.select(progression, id)
+        show_title()
+        _open_title_panel("shop")
+    else:
+        sound("block")
+        show_status("🔒 Nicht genug Münzen: %d von %d 🪙" % [progression.coins, int(bg.price)], 2.0)
+
+func _fill_extras(v: VBoxContainer) -> void:
+    v.add_child(label("★ EXTRAS", 24, Color("fde68a")))
+    var login_ready: bool = Rewards.login_ready(progression, Progression.today())
+    var path_open: int = Rewards.path_tier(progression) - progression.path_claimed
+    for spec in [["👁  BOSSKAMPF · HIMMEL UND HÖLLE", Color("ff5a1f"), func():
+                _close_title_panel()
+                hide_title()
+                open_boss_menu()
+                menu_return_title = true],
+            ["🎁  TÄGLICHE BELOHNUNG" + ("  ·  BEREIT!" if login_ready else "  ·  morgen wieder"), Color("fbbf24"), func(): _open_title_panel("daily")],
+            ["🏆  RUHMESPFAD  ·  STUFE %d / %d%s" % [Rewards.path_tier(progression), Rewards.PATH_TIERS, "  ·  %d BELOHNUNG(EN) ABHOLEN!" % path_open if path_open > 0 else ""], Color("f87171"), func(): _open_title_panel("path")],
+            ["🎯  TAGESAUFGABEN & ERFOLGE", Color("4ade80"), func(): _open_title_panel("tasks")],
+            ["🏅  LIGA  ·  %s  ·  %d LP" % [Rewards.league_name(progression.rank_points), progression.rank_points], Color("a78bfa"), func(): _open_title_panel("league")],
+            ["🎡  GLÜCKSRAD" + ("  ·  GRATIS-DREH BEREIT!" if Rewards.wheel_free(progression, Progression.today()) else "  ·  %d 🪙 pro Dreh" % Rewards.WHEEL_PRICE), Color("f472b6"), func(): _open_title_panel("wheel")],
+            ["🎖  TITEL  ·  »%s«" % Rewards.title_name(progression), Color("fde68a"), func(): _open_title_panel("titles")],
+            ["📚  SAMMLUNG  ·  %d %%" % int(Rewards.collection(progression, Backgrounds.LIST) * 100), Color("38bdf8"), func(): _open_title_panel("collection")]]:
+        var b := button(str(spec[0]), spec[1], spec[2])
+        b.custom_minimum_size.y = 50
+        b.add_theme_font_size_override("font_size", 18)
+        v.add_child(b)
+
+func _fill_daily(v: VBoxContainer) -> void:
+    var day: int = Progression.today()
+    var ready: bool = Rewards.login_ready(progression, day)
+    v.add_child(label("🎁 TÄGLICHE BELOHNUNG", 24, Color("fbbf24")))
+    v.add_child(label("Komm jeden Tag wieder! Sieben Tage am Stück – am 7. Tag gibt es zusätzlich eine Glückstruhe. Ein verpasster Tag beginnt von vorn.", 13, Color("cbd5e1")))
+    var row := HBoxContainer.new()
+    row.add_theme_constant_override("separation", 8)
+    v.add_child(row)
+    var last: int = int(progression.login.get("last", -1))
+    var step: int = int(progression.login.get("step", 0))
+    var next_step: int = (step % Rewards.LOGIN.size()) if last == day - 1 else (0 if last != day else step - 1)
+    for k in range(Rewards.LOGIN.size()):
+        var done: bool = (last == day and k < step) or (last == day - 1 and k < step % Rewards.LOGIN.size())
+        var today: bool = ready and k == next_step
+        var cell := PanelContainer.new()
+        cell.custom_minimum_size = Vector2(140, 150)
+        cell.add_theme_stylebox_override("panel", panel_style(Color(0.1, 0.08, 0.02, 0.95) if today else Color(0.04, 0.05, 0.08, 0.95),
+            Color("fbbf24") if today else (Color("4ade80") if done else Color("334155")), 3 if today else 1, 10))
+        row.add_child(cell)
+        var cv := VBoxContainer.new()
+        cell.add_child(cv)
+        cv.add_child(label("TAG %d" % (k + 1), 18, Color("fde68a")))
+        cv.add_child(label("%d 🪙" % Rewards.LOGIN[k], 22, Color("ffffff")))
+        if k == Rewards.LOGIN.size() - 1: cv.add_child(label("+ 🎁 TRUHE", 14, Color("fbbf24")))
+        cv.add_child(label("✓" if done else ("HEUTE" if today else ""), 20, Color("4ade80") if done else Color("fbbf24")))
+    var claim := button("ABHOLEN!" if ready else "Heute schon abgeholt – bis morgen!", Color("fbbf24") if ready else Color("475569"), func():
+        var r: Dictionary = Rewards.claim_login(progression, Progression.today())
+        if not r.is_empty():
+            sound("victory")
+            flash_screen(Color("fbbf24"), 0.5)
+            show_status("🎁 TAG %d: +%d 🪙%s" % [r.day, r.coins, "  + GLÜCKSTRUHE!" if r.chest else ""], 2.5)
+            _refresh_title_info()
+        _open_title_panel("daily"))
+    claim.custom_minimum_size.y = 56
+    claim.add_theme_font_size_override("font_size", 20)
+    v.add_child(claim)
+
+func _fill_path(v: VBoxContainer) -> void:
+    var tier: int = Rewards.path_tier(progression)
+    v.add_child(label("🏆 RUHMESPFAD  ·  STUFE %d / %d" % [tier, Rewards.PATH_TIERS], 24, Color("f87171")))
+    var into: int = int(progression.xp) % Rewards.PATH_XP
+    v.add_child(label("Jede Stufe braucht %d XP. Nächste Stufe: %d / %d XP.  Exklusiv: Skin HIMMELSGLANZ (Stufe 15), Skin HÖLLENFÜRST (Stufe 30)." % [Rewards.PATH_XP, into, Rewards.PATH_XP], 13, Color("cbd5e1")))
+    var bar := ProgressBar.new()
+    bar.custom_minimum_size = Vector2(1050, 18)
+    bar.max_value = Rewards.PATH_TIERS
+    bar.value = tier + float(into) / Rewards.PATH_XP
+    bar.show_percentage = false
+    v.add_child(bar)
+    var scroll := ScrollContainer.new()
+    scroll.custom_minimum_size = Vector2(1060, 330)
+    scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+    v.add_child(scroll)
+    var row := HBoxContainer.new()
+    row.add_theme_constant_override("separation", 6)
+    scroll.add_child(row)
+    for t in range(1, Rewards.PATH_TIERS + 1):
+        var r: Dictionary = Rewards.path_reward(t)
+        var got: bool = t <= progression.path_claimed
+        var reached: bool = t <= tier
+        var special: bool = str(r.kind) in ["skin", "weapon"]
+        var cell := PanelContainer.new()
+        cell.custom_minimum_size = Vector2(130, 150)
+        cell.add_theme_stylebox_override("panel", panel_style(Color(0.08, 0.04, 0.04, 0.95) if special else Color(0.04, 0.05, 0.08, 0.95),
+            Color("4ade80") if got else (Color("fbbf24") if reached else (Color("f87171") if special else Color("334155"))), 2, 8))
+        row.add_child(cell)
+        var cv := VBoxContainer.new()
+        cell.add_child(cv)
+        cv.add_child(label("STUFE %d" % t, 14, Color("fde68a")))
+        var rl := label(Rewards.reward_text(r), 13, Color("ffffff"))
+        rl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+        rl.custom_minimum_size.x = 110
+        cv.add_child(rl)
+        cv.add_child(label("✓" if got else ("ABHOLEN!" if reached else "🔒"), 16, Color("4ade80") if got else Color("fbbf24")))
+    var open: int = tier - progression.path_claimed
+    var claim := button("%d BELOHNUNG(EN) ABHOLEN!" % open if open > 0 else "Spiele weiter für die nächste Stufe", Color("f87171") if open > 0 else Color("475569"), func():
+        var got: Array = Rewards.claim_path(progression)
+        if not got.is_empty():
+            sound("victory")
+            flash_screen(Color("f87171"), 0.5)
+            show_status("🏆 " + "  ·  ".join(got.map(func(g): return Rewards.reward_text(g))), 3.0)
+            _refresh_title_info()
+        _open_title_panel("path"))
+    claim.custom_minimum_size.y = 50
+    v.add_child(claim)
+
+func _fill_tasks(v: VBoxContainer) -> void:
+    progression.refresh_daily()
+    v.add_child(label("🎯 TAGESAUFGABEN  ·  🔥 SIEGESSERIE %d  ·  📅 SPIELTAGE AM STÜCK %d" % [progression.win_streak, int(progression.streak.days)], 22, Color("4ade80")))
+    for c in progression.daily.get("list", []):
+        var line := "%s  %s   %d / %d   (+%d XP)" % ["✓" if c.done else "□", Progression.challenge_text(c), int(c.progress), int(c.goal), int(Progression.CHALLENGES[c.id].xp)]
+        v.add_child(label(line, 17, Color("4ade80") if c.done else Color("e2e8f0")))
+    v.add_child(label("Alle drei geschafft: +%d XP Bonus. Siegesserie: bis zu +50 %% Münzen." % Progression.DAILY_BONUS, 13, Color("94a3b8")))
+    progression.refresh_weekly()
+    v.add_child(label("📅 WOCHENAUFGABEN  (alle drei: + 🎁 TRUHE)", 20, Color("38bdf8")))
+    for c in progression.weekly.get("list", []):
+        v.add_child(label("%s  %s   %d / %d   (+%d 🪙)" % ["✓" if c.done else "□", Progression.weekly_text(c), int(c.progress), int(c.goal), int(Progression.WEEKLY[c.id].coins)], 16,
+            Color("4ade80") if c.done else Color("e2e8f0")))
+    var bounty: String = _bounty()
+    var bname: String = bounty
+    for pr in mk_presets: if pr.id == bounty: bname = pr.name
+    v.add_child(label("💰 KOPFGELD HEUTE: %s – gewinne mit diesem Kämpfer: +150 🪙 %s   ·   ⭐ Erster Sieg des Tages: +100 🪙 %s" % [bname,
+        "(kassiert)" if progression.bounty_day == Progression.today() else "", "(geschafft)" if progression.first_win_day == Progression.today() else ""], 14, Color("fbbf24")))
+    v.add_child(label("🏆 ERFOLGE  ·  %d / %d  (je +100 🪙)" % [progression.achievements.size(), Progression.ACHIEVEMENTS.size()], 20, Color("fbbf24")))
+    var grid := GridContainer.new()
+    grid.columns = 3
+    v.add_child(grid)
+    for id in Progression.ACHIEVEMENTS:
+        var a: Array = Progression.ACHIEVEMENTS[id]
+        var have: bool = progression.achievements.has(id)
+        var l := label(("🏆 " if have else "🔒 ") + str(a[0]) + " – " + str(a[1]), 12, Color("fde68a") if have else Color("64748b"))
+        l.custom_minimum_size.x = 350
+        grid.add_child(l)
+
+func _fill_league(v: VBoxContainer) -> void:
+    var cur: int = Rewards.league_for(progression.rank_points)
+    v.add_child(label("🏅 LIGA  ·  %s  ·  %d LIGAPUNKTE" % [Rewards.LEAGUES[cur][0], progression.rank_points], 24, Rewards.LEAGUES[cur][2]))
+    v.add_child(label("Sieg: +25 LP (mit Siegesserie bis +45), Niederlage: −15 LP. Jede neue Liga zahlt einmalig Münzen und Truhen.", 13, Color("cbd5e1")))
+    for k in range(Rewards.LEAGUES.size() - 1, -1, -1):
+        var lg: Array = Rewards.LEAGUES[k]
+        var lr: Dictionary = Rewards.LEAGUE_REWARDS[k]
+        var reward := "" if lr.is_empty() else "   ·   Aufstieg: %d 🪙%s" % [int(lr.get("coins", 0)), "  + %d 🎁" % int(lr.chests) if lr.has("chests") else ""]
+        var mark := "▶ " if k == cur else ("✓ " if k <= progression.best_league else "🔒 ")
+        v.add_child(label("%s%s  (ab %d LP)%s" % [mark, lg[0], int(lg[1]), reward], 20 if k == cur else 16, lg[2] if k <= progression.best_league else Color("64748b")))
+    if cur + 1 < Rewards.LEAGUES.size():
+        var bar := ProgressBar.new()
+        bar.custom_minimum_size = Vector2(1050, 18)
+        bar.min_value = int(Rewards.LEAGUES[cur][1])
+        bar.max_value = int(Rewards.LEAGUES[cur + 1][1])
+        bar.value = progression.rank_points
+        v.add_child(bar)
+        v.add_child(label("Noch %d LP bis %s" % [int(Rewards.LEAGUES[cur + 1][1]) - progression.rank_points, Rewards.LEAGUES[cur + 1][0]], 14, Color("e2e8f0")))
+
+func _fill_wheel(v: VBoxContainer) -> void:
+    var free: bool = Rewards.wheel_free(progression, Progression.today())
+    v.add_child(label("🎡 GLÜCKSRAD", 26, Color("f472b6")))
+    v.add_child(label("Jeden Tag ein Gratis-Dreh! Weitere Drehs für %d 🪙. Mit etwas Glück: der JACKPOT von 1000 Münzen." % Rewards.WHEEL_PRICE, 13, Color("cbd5e1")))
+    var grid := GridContainer.new()
+    grid.columns = 4
+    grid.add_theme_constant_override("h_separation", 10)
+    grid.add_theme_constant_override("v_separation", 10)
+    v.add_child(grid)
+    wheel_cells.clear()
+    for k in range(Rewards.WHEEL.size()):
+        var cell := PanelContainer.new()
+        cell.custom_minimum_size = Vector2(255, 80)
+        cell.add_theme_stylebox_override("panel", panel_style(Color(0.05, 0.04, 0.08, 0.95), Color("f472b6"), 1, 10))
+        var l := label(Rewards.wheel_text(Rewards.WHEEL[k]), 22, Color("fde047") if k == Rewards.WHEEL.size() - 1 else Color("ffffff"))
+        l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+        cell.add_child(l)
+        grid.add_child(cell)
+        wheel_cells.append(cell)
+    var spin := button("🎡 GRATIS DREHEN!" if free else "🎡 DREHEN  ·  %d 🪙" % Rewards.WHEEL_PRICE, Color("f472b6"), _spin_wheel)
+    spin.custom_minimum_size.y = 60
+    spin.add_theme_font_size_override("font_size", 22)
+    v.add_child(spin)
+    var res := label(wheel_result, 24, Color("fde68a"))
+    res.name = "WheelResult"
+    v.add_child(res)
+
+func _spin_wheel() -> void:
+    if wheel_spinning: return
+    var r: Dictionary = Rewards.spin_wheel(progression, chest_rng, Progression.today())
+    if r.is_empty():
+        sound("block")
+        show_status("🔒 Nicht genug Münzen für einen weiteren Dreh.", 2.0)
+        return
+    wheel_spinning = true
+    # The highlight runs around the wheel, slows down and stops on the prize.
+    var steps: int = Rewards.WHEEL.size() * 3 + int(r.index)
+    for k in range(steps + 1):
+        for c in range(wheel_cells.size()):
+            if is_instance_valid(wheel_cells[c]):
+                wheel_cells[c].add_theme_stylebox_override("panel", panel_style(Color(0.35, 0.1, 0.25, 0.95) if c == k % wheel_cells.size() else Color(0.05, 0.04, 0.08, 0.95),
+                    Color("fde047") if c == k % wheel_cells.size() else Color("f472b6"), 3 if c == k % wheel_cells.size() else 1, 10))
+        sound("jump")
+        await _wait(0.04 + pow(float(k) / steps, 3.0) * 0.28)
+    wheel_result = "✨ %s ✨" % Rewards.wheel_text(r.reward)
+    flash_screen(Color("f472b6"), 0.5)
+    sound("victory")
+    wheel_spinning = false
+    _refresh_title_info()
+    if title_panel_kind == "wheel": _open_title_panel("wheel")
+
+func _fill_titles(v: VBoxContainer) -> void:
+    v.add_child(label("🎖 TITEL  ·  AKTIV: »%s«" % Rewards.title_name(progression), 24, Color("fde68a")))
+    v.add_child(label("Titel erscheinen im Hauptmenü. Freigeschaltet durch Siege, Bosse, Ligen, Story und Meisterschaft.", 13, Color("cbd5e1")))
+    var grid := GridContainer.new()
+    grid.columns = 3
+    grid.add_theme_constant_override("h_separation", 8)
+    grid.add_theme_constant_override("v_separation", 8)
+    v.add_child(grid)
+    for t in Rewards.TITLES:
+        var have: bool = Rewards.title_unlocked(progression, t)
+        var active_t: bool = progression.title == t.id
+        var id: String = t.id
+        var b := button(("✓ " if active_t else ("" if have else "🔒 ")) + "»%s«  (%s ≥ %d)" % [t.name, t.stat, int(t.need)], Color("fde68a") if have else Color("475569"), func():
+            if Rewards.equip_title(progression, id):
+                sound("jump")
+                _refresh_title_info()
+            else: sound("block")
+            _open_title_panel("titles"))
+        b.custom_minimum_size = Vector2(345, 40)
+        b.add_theme_font_size_override("font_size", 13)
+        grid.add_child(b)
+
+func _fill_collection(v: VBoxContainer) -> void:
+    var pct: int = int(Rewards.collection(progression, Backgrounds.LIST) * 100)
+    v.add_child(label("📚 SAMMLUNG  ·  %d %%" % pct, 24, Color("38bdf8")))
+    var bar := ProgressBar.new()
+    bar.custom_minimum_size = Vector2(1050, 18)
+    bar.value = pct
+    v.add_child(bar)
+    var bgs: int = Backgrounds.LIST.filter(func(b): return Backgrounds.is_unlocked(progression, b.id)).size()
+    for line in ["🖼 Hintergründe & Arenen: %d / %d" % [bgs, Backgrounds.LIST.size()],
+            "⚔ Waffen: %d / %d" % [progression.weapons_owned.size(), Rewards.WEAPONS.size()],
+            "✨ Skins: %d / %d" % [progression.skins_owned.size(), Rewards.SKINS.size()],
+            "🏆 Erfolge: %d / %d" % [progression.achievements.size(), Progression.ACHIEVEMENTS.size()],
+            "⭐ Level %d · %s · %d XP insgesamt" % [progression.level(), Progression.rank_for(progression.level()), progression.xp],
+            "🥊 Kämpfe %d · Siege %d · beste Combo %d" % [int(progression.stats.get("matches", 0)), int(progression.stats.get("wins", 0)), int(progression.stats.get("best_combo", 0))]]:
+        v.add_child(label(line, 18, Color("e2e8f0")))
+
+func _fill_options(v: VBoxContainer) -> void:
+    v.add_child(label("⚙ OPTIONEN", 22, Color("fde68a")))
+    for spec in [["KI-STUFE", _cycle_ai_level], ["STOCKS", _cycle_stocks], ["FINISHER / BLUT", _toggle_finishers], ["SPIELER / TEAM-MODUS", _toggle_player_count]]:
+        var row_btn := button(str(spec[0]), Color("38bdf8"), func():
+            spec[1].call()
+            _open_title_panel("options"))
+        v.add_child(row_btn)
+    var state := label("KI-Stufe %d  ·  %d Stocks  ·  Finisher %s  ·  Modus %s" % [ai_level, stock_count, "an" if finishers_on else "aus", team_mode.to_upper()], 14, Color("cbd5e1"))
+    v.add_child(state)
+    var fs := button("VOLLBILD AN / AUS", Color("a78bfa"), func():
+        var w := get_window()
+        w.mode = Window.MODE_WINDOWED if w.mode == Window.MODE_FULLSCREEN else Window.MODE_FULLSCREEN)
+    v.add_child(fs)
+
+func _fill_credits(v: VBoxContainer) -> void:
+    v.add_child(label("PROMPT FIGHTERS ULTIMATE", 26, Color("fde68a")))
+    for line in ["Ein Smash-Kampfspiel aus Prompts – 49 Kämpfer, 19 Bosse, zwei Storykampagnen.", "",
+            "Engine: Godot 4.7 · 3D-Scans und HDRIs: Poly Haven (CC0) · Charaktere: Mixamo",
+            "Storymodus »Die göttliche Prüfung« frei nach Dante Alighieri", "", "Danke fürs Spielen!"]:
+        v.add_child(label(line, 15, Color("e2e8f0")))
+
+## Team layout of the current versus mode (empty = everyone for themselves).
+func team_layout() -> Array:
+    return {"2v2": [0, 0, 1, 1], "3v1": [0, 0, 0, 1]}.get(team_mode, [])
+
+## Applies teams to the running match: versus team modes or heroes against the boss.
+func apply_team_setup() -> void:
+    if boss_active:
+        var teams: Array = []
+        for f in sim.fighters: teams.append(9 if f.is_boss else 0)
+        sim.set_teams(teams)
+        sim.time_left = 300.0
+        sim.finishers_enabled = false
+        return
+    var layout: Array = team_layout()
+    if layout.is_empty() or sim.fighters.size() != layout.size(): return
+    sim.set_teams(layout)
+    if team_mode == "3v1":
+        # The lone fighter hits harder and is harder to launch.
+        sim.fighters[3].power_mult = 1.5
+        sim.fighters[3].kb_taken_mult = 0.6
+    status.text = "%s  /  %s" % [ARENAS[current_arena].name, "TEAM 2 GEGEN 2" if team_mode == "2v2" else "TEAM 3 GEGEN 1"]
+
+func winner_text() -> String:
+    return _winner_line() + last_reward_text
+
+func _winner_line() -> String:
+    if sim.result < 0: return "UNENTSCHIEDEN"
+    var w: Dictionary = sim.fighters[sim.result]
+    if boss_active:
+        return "%s TRIUMPHIERT…" % Bosses.data(boss_id).name if w.is_boss else "BOSS BEZWUNGEN!"
+    if not team_layout().is_empty(): return "TEAM %s GEWINNT!" % ("A" if int(w.team) == 0 else "B")
+    return "SPIELER %d GEWINNT!" % (sim.result + 1)
+
+# ── Boss mode ──
+
+func open_boss_menu() -> void:
+    if boss_menu == null: _build_boss_menu()
+    boss_menu.show()
+    boss_menu_index = 0
+    _highlight_boss_menu()
+    sound("jump")
+
+func _build_boss_menu() -> void:
+    boss_menu = PanelContainer.new()
+    boss_menu.position = Vector2(140, 40)
+    boss_menu.custom_minimum_size = Vector2(1000, 640)
+    boss_menu.add_theme_stylebox_override("panel", panel_style(Color(0.05, 0.02, 0.01, 0.97), Color("ff5a1f"), 2, 12))
+    selection.add_child(boss_menu)
+    var v := VBoxContainer.new()
+    v.add_theme_constant_override("separation", 10)
+    boss_menu.add_child(v)
+    v.add_child(label("👁  BOSSKAMPF · HIMMELREICH UND HÖLLENREICH", 20, Color("ffb13b")))
+    v.add_child(label("Deine Kämpfer (Slots 1–2, bei 4 Spielern 1–3) kämpfen gemeinsam. Mehr Helden = mehr Boss-Leben.", 12, Color("cbd5e1")))
+    boss_menu_buttons.clear()
+    var cols := HBoxContainer.new()
+    cols.add_theme_constant_override("separation", 14)
+    v.add_child(cols)
+    for realm in [["✨ HIMMELREICH – DIE NEUN CHÖRE", Bosses.HEAVEN, Color("ffe08a")], ["🔥 HÖLLENREICH – DIE ZEHN FÜRSTEN", Bosses.HELL, Color("ef4444")]]:
+        var col := VBoxContainer.new()
+        col.add_theme_constant_override("separation", 3)
+        col.custom_minimum_size.x = 470
+        cols.add_child(col)
+        col.add_child(label(realm[0], 14, realm[2]))
+        for bid in realm[1]:
+            var b: Dictionary = Bosses.data(bid)
+            var bb := button("%s · %s  (%s)" % [b.name, b.title, b.vice], b.color, func(): _pick_boss(bid, false))
+            bb.custom_minimum_size.y = 36
+            bb.add_theme_font_size_override("font_size", 13)
+            col.add_child(bb)
+            boss_menu_buttons.append(bb)
+        var rush := button("⚔  RUSH: ALLE HINTEREINANDER", realm[2], func(): _pick_boss(realm[1][0], true))
+        rush.custom_minimum_size.y = 38
+        col.add_child(rush)
+        boss_menu_buttons.append(rush)
+    var back := button("ZURÜCK", Color("64748b"), close_boss_menu)
+    v.add_child(back)
+    boss_menu_buttons.append(back)
+    v.add_child(label("🎮 Steuerkreuz wählen · A starten · B zurück", 11, Color("94a3b8")))
+
+func close_boss_menu() -> void:
+    if boss_menu: boss_menu.hide()
+
+func _boss_menu_open() -> bool:
+    return boss_menu != null and boss_menu.visible
+
+func _highlight_boss_menu() -> void:
+    for k in range(boss_menu_buttons.size()):
+        boss_menu_buttons[k].modulate = Color(1.25, 1.1, 0.8) if k == boss_menu_index else Color(0.8, 0.8, 0.8)
+
+func _pick_boss(bid: String, rush: bool) -> void:
+    close_boss_menu()
+    start_boss(bid, rush)
+
+func start_boss(bid: String, rush: bool) -> void:
+    if not boss_active: pre_boss_arena = current_arena
+    boss_active = true
+    boss_rush = rush
+    boss_id = bid
+    var heroes: int = 3 if player_count == 4 else 2
+    var p_list: Array = []
+    for pi in range(heroes):
+        p_list.append(remix_profiles[pi] if (pi < remix_profiles.size() and not remix_profiles[pi].is_empty()) else Prompt.interpret(prompts[pi].text, pi))
+    p_list.append(Bosses.profile(bid, heroes))
+    apply_arena(Bosses.data(bid).arena)
+    begin_match(p_list, "manual" if current_combat_mode == "manual" else "pve", stock_count)
+    apply_team_setup()
+    _apply_loadout()
+    if next_boss_button: next_boss_button.hide()
+    var b: Dictionary = Bosses.data(bid)
+    status.text = "%s  /  BOSSKAMPF: %s" % [ARENAS[current_arena].name, b.name]
+    announce("%s\n%s" % [b.name, b.title], b.color, 1.8)
+    show_status(str(b.intro), 3.5)
+    flash_screen(b.color, 0.5)
+    sound("victory")
+
+## Boss rush order of the current boss's realm.
+func _rush_list() -> Array:
+    return Bosses.HELL if Bosses.HELL.has(boss_id) else Bosses.HEAVEN
+
+func next_boss() -> void:
+    var list: Array = _rush_list()
+    var k: int = list.find(boss_id)
+    if k >= 0 and k + 1 < list.size(): start_boss(list[k + 1], true)
+
+func _next_boss_available() -> bool:
+    if not boss_active or not boss_rush or sim.result < 0 or sim.fighters[sim.result].is_boss: return false
+    return _rush_list().find(boss_id) + 1 < _rush_list().size()
+
+## Big health bar of the boss at the top of the screen.
+func update_boss_bar() -> void:
+    var bi: int = -1
+    for k in range(sim.fighters.size()):
+        if sim.fighters[k].is_boss: bi = k
+    if bi < 0 or not active:
+        if boss_bar: boss_bar.hide()
+        return
+    if boss_bar == null:
+        boss_bar = Control.new()
+        boss_bar.position = Vector2(290, 92)
+        boss_bar.size = Vector2(700, 34)
+        root_ui.add_child(boss_bar)
+        var bg := ColorRect.new()
+        bg.color = Color(0.05, 0.02, 0.02, 0.85)
+        bg.size = Vector2(700, 20)
+        bg.position = Vector2(0, 14)
+        boss_bar.add_child(bg)
+        boss_bar_fill = ColorRect.new()
+        boss_bar_fill.position = Vector2(2, 16)
+        boss_bar_fill.size = Vector2(696, 16)
+        boss_bar.add_child(boss_bar_fill)
+        boss_bar_label = label("", 13, Color("ffe7c2"))
+        boss_bar_label.position = Vector2(0, -6)
+        boss_bar.add_child(boss_bar_label)
+    var f: Dictionary = sim.fighters[bi]
+    var ratio: float = clampf(float(f.boss_hp) / maxf(1.0, float(f.boss_max)), 0.0, 1.0)
+    boss_bar.show()
+    boss_bar_fill.size.x = 696.0 * ratio
+    boss_bar_fill.color = Bosses.data(f.boss_id).color.lerp(Color("ff1a1a"), 1.0 - ratio) if f.boss_phase == 1 else Color("ff1a1a")
+    boss_bar_label.text = "👁 %s  ·  %d / %d%s" % [f.profile.name, int(ceil(f.boss_hp)), int(f.boss_max), "  ·  PHASE 2" if f.boss_phase == 2 else ""]
+
+## Warning shapes before a boss attack: danger zones, rings on the floor, a glowing boss.
+func boss_telegraph(ev: Dictionary) -> void:
+    var col := Color(1.0, 0.15, 0.08, 0.28)
+    var mat := StandardMaterial3D.new()
+    mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+    mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+    mat.albedo_color = col
+    mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+    var node := MeshInstance3D.new()
+    node.material_override = mat
+    match str(ev.shape):
+        "band":
+            var bm := BoxMesh.new()
+            bm.size = Vector3(absf(float(ev.x2) - float(ev.x1)), absf(float(ev.y2) - float(ev.y1)), 0.4)
+            node.mesh = bm
+            node.position = Vector3((float(ev.x1) + float(ev.x2)) * 0.5, (float(ev.y1) + float(ev.y2)) * 0.5, 0.4)
+        "circle":
+            var tm := TorusMesh.new()
+            tm.inner_radius = maxf(0.1, float(ev.radius) - 0.15)
+            tm.outer_radius = float(ev.radius)
+            node.mesh = tm
+            node.position = Vector3(float(ev.x1), float(ev.y1) + 0.05, 0.3)
+            if float(ev.y1) > 0.5: node.rotation_degrees = Vector3(90, 0, 0)
+        _:
+            var sm := SphereMesh.new()
+            sm.radius = 2.2
+            sm.height = 4.4
+            node.mesh = sm
+            node.position = Vector3(float(ev.x1), (float(ev.y1) + float(ev.y2)) * 0.5, 0.0)
+            mat.albedo_color = Color(1.0, 0.7, 0.3, 0.18)
+    add_child(node)
+    var tw := create_tween()
+    tw.tween_property(mat, "albedo_color:a", 0.55, maxf(0.05, float(ev.time) * 0.85))
+    tw.tween_callback(node.queue_free)
+    sound("electric")
+
+func boss_death(index: int) -> void:
+    var f: Dictionary = sim.fighters[index]
+    var col: Color = Bosses.data(f.boss_id).color
+    var c := Vector3(f.x, f.y + float(f.body_h) * 0.5, 0.3)
+    cinematic = true
+    slow_motion(0.2, 1.0)
+    announce("BOSS BEZWUNGEN!", Color("ffe7a8"), 1.6)
+    for k in range(6):
+        spark_burst(c + Vector3(randf_range(-1.5, 1.5), randf_range(-1.2, 1.5), 0), col, 50, 10.0, 0.14)
+        shock_ring(c, col.lightened(0.3), 3.0 + k * 1.5)
+        flash_screen(Color("fff4d6"), 0.4)
+        camera_shake = 1.2
+        sound("lava")
+        await _wait(0.18)
+    if index < views.size(): views[index].visible = false
+    flash_screen(Color.WHITE, 0.9)
+    cinematic = false
+
 func show_selection() -> void:
+    if boss_active:
+        boss_active = false
+        if pre_boss_arena != "" and pre_boss_arena != current_arena: apply_arena(pre_boss_arena)
+    close_boss_menu()
     active = false
     paused = false
     cinematic = false
@@ -2038,9 +3731,14 @@ func _on_card_hovered(idx: int) -> void:
         return
     mk_p1_name_label.text = preset.name
     var p0 = Prompt.interpret(preset.prompt, 0)
-    mk_p1_sub_label.text = "%s · %s" % [p0.element.to_upper(), preset.prompt.left(35)]
-    mk_p1_stats_label.text = "HP %d · KRAFT %d · RÜSTUNG %d · TEMPO %d · TECHNIK %d" % [
-        p0.stats.vitality, p0.stats.power, p0.stats.defense, p0.stats.speed, p0.stats.technique
+    if p0.has("archetype"):
+        mk_p1_sub_label.text = "%s · %s · GEWICHT %.2f" % [str(p0.archetype).to_upper(), p0.element.to_upper(), p0.weight]
+    else:
+        mk_p1_sub_label.text = "%s · %s" % [p0.element.to_upper(), preset.prompt.left(35)]
+    var stars: int = progression.stars(p0.family)
+    mk_p1_stats_label.text = "HP %d · KRAFT %d · RÜSTUNG %d · TEMPO %d · TECHNIK %d   ·   %s%s" % [
+        p0.stats.vitality, p0.stats.power, p0.stats.defense, p0.stats.speed, p0.stats.technique,
+        "★".repeat(stars) + "☆".repeat(5 - stars), "   ·   💰 KOPFGELD HEUTE!" if p0.family == _bounty() else ""
     ]
     # Hover only previews the info text. Selection happens on click, so hovering no longer
     # changes P1's fighter or reloads 3D models (the main cause of menu stutter).
@@ -2114,6 +3812,15 @@ func update_mk_grid_visuals() -> void:
         else:
             btn.add_theme_stylebox_override("normal", panel_style(Color("0d131c"), Color("1f2c3d"), 1, 6))
             btn.add_theme_stylebox_override("hover", panel_style(Color("1c2838"), Color("385070"), 1, 6))
+        # Gamepad cursors: a thick frame in the pad's player color.
+        var frame: Panel = item.get("cursor")
+        if frame != null:
+            frame.visible = false
+            for dev in Input.get_connected_joypads():
+                if dev < pad_cursor.size() and pad_cursor[dev] == k:
+                    frame.visible = true
+                    frame.add_theme_stylebox_override("panel", panel_style(Color(0, 0, 0, 0), [Color("ff9900"), CYAN, Color("ef4444"), Color("22c55e")][dev % 4], 3, 6))
+                    break
 
 func _setup_fusionskammer_modal() -> void:
     fusionskammer_modal = PanelContainer.new()
@@ -2300,6 +4007,18 @@ func _on_fusion_save() -> void:
 
 func _unhandled_key_input(event: InputEvent) -> void:
     if not event.is_pressed() or event.is_echo(): return
+    if event is InputEventKey and title_screen != null and title_screen.visible:
+        if title_stage == "splash":
+            _enter_main_menu() # any key starts
+            return
+        match event.keycode:
+            KEY_UP, KEY_W: _title_pad(JOY_BUTTON_DPAD_UP)
+            KEY_DOWN, KEY_S: _title_pad(JOY_BUTTON_DPAD_DOWN)
+            KEY_LEFT, KEY_A: _title_pad(JOY_BUTTON_DPAD_LEFT)
+            KEY_RIGHT, KEY_D: _title_pad(JOY_BUTTON_DPAD_RIGHT)
+            KEY_ENTER, KEY_KP_ENTER, KEY_SPACE: _title_pad(JOY_BUTTON_A)
+            KEY_ESCAPE: _title_pad(JOY_BUTTON_B)
+        return
     if event is InputEventKey:
         if event.keycode == KEY_ESCAPE:
             if fusionskammer_modal != null and fusionskammer_modal.visible:
@@ -2329,11 +4048,126 @@ func _unhandled_key_input(event: InputEvent) -> void:
 ## Gamepad buttons reach the same input buffer as keys.
 func _unhandled_input(event: InputEvent) -> void:
     if event is InputEventJoypadButton and event.pressed:
-        if event.button_index == JOY_BUTTON_START:
-            if active: paused = not paused
-            elif selection != null and selection.visible: start_round(current_combat_mode)
-            return
+        if _pad_menu_button(event.device, event.button_index): return
         buffer_press(event)
+    elif event is InputEventJoypadMotion:
+        _pad_menu_stick(event)
+
+## Menu cursor per gamepad (card index) and the stick latch for menu navigation.
+var pad_cursor: Array = [0, 1, 2, 3]
+var pad_stick_latch: Array = [Vector2i.ZERO, Vector2i.ZERO, Vector2i.ZERO, Vector2i.ZERO]
+
+func _fusion_open() -> bool:
+    return fusionskammer_modal != null and fusionskammer_modal.visible
+
+## Xbox standard menu buttons. Returns true if the press was used by a menu.
+func _pad_menu_button(dev: int, b: int) -> bool:
+    if title_screen != null and title_screen.visible:
+        _title_pad(b)
+        return true
+    if b == JOY_BUTTON_START:
+        if active and (result_panel == null or not result_panel.visible): paused = not paused
+        elif selection != null and selection.visible and not _fusion_open(): start_round(current_combat_mode)
+        return true
+    if result_panel != null and result_panel.visible:
+        if b == JOY_BUTTON_A and _next_boss_available(): next_boss()
+        elif b == JOY_BUTTON_A: restart_round()
+        elif b == JOY_BUTTON_B or b == JOY_BUTTON_BACK: show_selection()
+        return true
+    if active and paused:
+        # Pause: B resumes, View quits to the fighter selection.
+        if b == JOY_BUTTON_B: paused = false
+        elif b == JOY_BUTTON_BACK: show_selection()
+        return true
+    if story != null and story.menu_panel.visible:
+        if b == JOY_BUTTON_B or b == JOY_BUTTON_BACK:
+            story.close_menu()
+            if menu_return_title: show_title("menu")
+        else: _nav_pad(b, story.menu_panel)
+        return true
+    if selection == null or not selection.visible or active: return false
+    if _boss_menu_open():
+        if b == JOY_BUTTON_B or b == JOY_BUTTON_BACK:
+            close_boss_menu()
+            if menu_return_title: show_title("menu")
+        else: _nav_pad(b, boss_menu)
+        return true
+    if _fusion_open():
+        if b == JOY_BUTTON_B or b == JOY_BUTTON_BACK: close_fusionskammer()
+        return true
+    match b:
+        JOY_BUTTON_X:
+            open_boss_menu()
+            return true
+        JOY_BUTTON_B:
+            show_title("menu")
+            return true
+        JOY_BUTTON_LEFT_SHOULDER:
+            _step_arena(-1)
+            return true
+        JOY_BUTTON_RIGHT_SHOULDER:
+            _step_arena(1)
+            return true
+        JOY_BUTTON_BACK:
+            _cycle_combat_mode()
+            show_status("MODUS: %s   ·   ⧉ wechseln" % {"pve": "SPIELER vs KI", "manual": "SPIELER vs SPIELER", "autonomous": "KI vs KI"}.get(current_combat_mode, current_combat_mode), 1.6)
+            return true
+        JOY_BUTTON_RIGHT_STICK, JOY_BUTTON_LEFT_STICK:
+            _toggle_player_count()
+            show_status("SPIELER / TEAMS: %s   ·   R3 wechseln" % team_mode.to_upper(), 1.6)
+            return true
+    if dev >= pad_cursor.size(): return true
+    match b:
+        JOY_BUTTON_DPAD_LEFT: _move_pad_cursor(dev, Vector2i(-1, 0))
+        JOY_BUTTON_DPAD_RIGHT: _move_pad_cursor(dev, Vector2i(1, 0))
+        JOY_BUTTON_DPAD_UP: _move_pad_cursor(dev, Vector2i(0, -1))
+        JOY_BUTTON_DPAD_DOWN: _move_pad_cursor(dev, Vector2i(0, 1))
+        JOY_BUTTON_A:
+            var idx: int = pad_cursor[dev]
+            if idx >= 0 and idx < mk_presets.size():
+                if mk_presets[idx].id == "fusionskammer":
+                    if dev == 0: open_fusionskammer()
+                elif dev < prompts.size():
+                    on_mk_fighter_selected(dev, idx)
+        JOY_BUTTON_Y:
+            if dev < prompts.size():
+                var pool: Array = []
+                for k in range(mk_presets.size()):
+                    if mk_presets[k].id != "fusionskammer": pool.append(k)
+                if not pool.is_empty():
+                    pad_cursor[dev] = pool[randi() % pool.size()]
+                    on_mk_fighter_selected(dev, pad_cursor[dev])
+    return true
+
+## Left stick in menus: one cursor step per flick.
+func _pad_menu_stick(ev: InputEventJoypadMotion) -> void:
+    if selection == null or not selection.visible or active or _fusion_open(): return
+    if ev.device >= pad_cursor.size() or (ev.axis != JOY_AXIS_LEFT_X and ev.axis != JOY_AXIS_LEFT_Y): return
+    var latch: Vector2i = pad_stick_latch[ev.device]
+    var v: float = ev.axis_value
+    var step := 0
+    if absf(v) > 0.6: step = 1 if v > 0.0 else -1
+    elif absf(v) > 0.3: return
+    if ev.axis == JOY_AXIS_LEFT_X:
+        if step != 0 and latch.x != step: _move_pad_cursor(ev.device, Vector2i(step, 0))
+        latch.x = step
+    else:
+        if step != 0 and latch.y != step: _move_pad_cursor(ev.device, Vector2i(0, step))
+        latch.y = step
+    pad_stick_latch[ev.device] = latch
+
+func _move_pad_cursor(dev: int, d: Vector2i) -> void:
+    var cols: int = 17
+    var count: int = mk_presets.size()
+    var idx: int = clampi(int(pad_cursor[dev]), 0, count - 1)
+    if d.x != 0: idx = wrapi(idx + d.x, 0, count)
+    if d.y != 0:
+        var nxt: int = idx + d.y * cols
+        if nxt >= 0 and nxt < count: idx = nxt
+    pad_cursor[dev] = idx
+    if dev == 0: _on_card_hovered(idx)
+    update_mk_grid_visuals()
+    sound("jump")
 
 func buffer_press(event: InputEvent) -> void:
     if not active or paused or (sim.mode != "manual" and sim.mode != "pve"): return
@@ -2351,6 +4185,9 @@ func clear_input_buffer() -> void:
 
 ## Samples both keyboard players for one simulation tick. Buffered presses stay
 ## true for up to INPUT_BUFFER_FRAMES ticks, or until consume_input_buffer() sees them executed.
+var tap_jump_latch: Array = [false, false, false, false]
+var cstick_latch: Array = [false, false, false, false]
+
 func manual_commands() -> Array:
     var commands: Array = []
     for i in range(maxi(2, human_count())):
@@ -2360,7 +4197,11 @@ func manual_commands() -> Array:
         if Input.is_action_just_pressed(pre + "grab"): buf.grab = INPUT_BUFFER_FRAMES
         if Input.is_action_just_pressed(pre + "standard"): buf.standard = maxi(buf.standard, INPUT_BUFFER_FRAMES)
         if Input.is_action_just_pressed(pre + "special"): buf.special = maxi(buf.special, INPUT_BUFFER_FRAMES)
-        commands.append({
+        # Tap jump: flicking the left stick up jumps (Xbox genre standard).
+        var stick_y: float = Input.get_joy_axis(i, JOY_AXIS_LEFT_Y)
+        if stick_y < -0.75 and not tap_jump_latch[i]: buf.jump = INPUT_BUFFER_FRAMES
+        tap_jump_latch[i] = stick_y < -0.45
+        var cmd := {
             "move": Input.get_axis(pre + "left", pre + "right"),
             "up": Input.is_action_pressed(pre + "up"),
             "down": Input.is_action_pressed(pre + "down"),
@@ -2370,8 +4211,23 @@ func manual_commands() -> Array:
             "block": Input.is_action_pressed(pre + "block"),
             "grab": buf.grab > 0,
             "standard_held": Input.is_action_pressed(pre + "standard"),
-            "jump_held": Input.is_action_pressed(pre + "jump"),
-        })
+            "jump_held": Input.is_action_pressed(pre + "jump") or stick_y < -0.45,
+        }
+        # Right stick: a flick is a smash attack in that direction (an aerial while airborne).
+        var cs := Vector2(Input.get_joy_axis(i, JOY_AXIS_RIGHT_X), Input.get_joy_axis(i, JOY_AXIS_RIGHT_Y))
+        if cs.length() > 0.65 and not cstick_latch[i]:
+            cmd.standard = true
+            cmd.smash = true
+            cmd.standard_held = false
+            if absf(cs.x) >= absf(cs.y):
+                cmd.move = signf(cs.x)
+                cmd.up = false
+                cmd.down = false
+            else:
+                cmd.up = cs.y < 0.0
+                cmd.down = cs.y > 0.0
+        cstick_latch[i] = cs.length() > 0.3
+        commands.append(cmd)
         for action_type in BUFFERED_ACTIONS:
             buf[action_type] = maxi(0, buf[action_type] - 1)
     return commands
@@ -2406,6 +4262,9 @@ func _physics_process(delta: float) -> void:
                 commands.append(m_cmds[k] if k < humans else ai_cmds[k])
         sim.tick(commands, Combat.STEP)
         consume_input_buffer(sim.events)
+        for ev in sim.events:
+            progression.track(ev)
+            if ev.type == "finish": _grant_match_rewards(int(ev.get("winner", -1)))
         for event in sim.events:
             if event.type == "hit":
                 if smoke: smoke_report.hits += 1
@@ -2512,7 +4371,7 @@ func _physics_process(delta: float) -> void:
                 var who: String = "P%d" % (event.actor + 1)
                 show_status("%s FINISHER %s:  %s" % [who, event.name, Combat.code_text(event.code)], Combat.FINISH_TIME)
             elif event.type == "finisher":
-                play_finisher(event.actor, event.target, str(event.kind), str(event.name))
+                play_finisher(event.actor, event.target, str(event.kind), str(event.name), str(event.get("variant", "")))
             elif event.type == "finish" and event.get("finisher", false):
                 pass # the finisher cinematic shows the result
             elif event.type == "weapon_pickup":
@@ -2541,6 +4400,99 @@ func _physics_process(delta: float) -> void:
                 for who in [event.actor, event.target]:
                     spark_burst(Vector3(sim.fighters[who].x, sim.fighters[who].y + 1.0, 0.3), Color("5eead4"), 25, 6.0, 0.1)
                 show_status("PLATZTAUSCH!")
+            elif event.type == "marked":
+                var mt: Dictionary = sim.fighters[event.target]
+                shock_ring(Vector3(mt.x, mt.y + 1.1, 0.3), Color("49def4"), 1.4)
+                show_status("⚡ %s IST MARKIERT – SPEZIAL FÜR DEN BLITZSCHLAG!" % mt.profile.name, 1.4)
+                sound("electric")
+            elif event.type == "stuck":
+                sound("block")
+            elif event.type == "recall":
+                sound("electric")
+            elif event.type == "catch":
+                var cf: Dictionary = sim.fighters[event.actor]
+                spark_burst(Vector3(cf.x, cf.y + 1.2, 0.35), Color("ffe26a"), 24, 5.0, 0.08)
+                sound("jump")
+            elif event.type == "pool":
+                # The blob became a lava pool: rebuild its visual with the new shape.
+                if projectile_nodes.has(event.id):
+                    projectile_nodes[event.id].queue_free()
+                    projectile_nodes.erase(event.id)
+                spark_burst(Vector3(event.x, 0.3, 0.3), Color("ff6d2b"), 30, 5.0, 0.1)
+                sound("lava")
+            elif event.type == "reflect":
+                spark_burst(Vector3(event.x, event.y, 0.4), Color("e2e8f0"), 26, 6.0, 0.08)
+                show_status("REFLEKTIERT!", 0.8)
+                sound("block")
+            elif event.type == "bulwark_block":
+                var bf: Dictionary = sim.fighters[event.actor]
+                views[event.actor].shield_flash()
+                spark_burst(Vector3(bf.x + bf.facing * 0.6, bf.y + 1.1, 0.4), Color("e2e8f0"), 18, 5.0, 0.07)
+                sound("block")
+            elif event.type == "iai_cut":
+                var sf: Dictionary = sim.fighters[event.actor]
+                var cut := _beam(Vector3(event.from_x, event.y + 1.0, 0.45), Vector3(sf.x, sf.y + 1.0, 0.45), Color("e6fffa"), 0.12)
+                _fade_free(cut, 0.4)
+                flash_screen(Color.WHITE, 0.35)
+                slow_motion(0.2, 0.18)
+                announce("ISSEN!", Color("99f6e4"), 0.4)
+                sound("hit")
+            elif event.type == "slam":
+                var sc: Color = event.color
+                shock_ring(Vector3(event.x, event.y + 0.2, 0.3), sc, float(event.radius) * 2.0)
+                for k in range(6):
+                    erupt_pillar(Vector3(event.x + (k - 2.5) * float(event.radius) * 0.33, event.y - 0.4, 0.2), sc, false)
+                camera_shake = 1.3
+                sound("lava")
+                sound("hit")
+            elif event.type == "yank":
+                var yf: Dictionary = sim.fighters[event.actor]
+                _fade_free(_beam(Vector3(event.from_x, yf.y + 1.1, 0.4), Vector3(yf.x, yf.y + 1.1, 0.4), Color("a8a29e"), 0.05), 0.35)
+                announce("ENTERN!", Color("fbbf24"), 0.35)
+                sound("jump")
+            elif event.type == "heat_full":
+                var hf: Dictionary = sim.fighters[event.actor]
+                shock_ring(Vector3(hf.x, hf.y + 1.0, 0.3), Color("ff6d2b"), 3.0)
+                show_status("🔥 %s GLÜHT – SPEZIAL = KERNSCHMELZE!" % hf.profile.name, 1.8)
+                sound("lava")
+            elif event.type == "armor":
+                views[event.actor].flash()
+                var af: Dictionary = sim.fighters[event.actor]
+                spark_burst(Vector3(af.x, af.y + 1.2, 0.4), Color("fbbf24"), 10, 4.0, 0.07)
+                sound("block")
+            elif event.type == "boss_telegraph":
+                boss_telegraph(event)
+            elif event.type == "boss_phase":
+                announce("PHASE 2 · ZORN DES HIMMELS", Color("ff3b1f"), 1.2)
+                flash_screen(Color("ff3b1f"), 0.6)
+                camera_shake = 1.5
+                sound("victory")
+            elif event.type == "boss_defeated":
+                boss_death(event.actor)
+            elif event.type == "boss_attack":
+                sound("lava" if str(event.pattern) in ["fire_breath", "ring_burst", "fire_pillars", "dive"] else "electric")
+            elif event.type == "clone_ready":
+                spark_burst(Vector3(event.x, sim.fighters[event.actor].y + 1.0, 0.3), Color("ff9b3d"), 16, 4.0, 0.08)
+            elif event.type == "echo_strike":
+                spark_burst(Vector3(event.x + float(event.facing) * 0.8, event.y, 0.4), Color("ffb870"), 12, 5.0, 0.07)
+            elif event.type == "clone_swap":
+                var cw: Dictionary = sim.fighters[event.actor]
+                for pos in [Vector3(event.from_x, event.from_y + 1.0, 0.3), Vector3(cw.x, cw.y + 1.0, 0.3)]:
+                    spark_burst(pos, Color("ff9b3d"), 22, 5.0, 0.08)
+                if event.actor < views.size(): views[event.actor].reset_physics_interpolation()
+                sound("jump")
+            elif event.type == "nova_launch":
+                announce("NOVA!", Color("c084fc"), 0.35)
+                sound("lava")
+            elif event.type == "shield_pierce":
+                announce("SCHILD DURCHBROCHEN!", Color("ffd23f"), 0.5)
+                sound("block")
+            elif event.type == "one_punch_ko":
+                flash_screen(Color.WHITE, 0.8)
+                slow_motion(0.15, 0.4)
+                announce("ERNSTFALL!", Color("ffd23f"), 0.7)
+                camera_shake = 1.8
+                sound("hit")
             elif event.type == "counter":
                 announce("KONTER!", Color("7dd3fc"), 0.45)
                 shock_ring(Vector3(sim.fighters[event.actor].x, sim.fighters[event.actor].y + 1.1, 0.3), Color("7dd3fc"), 2.6)
@@ -2563,13 +4515,13 @@ func _physics_process(delta: float) -> void:
                 if story != null and story.running:
                     story.on_fight_finished(sim.result)
                 else:
-                    result_label.text = "UNENTSCHIEDEN" if sim.result == -1 else "SPIELER %d GEWINNT!" % (sim.result + 1)
+                    result_label.text = winner_text()
                     get_tree().create_timer(1.1, true, false, true).timeout.connect(_show_result_panel_if_finished)
             elif event.type == "finish" and story != null and story.running:
                 sound("victory")
                 story.on_fight_finished(sim.result)
             elif event.type == "finish":
-                result_label.text = "UNENTSCHIEDEN" if sim.result == -1 else "SPIELER %d GEWINNT!" % (sim.result + 1)
+                result_label.text = winner_text()
                 result_panel.show()
                 sound("victory")
                 if smoke: finish_smoke_round()
@@ -2623,6 +4575,7 @@ func _process(delta: float) -> void:
                 announce("GO!", Color("4ade80"), 0.4)
                 sound("start")
             last_countdown_step = step
+    _update_nav_frame()
     if cinematic:
         update_player_markers()
         return # the story mode drives the camera during cutscenes
@@ -2723,6 +4676,7 @@ func setup_player_markers() -> void:
 ## Human players are "P1".."P4", computer-controlled fighters carry a "KI" tag.
 func marker_text(index: int) -> String:
     var is_ai: bool = index >= human_count()
+    if index < sim.fighters.size() and sim.fighters[index].is_boss: return ""
     return "P%d%s\n▼" % [index + 1, " KI" if is_ai else ""]
 
 ## Moves each marker above its fighter's head with constant on-screen size; bobs gently.
@@ -2758,9 +4712,9 @@ func get_portrait_for_fighter(f: Dictionary) -> Texture2D:
         return PORTRAITS[family]
     var ptext: String = f.profile.prompt.to_lower()
     for cand in [
-        "ninja", "golem", "valkyrie", "dragon", "goku", "vegeta", "frieza", "subzero", "pain",
-        "luffy", "zoro", "naruto", "sasuke", "saitama", "tanjiro", "sonic", "akaza", "blue_eyes",
-        "charizard", "anubis", "specter", "phoenix", "golden_golem", "steel_knight", "vanguard_soldier",
+        "ninja", "golem", "valkyrie", "dragon", "kairo", "varakh", "xylar", "glaciem", "oryn",
+        "tobi", "jubei", "ren", "amethya", "bruno", "hikaru", "zip", "raiga", "albion",
+        "pyrax", "anubis", "specter", "phoenix", "golden_golem", "steel_knight", "vanguard_soldier",
         "sorceress_medea", "skeleton_reaper", "mutant_titan", "swat_specops", "samurai_dreyar",
         "pirate_captain", "vampire_lord", "wizard_sorcerer", "warrok_brute", "martial_yaku", "monk_ganfaul"
     ]:
@@ -2772,11 +4726,17 @@ func get_portrait_for_fighter(f: Dictionary) -> Texture2D:
 
 func update_hud() -> void:
     if not timer or sim.fighters.is_empty(): return
+    update_boss_bar()
+    if next_boss_button: next_boss_button.visible = result_panel.visible and _next_boss_available()
     timer.text = "%02d" % int(ceil(sim.time_left))
     var active_count: int = mini(health_bars.size(), sim.fighters.size())
     for i in range(active_count):
         var f: Dictionary = sim.fighters[i]
-        names[i].text = "P%d  ·  %s" % [i+1, f.profile.name]
+        var tag: String = ""
+        if f.is_boss: tag = "👁 "
+        elif boss_active: tag = "[HELD] "
+        elif not team_layout().is_empty() and (story == null or not story.running): tag = "[%s] " % ("A" if int(f.team) == 0 else "B")
+        names[i].text = "%sP%d  ·  %s" % [tag, i+1, f.profile.name]
         var p_dmg: float = f.get("damage_percent", 0.0)
 
         # Damage percent coloring:
@@ -2789,14 +4749,17 @@ func update_hud() -> void:
         elif p_dmg >= 100.0: dmg_col = Color("fb923c")
         elif p_dmg >= 50.0: dmg_col = Color("fde047")
 
-        health_text[i].text = "%d %%" % int(round(p_dmg))
+        health_text[i].text = "%d HP" % int(ceil(f.boss_hp)) if f.is_boss else "%d %%" % int(round(p_dmg))
         health_text[i].add_theme_color_override("font_color", dmg_col)
 
         var super_val: float = f.get("super", 0.0)
         var combo_val: int = f.get("combo", 0)
         var super_str: String = "⚡ SUPER!" if super_val >= 100.0 else "SUPER %d%%" % int(super_val)
         var combo_str: String = " · %d HITS" % combo_val if combo_val > 1 else ""
-        special_text[i].text = super_str + combo_str + (" · SPEZIAL!" if f.cooldowns[1] <= 0 and super_val >= 40 else "")
+        var kit_str: String = ""
+        if bool(f.get("phys", {}).get("heat", false)):
+            kit_str = " · 🔥 KERNSCHMELZE!" if float(f.heat) >= Combat.HEAT_MAX else " · GLUT %d%%" % int(f.heat)
+        special_text[i].text = super_str + combo_str + kit_str + (" · SPEZIAL!" if f.cooldowns[1] <= 0 and super_val >= 40 else "")
 
         if lives_labels.size() > i and lives_labels[i]:
             var lives_cnt: int = f.get("lives", 3)
@@ -2809,7 +4772,7 @@ func update_hud() -> void:
             var fam_key: String = f.profile.get("family", "")
             if not portrait_cache.has(fam_key): portrait_cache[fam_key] = get_portrait_for_fighter(f)
             portrait_rects[i].texture = portrait_cache[fam_key]
-    if paused: status.text = "PAUSE  ·  ESC zum Fortsetzen"
+    if paused: status.text = "PAUSE  ·  ESC / ☰ / B zum Fortsetzen  ·  ⧉ Kämpferauswahl"
     elif active and sim.countdown > 0: status.text = "BEREIT?"
     elif status_message_time > 0.0: status.text = status_message
     else:

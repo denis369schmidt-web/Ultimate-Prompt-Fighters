@@ -3,6 +3,8 @@ extends RefCounted
 ## Supports 2, 3, or 4 simultaneous fighters (FFA or Team Brawl) on enlarged tournament arenas with dynamic special items.
 const Prompt = preload("res://scripts/prompt_interpreter.gd")
 const Signatures = preload("res://scripts/signatures.gd")
+const FighterKits = preload("res://scripts/fighter_kits.gd")
+const Bosses = preload("res://scripts/bosses.gd")
 
 ## Body pose per move, bare-handed and with a melee weapon (the view animates each).
 const MOVE_POSE := {"jab": "Attack", "ftilt": "Kick", "utilt": "Uppercut", "dtilt": "Sweep", "fsmash": "HeavyPunch",
@@ -36,6 +38,15 @@ const WEAPONS := {
 	"blaster": {"name": "LASERBLASTER", "reach": 0.0, "dmg": 1.0, "kb": 1.0, "windup": -0.05, "uses": 18, "special": "laser", "shoot": "laser", "color": Color("f472b6")},
 	"boomerang": {"name": "STURMBUMERANG", "reach": 0.0, "dmg": 1.0, "kb": 1.0, "windup": 0.0, "uses": 9, "special": "boomerang", "shoot": "boomerang", "color": Color("facc15")},
 	"flail": {"name": "KETTENMORGENSTERN", "reach": 1.7, "dmg": 1.7, "kb": 1.8, "windup": 0.1, "uses": 10, "special": "quake", "color": Color("a8a29e")},
+	# Shop weapons (rewards.gd): spawn only once bought.
+	"shadow_katana": {"name": "SCHATTENKATANA", "reach": 1.05, "dmg": 1.45, "kb": 1.15, "windup": -0.06, "uses": 18, "special": "saber", "color": Color("a855f7"), "shop": true},
+	"frost_axe": {"name": "FROSTAXT", "reach": 0.95, "dmg": 1.6, "kb": 1.3, "windup": 0.05, "uses": 12, "special": "frost_nova", "color": Color("7dd3fc"), "freeze": 0.7, "shop": true},
+	"flame_whip": {"name": "FEUERPEITSCHE", "reach": 2.1, "dmg": 1.3, "kb": 1.2, "windup": 0.04, "uses": 14, "special": "crescent", "color": Color("f97316"), "shop": true},
+	"crystal_bow": {"name": "KRISTALLBOGEN", "reach": 0.0, "dmg": 1.0, "kb": 1.0, "windup": -0.02, "uses": 16, "special": "crystal_arrow", "shoot": "crystal_arrow", "color": Color("67e8f9"), "shop": true},
+	"dragon_lance": {"name": "DRACHENLANZE", "reach": 1.9, "dmg": 1.55, "kb": 1.5, "windup": 0.06, "uses": 12, "special": "beam", "color": Color("ef4444"), "shop": true},
+	"soul_scythe": {"name": "SEELENSENSE", "reach": 1.5, "dmg": 1.7, "kb": 1.45, "windup": 0.07, "uses": 12, "special": "crescent", "color": Color("a3e635"), "shop": true},
+	"thunder_hammer": {"name": "DONNERHAMMER", "reach": 1.1, "dmg": 2.1, "kb": 2.0, "windup": 0.12, "uses": 10, "special": "quake", "color": Color("fde047"), "shop": true},
+	"plasma_cannon": {"name": "PLASMAKANONE", "reach": 0.0, "dmg": 1.0, "kb": 1.0, "windup": 0.06, "uses": 10, "special": "plasma", "shoot": "plasma", "color": Color("22d3ee"), "shop": true},
 }
 ## Projectile kinds: speed m/s, lifetime s, hit size, damage, push, angle, pierce, return time.
 const PROJECTILES := {
@@ -44,7 +55,11 @@ const PROJECTILES := {
 	"crescent": {"speed": 10.0, "life": 0.95, "size": 1.1, "damage": 15.0, "push": 0.8, "angle": 42.0, "pierce": true, "turn": -1.0},
 	"laser": {"speed": 24.0, "life": 0.55, "size": 0.35, "damage": 4.5, "push": 0.18, "angle": 20.0, "pierce": false, "turn": -1.0},
 	"boomerang": {"speed": 13.0, "life": 1.8, "size": 0.55, "damage": 10.0, "push": 0.5, "angle": 45.0, "pierce": true, "turn": 0.5},
+	"crystal_arrow": {"speed": 26.0, "life": 0.7, "size": 0.35, "damage": 9.0, "push": 0.5, "angle": 30.0, "pierce": true, "turn": -1.0, "shape": "arrow"},
+	"plasma": {"speed": 9.0, "life": 1.4, "size": 0.5, "damage": 13.0, "push": 0.8, "angle": 45.0, "pierce": false, "turn": -1.0, "explode": 1.8, "shape": "orb"},
 }
+## Weapons that may spawn in arenas (empty = the classic eight); main.gd adds bought shop weapons.
+var weapon_pool: Array = []
 var time_left := MATCH_TIME
 var initial_lives := 3
 var elapsed := 0.0
@@ -110,6 +125,14 @@ var finish_loser := -1
 
 const GRAVITY := 20.0
 const JUMP_FORCE := 8.5
+## Kit mechanics (fighter_kits.gd / signatures.gd).
+const ARMOR_SELF_LIMIT := 18.0   # armor buffs ignore hits below this damage
+const HEAT_MAX := 100.0          # heat gauge: full = meltdown ready
+const MARK_TIME := 3.5           # how long a signature mark lasts
+## Contacts created outside the attack loop (e.g. a landing shockwave), resolved next contact pass.
+var queued_contacts: Array = []
+## Boss fights: attack choice and timing of the angel bosses (own stream, replays stay exact).
+var boss_rng := RandomNumberGenerator.new()
 const HITSTOP_FRAMES := 4
 const PARRY_WINDOW := 0.12
 const MAX_SUPER := 100.0
@@ -218,6 +241,7 @@ func start(a, b = null, control: String = "manual", lives_count: int = 3) -> voi
 
 	for i in range(count):
 		var p: Dictionary = profiles[i]
+		var phys: Dictionary = FighterKits.physics(p)
 		fighters.append({
 			"profile": p,
 			"hp": p.health,
@@ -243,7 +267,8 @@ func start(a, b = null, control: String = "manual", lives_count: int = 3) -> voi
 			"parry_timer": 0.0,
 			"parry_used": false,
 			"lives": lives_count,
-			"air_jumps": 2,
+			"phys": phys,               # movement values from the fighter kit
+			"air_jumps": int(phys.air_jumps),
 			"air_dash_used": false,
 			"drop_through": 0.0,
 			"invulnerable": 0.0,
@@ -263,7 +288,7 @@ func start(a, b = null, control: String = "manual", lives_count: int = 3) -> voi
 			"kb_taken_mult": 1.0,   # and incoming knockback
 			"air_control_lock": 0.0,
 			"moves": build_moveset(p),
-			"shield_hp": SHIELD_MAX,
+			"shield_hp": SHIELD_MAX * float(phys.shield),
 			"intangible": 0.0,
 			"dodge_timer": 0.0,
 			"dodge_kind": "",
@@ -287,10 +312,28 @@ func start(a, b = null, control: String = "manual", lives_count: int = 3) -> voi
 			"counter": 0.0,             # counter stance time left
 			"rage_timer": 0.0,          # signature rage boost time left
 			"anim_windup": 0.1,         # windup of the running move (animation timing)
+			"armor_timer": 0.0,         # self armor: hits below ARMOR_SELF_LIMIT do not interrupt
+			"marked_by": -1,            # signature mark (Volt Ninja): who marked this fighter
+			"mark_timer": 0.0,
+			"heat": 0.0,                # heat gauge (kits with phys.heat)
+			"bulwark": 0.0,             # frontal shield wall time left
+			"iai": 0.0,                 # iaido stance time left
+			"slam": false,              # leap slam in flight
+			"slam_vx": 0.0,
+			"slam_dmg": 0.0,
+			"special_held": false,      # special button held this tick (charged signatures)
+			"sig_charge": 0.0,          # charge time of a charged signature
+			"volley": 0,                # ki volley shots left
+			"volley_t": 0.0,
+			"trail_last_x": 0.0,        # last spark of a trail dash
+			"is_boss": false,           # angel boss (bosses.gd): own update, health bar, no knockback
+			"body_w": 0.0,              # hurtbox half width beyond the center point (bosses)
+			"body_h": 1.8,              # hurtbox height
 		})
 
 	projectiles.clear()
 	projectile_serial = 0
+	queued_contacts.clear()
 	# Reset Items
 	items.clear()
 	for def in DEFAULT_ITEMS:
@@ -301,6 +344,11 @@ func start(a, b = null, control: String = "manual", lives_count: int = 3) -> voi
 		match_seed = (match_seed * 31 + int(p.get("seed", 0))) & 0x7fffffff
 	rng.seed = match_seed
 	ai_rng.seed = match_seed ^ 0x5bd1e995
+	boss_rng.seed = match_seed ^ 0x2545f491
+	var heroes: int = 0
+	for f0 in fighters: if not f0.profile.has("boss"): heroes += 1
+	for f0 in fighters:
+		if f0.profile.has("boss"): _init_boss(f0, heroes)
 
 	ai_memory.clear()
 	for k in range(count): ai_memory.append({})
@@ -331,6 +379,12 @@ func queue_attack(i: int, is_special: bool) -> bool:
 	if f.state == "Carrying" and f.carried_item >= 0:
 		throw_carried_item(i)
 		return true
+	if is_special:
+		var follow: Dictionary = _sig_followup(i)
+		if not follow.is_empty():
+			f.cooldowns[1] = float(follow.get("cooldown", 0.4))
+			_begin_pending(i, follow, true, "nspecial")
+			return true
 
 	var idx := 1 if is_special else 0
 	if f.cooldowns[idx] > 0.0: return false
@@ -380,10 +434,15 @@ func _begin_pending(i: int, a: Dictionary, is_special: bool, key: String) -> voi
 	elif is_special and key == "nspecial" and not a.has("sig"):
 		var sig: Dictionary = Signatures.for_family(str(f.profile.get("family", "")))
 		if not sig.is_empty(): a = signature_ability(i, a, sig)
+	elif is_special and a.has("use_sig") and not a.has("sig"):
+		a = signature_ability(i, a, a.use_sig)
 	var pose: String = MOVE_POSE.get(key, "SpecialAttack" if is_special else "Attack")
 	if a.has("weapon"):
 		pose = "Cast" if weapon_shoots(a) else WEAPON_POSE.get(key, "Slash")
 	if a.has("sig"): pose = Signatures.MECH_POSE.get(a.sig.mech, "SpecialAttack")
+	if a.has("pose") and not a.has("weapon"): pose = str(a.pose)
+	if a.has("sig") and str(a.sig.mech) == "bulwark": f.bulwark = float(a.windup)
+	if bool(a.get("charge", false)): f.sig_charge = 0.0
 	f.anim_windup = float(a.windup)
 	f.state = "Attack"
 	f.pending = {
@@ -735,13 +794,15 @@ func spawn_projectile_spec(owner: int, spec: Dictionary, damage: float, x: float
 
 func _explode_projectile(pr: Dictionary, contacts: Array) -> void:
 	var radius: float = float(pr.spec.get("explode", 0.0))
+	if pr.has("size_now"): radius *= float(pr.size_now) / float(pr.spec.get("size", 1.0)) # grown orbs blow up bigger
 	events.append({"type": "blast", "actor": pr.owner, "x": pr.x, "y": pr.y, "radius": radius, "color": pr.spec.get("color", Color.ORANGE)})
 	for ti in range(fighters.size()):
 		if ti == pr.owner or is_ally(pr.owner, ti): continue
 		var t: Dictionary = fighters[ti]
 		if t.state == "Defeated" or t.state == "Dazed": continue
-		if Vector2(t.x - pr.x, t.y + 0.8 - pr.y).length() <= radius:
-			contacts.append({"from": pr.owner, "to": ti, "attack": {"ability": pr.ability, "special": true}, "push_dir": signf(t.x - pr.x) if absf(t.x - pr.x) > 0.05 else 1.0})
+		if Vector2(t.x - pr.x, t.y + float(t.body_h) * 0.45 - pr.y).length() - float(t.body_w) <= radius:
+			contacts.append({"from": pr.owner, "to": ti, "attack": {"ability": pr.ability, "special": true}, "push_dir": signf(t.x - pr.x) if absf(t.x - pr.x) > 0.05 else 1.0,
+				"src_x": pr.x})
 
 ## Moves projectiles and reports their hits as contacts.
 func _update_projectiles(dt: float, contacts: Array) -> void:
@@ -750,12 +811,63 @@ func _update_projectiles(dt: float, contacts: Array) -> void:
 		var d: Dictionary = pr.spec
 		pr.age += dt
 		pr.life -= dt
+		if pr.get("stuck", false):
+			# A thrown spear stuck in the floor waits to be recalled.
+			if pr.life <= 0.0:
+				events.append({"type": "projectile_end", "id": pr.id})
+				continue
+			keep.append(pr)
+			continue
 		var speed: float = float(d.get("speed", 10.0))
+		if d.has("grow"):
+			# Nova orb: grows above the owner's head, then is hurled at the nearest opponent.
+			var base: float = float(d.get("size", 0.3))
+			pr.size_now = minf(float(d.get("max_size", 1.0)), base + float(d.grow) * pr.age)
+			if not pr.get("launched", false):
+				var ow: Dictionary = fighters[pr.owner]
+				if pr.age < float(d.get("hold", 1.0)) and ow.state != "HitStun" and ow.state != "Defeated":
+					pr.x = ow.x
+					pr.y = ow.y + 2.6
+					pr.vx = 0.0
+					pr.vy = 0.0
+				else:
+					pr.launched = true
+					var aim := Vector2(float(ow.facing), -0.3)
+					var nt: int = get_nearest_opponent(pr.owner)
+					if nt >= 0: aim = Vector2(fighters[nt].x - pr.x, fighters[nt].y + 1.0 - pr.y)
+					aim = aim.normalized() * speed
+					pr.vx = aim.x
+					pr.vy = aim.y
+					pr.ability = pr.ability.duplicate()
+					pr.ability.damage = float(d.get("base_dmg", pr.ability.damage)) * (0.6 + 0.4 * pr.size_now / base)
+					events.append({"type": "nova_launch", "actor": pr.owner, "id": pr.id, "size": pr.size_now})
+		if bool(d.get("echo", false)) and not pr.get("echoing", false) and pr.age >= float(d.get("dash_time", 0.45)):
+			# Shadow clone: after its dash it stays and copies the owner's attacks.
+			pr.echoing = true
+			pr.vx = 0.0
+			pr.vy = 0.0
+			pr.echo_hits = []
+			events.append({"type": "clone_ready", "actor": pr.owner, "id": pr.id, "x": pr.x})
+		if float(d.get("gravity_pull", 0.0)) > 0.0:
+			# Singularity: drags opponents towards its core.
+			for ti in range(fighters.size()):
+				if ti == pr.owner or is_ally(pr.owner, ti): continue
+				var gt: Dictionary = fighters[ti]
+				if gt.state in ["Defeated", "Dazed", "Ledge"] or gt.intangible > 0.0: continue
+				var to_core := Vector2(pr.x - gt.x, pr.y - (gt.y + 0.9))
+				if to_core.length() < float(d.get("pull_radius", 4.0)) and to_core.length() > 0.35:
+					gt.x += signf(to_core.x) * float(d.gravity_pull) * dt
+					if not gt.is_grounded: gt.vy = move_toward(gt.vy, signf(to_core.y) * 3.0, 20.0 * dt)
 		if float(d.get("turn", -1.0)) > 0.0 and pr.age >= float(d.turn):
 			# Returning projectiles fly back to their owner.
 			var o: Dictionary = fighters[pr.owner]
 			var to := Vector2(o.x - pr.x, o.y + 1.1 - pr.y)
-			if to.length() < 0.7 and pr.age > float(d.turn) + 0.1: continue
+			if to.length() < 0.7 and pr.age > float(d.turn) + 0.1:
+				if bool(d.get("javelin", false)):
+					o.cooldowns[1] = 0.0 # catching the spear readies the next throw
+					events.append({"type": "catch", "actor": pr.owner})
+				events.append({"type": "projectile_end", "id": pr.id})
+				continue
 			var v := to.normalized() * speed
 			pr.vx = v.x
 			pr.vy = v.y
@@ -788,25 +900,67 @@ func _update_projectiles(dt: float, contacts: Array) -> void:
 		var gone := false
 		if on_floor:
 			pr.y = 0.15
-			if float(d.get("explode", 0.0)) > 0.0:
+			if d.has("pool") and not pr.get("pooled", false):
+				# Lava blob: turns into a burning pool on the floor.
+				var pool: Dictionary = d.pool
+				pr.pooled = true
+				pr.spec = d.merged({"shape": "lava_pool", "gravity": 0.0, "size": float(pool.get("size", 1.2)),
+					"rehit": float(pool.get("rehit", 0.5)), "pierce": true}, true)
+				d = pr.spec
+				pr.vx = 0.0
+				pr.vy = 0.0
+				pr.life = float(pool.get("life", 4.0))
+				pr.hit = []
+				pr.ability = pr.ability.duplicate()
+				pr.ability.damage = float(pr.ability.damage) * float(pool.get("dmg", 0.35))
+				pr.ability.push = 0.3
+				pr.ability.angle = 80.0
+				pr.ability.hitstun = 0.2
+				events.append({"type": "pool", "actor": pr.owner, "id": pr.id, "x": pr.x})
+			elif float(d.get("explode", 0.0)) > 0.0:
 				_explode_projectile(pr, contacts)
 				gone = true
+			elif bool(d.get("javelin", false)) and not pr.returning:
+				pr.stuck = true
+				pr.vx = 0.0
+				pr.vy = 0.0
+				pr.life = 6.0
+				events.append({"type": "stuck", "actor": pr.owner, "id": pr.id})
 			else:
 				pr.vy = 0.0
-		var size: float = float(d.get("size", 0.5))
+		if float(d.get("rehit", 0.0)) > 0.0:
+			pr.rehit_t = float(pr.get("rehit_t", 0.0)) + dt
+			if pr.rehit_t >= float(d.rehit):
+				pr.rehit_t = 0.0
+				pr.hit = []
+		var size: float = float(pr.get("size_now", d.get("size", 0.5)))
+		var inert: bool = bool(d.get("nohit", false)) or pr.get("echoing", false) or (d.has("grow") and not pr.get("launched", false))
 		for ti in range(fighters.size()):
-			if gone: break
+			if gone or inert: break
 			if ti == pr.owner or is_ally(pr.owner, ti) or ti in pr.hit: continue
 			var t: Dictionary = fighters[ti]
 			if t.state == "Defeated" or t.state == "Dazed": continue
-			if absf(t.x - pr.x) <= size and pr.y >= t.y - 0.3 - size * 0.5 and pr.y <= t.y + 1.8 + size * 0.5:
+			if absf(t.x - pr.x) <= size + float(t.body_w) and pr.y >= t.y - 0.3 - size * 0.5 and pr.y <= t.y + float(t.body_h) + size * 0.5:
+				if float(t.bulwark) > 0.0 and signf(pr.x - t.x) == float(t.facing) and not pr.get("pooled", false) and not pr.get("stuck", false):
+					# Shield wall: the shot flies back and now belongs to the defender.
+					pr.owner = ti
+					pr.vx = -pr.vx * 1.1
+					pr.vy = absf(pr.vy) * 0.3
+					pr.x = t.x + float(t.facing) * (size + 0.4)
+					pr.hit = []
+					pr.returning = false
+					events.append({"type": "reflect", "actor": ti, "x": pr.x, "y": pr.y})
+					break
 				pr.hit.append(ti)
 				if float(d.get("explode", 0.0)) > 0.0:
 					_explode_projectile(pr, contacts)
 					gone = true
 					break
-				var c := {"from": pr.owner, "to": ti, "attack": {"ability": pr.ability, "special": false}, "push_dir": signf(pr.vx) if absf(pr.vx) > 0.1 else 1.0}
+				var c := {"from": pr.owner, "to": ti, "attack": {"ability": pr.ability, "special": false}, "push_dir": signf(pr.vx) if absf(pr.vx) > 0.1 else 1.0,
+					"src_x": pr.x}
 				if bool(d.get("pull", false)): c["pull"] = true
+				if bool(d.get("mark", false)): c["mark"] = true
+				if bool(d.get("yank", false)): c["yank"] = true
 				if bool(d.get("swap", false)): c["swap"] = true
 				if float(d.get("lifesteal", 0.0)) > 0.0: c["lifesteal"] = float(d.lifesteal)
 				contacts.append(c)
@@ -833,9 +987,28 @@ func signature_ability(i: int, a: Dictionary, sig: Dictionary) -> Dictionary:
 	if sig.has("windup"): b["windup"] = float(sig.windup)
 	b.erase("type") # the signature replaces the old all-around type
 	match str(sig.mech):
-		"projectile", "meteor", "mine", "turret", "clone", "eruption", "rage":
+		"projectile", "meteor", "mine", "turret", "clone", "eruption", "rage", "mark", "javelin", "magma", "board", "cannon", "nova", "shadow_clone", "singularity":
 			b["no_hit"] = true
 			b["active"] = 0.1
+		"iai":
+			b["no_hit"] = true
+			b["active"] = float(sig.get("time", 0.9))
+			b["recovery"] = 0.3
+		"volley":
+			b["no_hit"] = true
+			b["active"] = int(sig.get("count", 6)) * float(sig.get("interval", 0.1)) + 0.05
+			b["recovery"] = 0.2
+		"charge_beam":
+			b.merge({"x_min": 0.3, "range": float(sig.get("length", 5.0)), "y_min": 1.2 - float(sig.get("thick", 0.8)) * 0.5,
+				"y_max": 1.2 + float(sig.get("thick", 0.8)) * 0.5, "angle": 30.0, "active": 0.3, "charge": true}, true)
+		"leap_slam":
+			b["no_hit"] = true
+			b["active"] = 1.6
+			b["recovery"] = 0.1
+		"bulwark":
+			b["windup"] = float(sig.get("time", 0.75))
+			b.merge({"x_min": 0.0, "range": 1.7, "y_min": -0.2, "y_max": 2.0, "active": 0.14, "recovery": 0.3, "angle": 40.0,
+				"push": float(a.push) * 1.8}, true)
 		"counter":
 			b["no_hit"] = true
 			b["active"] = 0.45
@@ -844,7 +1017,7 @@ func signature_ability(i: int, a: Dictionary, sig: Dictionary) -> Dictionary:
 			b.merge({"x_min": 0.3, "range": float(sig.get("length", 6.0)), "y_min": 1.2 - float(sig.get("thick", 0.8)) * 0.5,
 				"y_max": 1.2 + float(sig.get("thick", 0.8)) * 0.5, "angle": 30.0, "active": 0.28}, true)
 			if sig.has("freeze"): b["freeze"] = float(sig.freeze)
-		"dash":
+		"dash", "trail_dash":
 			var multi: int = int(sig.get("multi", 1))
 			b.merge({"x_min": -0.3, "range": 1.3, "y_min": -0.2, "y_max": 1.9, "active": 0.3, "motion_vx": float(sig.get("speed", 12.0)), "angle": 40.0}, true)
 			if multi > 1:
@@ -866,6 +1039,9 @@ func signature_ability(i: int, a: Dictionary, sig: Dictionary) -> Dictionary:
 			b["damage"] = dmg / hits * 1.5
 		"power":
 			b.merge({"x_min": -0.3, "range": 1.8, "y_min": -0.2, "y_max": 2.0, "active": 0.12, "recovery": 0.45, "angle": 38.0, "push": float(a.push) * 2.2}, true)
+		"one_punch":
+			b.merge({"x_min": -0.3, "range": 1.9, "y_min": -0.2, "y_max": 2.0, "active": 0.12, "recovery": 0.6, "angle": 38.0,
+				"push": float(a.push) * 1.6, "unblockable": true, "ko_at": float(sig.get("ko_at", 120.0)), "kb_scale": float(sig.get("kb_scale", 70.0))}, true)
 	return b
 
 ## Runs a signature at the start of its active frames.
@@ -877,9 +1053,12 @@ func _sig_activate(i: int, ab: Dictionary) -> void:
 	var fx: float = float(f.facing)
 	var spec: Dictionary = sig.duplicate()
 	spec["kind"] = str(f.profile.get("family", "sig"))
+	if str(sig.mech).begins_with("boss_"):
+		_boss_activate(i, ab)
+		return
 	events.append({"type": "signature", "actor": i, "mech": sig.mech, "color": col, "name": ab.get("name", "")})
 	match str(sig.mech):
-		"projectile":
+		"projectile", "mark", "javelin", "magma", "board":
 			var count: int = int(sig.get("count", 1))
 			var spread: float = float(sig.get("spread", 0.18))
 			for k in range(count):
@@ -922,6 +1101,485 @@ func _sig_activate(i: int, ab: Dictionary) -> void:
 			f.counter = 0.45
 		"rage":
 			f.rage_timer = float(sig.get("time", 6.0))
+		"mark_strike":
+			var mt: int = _marked_target(i)
+			if mt >= 0:
+				var mo: Dictionary = fighters[mt]
+				var mside: float = signf(mo.x - f.x) if absf(mo.x - f.x) > 0.05 else fx
+				events.append({"type": "teleport", "actor": i, "from_x": f.x, "from_y": f.y})
+				f.x = mo.x + mside * 0.9
+				f.y = mo.y
+				f.facing = -int(mside)
+				f.is_grounded = mo.is_grounded
+				mo.marked_by = -1
+				mo.mark_timer = 0.0
+		"recall":
+			for pr in projectiles:
+				if pr.owner == i and pr.get("stuck", false):
+					pr.stuck = false
+					pr.spec = pr.spec.duplicate()
+					pr.spec.turn = 0.01
+					pr.spec.speed = 20.0
+					pr.spec.gravity = 0.0
+					pr.spec.pierce = true
+					pr.age = 0.02
+					pr.life = 2.5
+					pr.hit = []
+					pr.ability = pr.ability.duplicate()
+					pr.ability.damage = dmg
+					events.append({"type": "recall", "actor": i, "id": pr.id})
+		"meltdown":
+			f.heat = 0.0
+		"cannon":
+			var from_x: float = clampf(f.x - fx * 11.0, BLAST_ZONE_LEFT + 1.0, BLAST_ZONE_RIGHT - 1.0)
+			spec.merge({"shape": "cannonball", "life": 2.2, "size": 0.5, "explode": 1.8, "push": 0.8, "angle": 45.0}, true)
+			spawn_projectile_spec(i, spec, dmg, from_x, f.y + 1.0, fx * 19.0, 0.0)
+		"iai":
+			f.iai = float(ab.get("active", 0.9))
+		"volley":
+			f.volley = int(sig.get("count", 6))
+			f.volley_t = 0.0
+		"nova":
+			spec.merge({"shape": sig.get("shape", "orb"), "fuse": 0.01, "base_dmg": dmg}, true)
+			spawn_projectile_spec(i, spec, dmg, f.x, f.y + 2.6, 0.0, 0.0)
+		"shadow_clone":
+			for pr in projectiles:
+				if pr.owner == i and bool(pr.spec.get("echo", false)):
+					pr.life = 0.0 # only one clone at a time
+			spec.merge({"shape": "clone", "life": float(sig.get("life", 5.0)), "size": 0.7, "pierce": true, "push": 0.7, "angle": 40.0,
+				"echo": true}, true)
+			spawn_projectile_spec(i, spec, dmg, f.x + fx * 0.5, f.y + 0.9, fx * float(sig.get("speed", 10.0)), 0.0)
+		"trail_dash":
+			f.trail_last_x = f.x
+		"singularity":
+			spec.merge({"shape": "singularity", "life": float(sig.get("fuse", 1.6)), "fuse": 0.01, "size": 0.4, "nohit": true,
+				"push": 0.95, "angle": 50.0}, true)
+			spawn_projectile_spec(i, spec, dmg, f.x + fx * 2.5, f.y + 1.2, fx * 1.2, 0.0)
+		"leap_slam":
+			var tx: float = f.x + fx * 3.0
+			var lo: int = get_nearest_opponent(i)
+			if lo >= 0 and absf(fighters[lo].x - f.x) < 9.0: tx = fighters[lo].x
+			tx = clampf(tx, STAGE_LEFT + 0.6, STAGE_RIGHT - 0.6)
+			var rise: float = float(sig.get("rise", 11.5))
+			var flight: float = 2.0 * rise / maxf(1.0, float(f.phys.gravity))
+			f.vy = rise
+			f.y += 0.05
+			f.is_grounded = false
+			f.slam = true
+			f.slam_vx = (tx - f.x) / flight
+			f.vx = f.slam_vx
+			f.slam_dmg = dmg
+			f.armor_timer = maxf(f.armor_timer, flight + 0.2)
+			if absf(tx - f.x) > 0.1: f.facing = 1 if tx > f.x else -1
+
+## Second stage of two-stage signatures: strike the marked opponent, recall the thrown
+## spear, or unleash the full heat gauge. Empty when nothing is ready.
+func _sig_followup(i: int) -> Dictionary:
+	var f: Dictionary = fighters[i]
+	if not f.weapon.is_empty(): return {}
+	var sig: Dictionary = Signatures.for_family(str(f.profile.get("family", "")))
+	var sp: Dictionary = f.profile.special
+	var col: Color = sig.get("color", Color.WHITE)
+	match str(sig.get("mech", "")):
+		"mark":
+			if _marked_target(i) >= 0:
+				return {"name": "Raijin-Blitzschlag", "damage": float(sp.damage) * 1.25, "windup": 0.06, "active": 0.14, "recovery": 0.26,
+					"x_min": -0.4, "range": 1.6, "y_min": -0.3, "y_max": 2.1, "angle": 50.0, "push": float(sp.push) * 1.4, "hitstun": 0.5,
+					"cooldown": float(sp.cooldown), "special": true, "sig": {"mech": "mark_strike", "color": col}}
+		"javelin":
+			for pr in projectiles:
+				if pr.owner == i and pr.get("stuck", false):
+					return {"name": "Speer-Rückruf", "damage": float(sp.damage) * 0.8, "windup": 0.05, "active": 0.1, "recovery": 0.16,
+						"range": 0.0, "push": float(sp.push), "angle": 40.0, "hitstun": 0.3, "no_hit": true, "cooldown": 0.3, "special": true,
+						"sig": {"mech": "recall", "color": col}}
+		"magma":
+			if float(f.heat) >= HEAT_MAX:
+				return {"name": "KERNSCHMELZE", "damage": float(sp.damage) * 1.7, "windup": 0.3, "active": 0.2, "recovery": 0.4,
+					"x_min": -3.0, "range": 3.0, "y_min": -0.5, "y_max": 3.2, "all_around": true, "angle": 55.0, "push": float(sp.push) * 2.3,
+					"hitstun": 0.5, "armor": 99.0, "no_heat": true, "cooldown": float(sp.cooldown), "special": true, "sig": {"mech": "meltdown", "color": col}}
+	return {}
+
+# ── Angel bosses ─────────────────────────────────────────────────────────────────
+
+func _init_boss(f: Dictionary, heroes: int) -> void:
+	var b: Dictionary = Bosses.data(str(f.profile.boss))
+	var prof: Dictionary = Bosses.profile(str(f.profile.boss), heroes)
+	f.is_boss = true
+	f.boss_id = str(f.profile.boss)
+	f.boss_hp = float(prof.health)
+	f.boss_max = float(prof.health)
+	f.boss_phase = 1
+	f.boss_cool = 2.0
+	f.boss_last = ""
+	f.boss_emit = {}
+	f.boss_gale = 0.0
+	f.boss_gale_force = 5.5
+	f.boss_roll = 0.0
+	f.boss_roll_ground = true
+	f.boss_marks = []
+	f.body_w = float(b.body_w)
+	f.body_h = float(b.body_h)
+	f.x = 5.5 if f.x >= 0.0 else -5.5
+	f.y = float(b.hover)
+	f.is_grounded = false
+	f.lives = 1
+	f.team = 9
+	events.append({"type": "boss_intro", "actor": fighters.find(f), "name": b.name, "title": b.title, "intro": b.intro})
+
+func _living_boss() -> int:
+	for k in range(fighters.size()):
+		if fighters[k].is_boss and fighters[k].state != "Defeated": return k
+	return -1
+
+## Damage to a boss: its health bar drops, it is never launched. Half health starts phase 2.
+func _hit_boss(ai: int, bi: int, a: Dictionary, is_special: bool) -> void:
+	var attacker: Dictionary = fighters[ai]
+	var boss: Dictionary = fighters[bi]
+	if boss.state == "Defeated": return
+	var combo_mult: float = COMBO_MULT[mini(attacker.combo, COMBO_MULT.size() - 1)]
+	var dmg: float = float(a.damage) * clampf(1.0 - boss.profile.stats.defense * 0.01, 0.55, 0.9) * combo_mult
+	dmg *= float(attacker.get("power_mult", 1.0)) * (2.0 if attacker.titan_timer > 0.0 else 1.0) * (1.35 if attacker.rage_timer > 0.0 else 1.0)
+	if is_special and attacker.super >= MAX_SUPER:
+		dmg *= 1.7
+		attacker.super = 0.0
+		events.append({"type": "super_used", "actor": ai})
+	boss.boss_hp = maxf(0.0, float(boss.boss_hp) - dmg)
+	attacker.combo += 1
+	attacker.combo_timer = 2.0
+	attacker.super = minf(MAX_SUPER, attacker.super + (10.0 if is_special else 5.0))
+	attacker.hitstop = 2
+	events.append({"type": "hit", "actor": ai, "target": bi, "damage": dmg, "special": is_special, "super_hit": false,
+		"launch_impulse": 0.0, "damage_percent": 0.0, "boss": true})
+	if boss.boss_phase == 1 and boss.boss_hp <= boss.boss_max * 0.5:
+		boss.boss_phase = 2
+		boss.invulnerable = 1.2
+		boss.pending = {}
+		boss.boss_emit = {}
+		boss.boss_cool = 1.2
+		events.append({"type": "boss_phase", "actor": bi, "phase": 2})
+	if boss.boss_hp <= 0.0:
+		boss.state = "Defeated"
+		boss.pose = "Defeat"
+		boss.lives = 0
+		boss.pending = {}
+		boss.boss_emit = {}
+		events.append({"type": "boss_defeated", "actor": bi, "by": ai})
+
+## The boss hovers towards its target, runs timed effects and picks its next attack pattern.
+func _boss_update(i: int, dt: float) -> void:
+	var f: Dictionary = fighters[i]
+	var b: Dictionary = Bosses.data(f.boss_id)
+	f.hitstop = 0
+	if f.invulnerable > 0: f.invulnerable = maxf(0.0, f.invulnerable - dt)
+	if f.pose_time > 0:
+		f.pose_time = maxf(0.0, f.pose_time - dt)
+		if f.pose_time <= 0.0 and f.pending.is_empty():
+			f.state = "Ready"
+			f.pose = "Idle"
+	var ti: int = get_nearest_opponent(i)
+	var tgt: Dictionary = fighters[ti] if ti >= 0 else f
+	var fast: float = 1.35 if f.boss_phase == 2 else 1.0
+	if f.boss_roll != 0.0:
+		# Wheel roll: races across the stage at floor level.
+		f.x += f.boss_roll * dt
+		if f.boss_roll_ground: f.y = move_toward(f.y, 0.0, 8.0 * dt)
+		if absf(f.x) > STAGE_RIGHT - 1.0:
+			f.x = clampf(f.x, STAGE_LEFT + 1.0, STAGE_RIGHT - 1.0)
+			f.boss_roll = 0.0
+	elif f.pending.is_empty() or f.pending.stage == "windup":
+		var keep: float = 3.2 if b.body_w > 1.5 else 2.6
+		var want_x: float = clampf(tgt.x - signf(tgt.x - f.x) * keep, STAGE_LEFT + 2.0, STAGE_RIGHT - 2.0)
+		f.x = move_toward(f.x, want_x, float(b.speed) * fast * dt)
+		f.y = move_toward(f.y, float(b.hover) + sin(elapsed * 1.3) * 0.25, 3.0 * dt)
+		if absf(tgt.x - f.x) > 0.2: f.facing = 1 if tgt.x > f.x else -1
+	if f.boss_gale > 0.0:
+		# Gale: every hero is blown away from the boss (negative force pulls them in).
+		f.boss_gale = maxf(0.0, f.boss_gale - dt)
+		for k in range(fighters.size()):
+			var h: Dictionary = fighters[k]
+			if k == i or is_ally(i, k) or h.state in ["Defeated", "Ledge"]: continue
+			if absf(h.x - f.x) < 9.0 and absf(h.x - f.x) > 0.8: h.x += signf(h.x - f.x) * float(f.boss_gale_force) * dt
+	if not f.boss_emit.is_empty():
+		f.boss_emit.t -= dt
+		if f.boss_emit.t <= 0.0: _boss_emit_step(i)
+	f.boss_cool -= dt * fast
+	if f.pending.is_empty() and f.boss_emit.is_empty() and f.boss_roll == 0.0 and f.boss_cool <= 0.0 and ti >= 0:
+		var pool: Array = b.patterns[f.boss_phase - 1].duplicate()
+		if pool.size() > 1: pool.erase(f.boss_last)
+		var pat: String = pool[boss_rng.randi_range(0, pool.size() - 1)]
+		f.boss_last = pat
+		_boss_start(i, pat, tgt)
+		f.boss_cool = (2.2 if f.boss_phase == 1 else 1.5)
+
+## Relative hitbox height band of the boss for a world height range.
+static func _band(f: Dictionary, lo: float, hi: float) -> Dictionary:
+	return {"y_min": lo - float(f.y), "y_max": hi - float(f.y)}
+
+## Starts one attack pattern (bosses.gd PATTERNS) with a readable warning (boss_telegraph event).
+func _boss_start(i: int, pat: String, tgt: Dictionary) -> void:
+	var f: Dictionary = fighters[i]
+	var b: Dictionary = Bosses.data(f.boss_id)
+	var pd: Dictionary = Bosses.pattern(pat)
+	var dmg: float = float(b.dmg) * float(pd.get("dmg", 1.0))
+	var slow: float = 1.0 if f.boss_phase == 1 else 0.75
+	var fx: float = float(f.facing)
+	var col: Color = pd.get("color", b.color)
+	var ab := {"name": pat, "damage": dmg, "windup": 0.6 * slow, "active": 0.2, "recovery": 0.5, "push": 0.8, "angle": 40.0,
+		"hitstun": 0.4, "range": 1.0, "no_hit": true, "sig": {"mech": "boss_" + pat, "color": col}}
+	match str(pd.get("type", "emit")):
+		"sweep":
+			var reach: float = float(pd.get("len", 9.5))
+			ab.merge({"no_hit": false, "x_min": -0.8, "range": reach, "windup": float(pd.get("windup", 0.9)) * slow, "active": 0.22,
+				"recovery": 0.6, "push": 0.95, "angle": 35.0}, true)
+			ab.merge(_band(f, float(pd.get("lo", -0.3)), float(pd.get("hi", 1.3))), true)
+			_telegraph(i, "band", f.x, f.x + fx * reach, float(pd.get("lo", -0.3)), float(pd.get("hi", 1.3)), ab.windup)
+		"emit", "gale":
+			_telegraph(i, "glow", f.x, f.x, f.y, f.y + float(f.body_h), ab.windup)
+		"slow":
+			ab.windup = 0.8 * slow
+			_telegraph(i, "circle", f.x, f.x, f.y + 1.6, 0.0, ab.windup, float(pd.get("radius", 7.0)))
+		"dive":
+			ab.merge({"windup": 1.0 * slow, "active": 0.1, "recovery": 0.9}, true)
+			f.boss_marks = [clampf(tgt.x, STAGE_LEFT + 1.0, STAGE_RIGHT - 1.0)]
+			_telegraph(i, "circle", f.boss_marks[0], f.boss_marks[0], 0.0, 0.0, ab.windup, float(pd.get("radius", 4.5)))
+		"charge":
+			var dir: float = signf(tgt.x - f.x) if absf(tgt.x - f.x) > 0.3 else fx
+			f.facing = int(dir)
+			var ground: bool = bool(pd.get("ground", false))
+			ab.merge({"no_hit": false, "windup": 1.0 * slow, "active": 1.6, "recovery": 0.5, "x_min": -float(f.body_w) - 0.3,
+				"range": float(f.body_w) + 0.3, "all_around": true, "rehit": 0.5, "push": 1.0, "angle": 62.0, "roll_dir": dir,
+				"roll_speed": float(pd.get("speed", 10.0)), "roll_ground": ground}, true)
+			var band_lo: float = 0.0 if ground else f.y
+			ab.merge({"y_min": -0.2, "y_max": float(f.body_h) - 0.2}, true)
+			_telegraph(i, "band", f.x, STAGE_RIGHT * dir, band_lo, band_lo + 3.0, ab.windup)
+		"ring":
+			ab.windup = 0.7 * slow
+			_telegraph(i, "band", f.x - 9.0, f.x + 9.0, 0.0, 0.8, ab.windup)
+		"beam":
+			var ty: float = float(tgt.y)
+			ab.merge({"no_hit": false, "x_min": 0.5, "range": 20.0, "windup": 1.1 * slow, "active": 0.4, "recovery": 0.6, "push": 1.0,
+				"angle": 30.0}, true)
+			ab.merge(_band(f, ty + 0.1, ty + 1.5), true)
+			_telegraph(i, "band", f.x, f.x + fx * 20.0, ty + 0.1, ty + 1.5, ab.windup)
+		"pillars":
+			ab.windup = 0.9 * slow
+			f.boss_marks = []
+			for k in range(fighters.size()):
+				var h: Dictionary = fighters[k]
+				if k == i or is_ally(i, k) or h.state == "Defeated": continue
+				f.boss_marks.append(clampf(h.x, STAGE_LEFT, STAGE_RIGHT))
+				_telegraph(i, "circle", h.x, h.x, 0.0, 0.0, ab.windup, 0.9)
+		"nova":
+			var r: float = float(pd.get("radius", 4.6))
+			ab.merge({"no_hit": false, "x_min": -r, "range": r, "all_around": true, "windup": 1.4 * slow, "active": 0.25, "recovery": 0.8,
+				"push": 1.3, "angle": 55.0}, true)
+			ab.merge(_band(f, -0.5, f.y + 5.0), true)
+			_telegraph(i, "circle", f.x, f.x, f.y + 1.8, 0.0, ab.windup, r)
+	f.pending = {}
+	_begin_pending(i, ab, true, "boss")
+	f.pose = "Charge"
+
+func _telegraph(i: int, shape: String, x1: float, x2: float, y1: float, y2: float, time: float, radius: float = 0.0) -> void:
+	events.append({"type": "boss_telegraph", "actor": i, "shape": shape, "x1": x1, "x2": x2, "y1": y1, "y2": y2, "time": time, "radius": radius})
+
+## Shot spec of an emitting pattern.
+static func _pattern_spec(pd: Dictionary, col: Color) -> Dictionary:
+	var spec := {"kind": "boss", "shape": str(pd.get("shape", "orb")), "color": col, "speed": float(pd.get("speed", 0.0)),
+		"life": float(pd.get("life", 1.2)), "size": float(pd.get("size", 0.35)), "push": 0.45, "angle": 40.0}
+	for key in ["gravity", "homing", "explode", "freeze"]:
+		if pd.has(key): spec[key] = pd[key]
+	return spec
+
+## Pattern effects at the end of the warning.
+func _boss_activate(i: int, ab: Dictionary) -> void:
+	var f: Dictionary = fighters[i]
+	var b: Dictionary = Bosses.data(f.boss_id)
+	var pat: String = str(ab.sig.mech).trim_prefix("boss_")
+	var pd: Dictionary = Bosses.pattern(pat)
+	var dmg: float = float(ab.damage)
+	var col: Color = pd.get("color", b.color)
+	match str(pd.get("type", "emit")):
+		"emit":
+			var count: int = int(pd.get("count", 8))
+			if f.boss_phase == 2: count = int(count * 1.3)
+			f.boss_emit = {"kind": str(pd.get("emit", "aimed")), "left": count, "interval": float(pd.get("interval", 0.12)), "t": 0.0,
+				"dmg": dmg, "spec": _pattern_spec(pd, col)}
+		"gale":
+			f.boss_gale = float(pd.get("time", 1.6))
+			f.boss_gale_force = float(pd.get("force", 5.5))
+			if pd.has("slow"):
+				for k in range(fighters.size()):
+					if k != i and not is_ally(i, k): fighters[k].slow_timer = maxf(fighters[k].slow_timer, float(pd.slow))
+			var gspec := _pattern_spec({"shape": pd.get("shape", "shard"), "speed": 15.0, "life": 1.0, "size": 0.35}, col)
+			f.boss_emit = {"kind": "aimed", "left": int(pd.get("shots", 5)), "interval": 0.25, "t": 0.2, "dmg": float(b.dmg) * 0.4, "spec": gspec}
+		"slow":
+			# Stillness: everyone nearby moves at half speed, then a burst.
+			var r: float = float(pd.get("radius", 7.0))
+			for k in range(fighters.size()):
+				var h: Dictionary = fighters[k]
+				if k == i or is_ally(i, k) or h.state == "Defeated": continue
+				if absf(h.x - f.x) <= r:
+					h.slow_timer = maxf(h.slow_timer, float(pd.get("time", 2.5)))
+					queued_contacts.append({"from": i, "to": k, "attack": {"ability": {"name": "Stillstand", "damage": dmg, "push": 0.35,
+						"angle": 60.0, "hitstun": 0.3, "range": r}, "special": true}, "push_dir": signf(h.x - f.x) if absf(h.x - f.x) > 0.05 else 1.0})
+			events.append({"type": "boss_slow", "actor": i, "x": f.x, "radius": r})
+		"dive":
+			var tx: float = float(f.boss_marks[0]) if not f.boss_marks.is_empty() else f.x
+			events.append({"type": "teleport", "actor": i, "from_x": f.x, "from_y": f.y})
+			f.x = tx
+			f.y = 0.0
+			_boss_quake(i, tx, float(pd.get("radius", 4.5)), dmg)
+		"ring":
+			for dir in [-1.0, 1.0]:
+				spawn_projectile_spec(i, {"kind": "boss", "shape": "pillar", "color": col, "speed": float(pd.get("speed", 8.0)), "life": 1.4,
+					"size": 0.6, "pierce": true, "push": 0.9, "angle": 80.0}, dmg, f.x + dir * 0.8, 0.4, dir * float(pd.get("speed", 8.0)), 0.0)
+		"pillars":
+			for x in f.boss_marks:
+				spawn_projectile_spec(i, {"kind": "boss", "shape": "holy_pillar", "color": col, "speed": 0.0, "life": 0.6, "size": 0.8,
+					"pierce": true, "push": 1.0, "angle": 85.0}, dmg, float(x), 0.8, 0.0, 0.0)
+		"charge":
+			f.boss_roll = float(ab.get("roll_dir", 1.0)) * float(ab.get("roll_speed", 10.0))
+			f.boss_roll_ground = bool(ab.get("roll_ground", false))
+	events.append({"type": "boss_attack", "actor": i, "pattern": pat})
+
+func _boss_emit_step(i: int) -> void:
+	var f: Dictionary = fighters[i]
+	var em: Dictionary = f.boss_emit
+	em.left -= 1
+	em.t = float(em.interval)
+	var spec: Dictionary = em.spec
+	var cy: float = f.y + float(f.body_h) * 0.55
+	match str(em.kind):
+		"radial":
+			for k in range(8):
+				var a: float = TAU * k / 8.0 + em.left * 0.2
+				var v := Vector2(cos(a), sin(a)) * maxf(4.0, float(spec.speed))
+				spawn_projectile_spec(i, spec, float(em.dmg), f.x, cy, v.x, v.y)
+		"aimed", "swarm":
+			var ti: int = get_nearest_opponent(i)
+			var aim := Vector2(float(f.facing), 0.0)
+			if ti >= 0:
+				var h: Dictionary = fighters[ti]
+				aim = Vector2(h.x + boss_rng.randf_range(-0.6, 0.6) - f.x, h.y + 1.0 - cy)
+			if str(em.kind) == "swarm": aim = aim.rotated(boss_rng.randf_range(-1.2, 1.2))
+			aim = aim.normalized() * maxf(4.0, float(spec.speed))
+			var ox: float = boss_rng.randf_range(-float(f.body_w), float(f.body_w))
+			spawn_projectile_spec(i, spec, float(em.dmg), f.x + ox, cy + boss_rng.randf_range(-0.8, 0.8), aim.x, aim.y)
+		"rain":
+			var x: float = boss_rng.randf_range(STAGE_LEFT + 0.5, STAGE_RIGHT - 0.5)
+			var ti2: int = get_nearest_opponent(i)
+			if ti2 >= 0 and em.left % 3 == 0: x = fighters[ti2].x
+			spawn_projectile_spec(i, spec, float(em.dmg), x, 9.0, 0.0, -9.0)
+	if em.left <= 0: f.boss_emit = {}
+
+## Landing quake of a boss dive: hits grounded heroes, harder up close.
+func _boss_quake(i: int, x: float, radius: float, dmg: float) -> void:
+	var f: Dictionary = fighters[i]
+	events.append({"type": "slam", "actor": i, "x": x, "y": 0.0, "radius": radius, "color": Bosses.data(f.boss_id).color})
+	for k in range(fighters.size()):
+		if k == i or is_ally(i, k): continue
+		var h: Dictionary = fighters[k]
+		if h.state in ["Defeated", "Dazed", "Ledge"]: continue
+		var dist: float = absf(h.x - x)
+		if dist > radius or h.y > 1.0: continue
+		var near: float = 1.0 - dist / radius
+		queued_contacts.append({"from": i, "to": k, "attack": {"ability": {"name": "Himmelssturz", "damage": dmg * (0.5 + 0.5 * near),
+			"push": 0.5 + 0.7 * near, "angle": 75.0, "hitstun": 0.4, "range": radius}, "special": true}, "push_dir": signf(h.x - x) if dist > 0.05 else 1.0})
+
+## One shot of a ki volley, aimed at the nearest opponent (forward cone); the last one explodes.
+func _fire_volley(i: int) -> void:
+	var f: Dictionary = fighters[i]
+	var sig: Dictionary = Signatures.for_family(str(f.profile.get("family", "")))
+	f.volley -= 1
+	f.volley_t = float(sig.get("interval", 0.1))
+	var last: bool = f.volley <= 0
+	var fx: float = float(f.facing)
+	var dir := Vector2(fx, 0.0)
+	var opp: int = get_nearest_opponent(i)
+	if opp >= 0:
+		dir = Vector2(fighters[opp].x - f.x, fighters[opp].y + 1.0 - (f.y + 1.2)).normalized()
+	if dir.x * fx < 0.3: dir = Vector2(fx, clampf(dir.y, -0.7, 0.7)).normalized()
+	var spec: Dictionary = sig.duplicate()
+	spec["kind"] = str(f.profile.get("family", "volley"))
+	var dmg: float = float(f.profile.special.damage) * float(sig.get("dmg", 0.16)) * float(f.get("power_mult", 1.0))
+	if last:
+		spec["size"] = 0.55
+		spec["explode"] = float(sig.get("final_explode", 2.0))
+		dmg *= float(sig.get("final_mult", 2.5))
+	var speed: float = float(sig.get("speed", 15.0))
+	spawn_projectile_spec(i, spec, dmg, f.x + fx * 0.7, f.y + 1.2, dir.x * speed, dir.y * speed)
+
+## Facing (+1/-1) from position x towards fighter i's nearest opponent.
+func _facing_from(i: int, x: float) -> int:
+	var best := -1
+	var best_d := INF
+	for ti in range(fighters.size()):
+		if ti == i or is_ally(i, ti) or fighters[ti].state == "Defeated": continue
+		var d: float = absf(fighters[ti].x - x)
+		if d < best_d:
+			best_d = d
+			best = ti
+	if best < 0: return int(fighters[i].facing)
+	return 1 if fighters[best].x >= x else -1
+
+## Opponent currently carrying fighter i's signature mark, or -1.
+func _marked_target(i: int) -> int:
+	for ti in range(fighters.size()):
+		var t: Dictionary = fighters[ti]
+		if ti != i and int(t.marked_by) == i and float(t.mark_timer) > 0.0 and t.state != "Defeated": return ti
+	return -1
+
+## First opponent inside the iaido reach in front of fighter i, or -1.
+func _iai_target(i: int, reach: float) -> int:
+	var f: Dictionary = fighters[i]
+	for ti in range(fighters.size()):
+		if ti == i or is_ally(i, ti): continue
+		var t: Dictionary = fighters[ti]
+		if t.state in ["Defeated", "Dazed"] or t.intangible > 0.0 or t.invulnerable > 0.0: continue
+		var fwd: float = (t.x - f.x) * float(f.facing)
+		if fwd > -0.2 and fwd <= reach and absf(t.y - f.y) < 1.4: return ti
+	return -1
+
+## Leap slam landing: a quake that hits every grounded opponent in range, harder up close.
+func _slam_shockwave(i: int) -> void:
+	var f: Dictionary = fighters[i]
+	var sig: Dictionary = Signatures.for_family(str(f.profile.get("family", "")))
+	var radius: float = float(sig.get("radius", 6.0))
+	events.append({"type": "slam", "actor": i, "x": f.x, "y": f.y, "radius": radius, "color": sig.get("color", Color.ORANGE)})
+	for ti in range(fighters.size()):
+		if ti == i or is_ally(i, ti): continue
+		var t: Dictionary = fighters[ti]
+		if t.state in ["Defeated", "Dazed", "Ledge"]: continue
+		var dist: float = absf(t.x - f.x)
+		if dist > radius or t.y - f.y > 0.8 or t.y < f.y - 1.0: continue
+		var near: float = 1.0 - dist / radius
+		var ab := {"name": "Erdbeben", "damage": float(f.slam_dmg) * (0.45 + 0.55 * near), "push": 0.35 + 0.7 * near, "angle": 80.0,
+			"hitstun": 0.3 + 0.2 * near, "range": radius}
+		queued_contacts.append({"from": i, "to": ti, "attack": {"ability": ab, "special": true},
+			"push_dir": signf(t.x - f.x) if dist > 0.05 else float(f.facing)})
+
+## Fires the projectile of a move with a "shot" (pistol, wind blade …).
+func _fire_shot(i: int, ab: Dictionary) -> void:
+	var f: Dictionary = fighters[i]
+	var spec: Dictionary = ab.shot
+	var fx: float = float(f.facing)
+	spawn_projectile_spec(i, spec, float(ab.damage) * float(f.get("power_mult", 1.0)), f.x + fx * 0.7, f.y + 1.15,
+		fx * float(spec.get("speed", 15.0)), float(spec.get("rise", 0.0)))
+
+## True if the target's armor (buff or armored move) swallows a hit of this damage.
+static func _armor_holds(t: Dictionary, damage: float) -> bool:
+	if float(t.get("armor_timer", 0.0)) > 0.0 and damage < ARMOR_SELF_LIMIT: return true
+	var pend: Dictionary = t.get("pending", {})
+	if pend.is_empty() or str(pend.get("stage", "")) == "recovery": return false
+	return damage < float(pend.ability.get("armor", 0.0))
+
+## Heat gauge: fighters with phys.heat heat up when they hit and (more) when they get hit.
+func _gain_heat(ai: int, ti: int, damage: float) -> void:
+	for pair in [[ai, 1.2], [ti, 1.6]]:
+		var who: Dictionary = fighters[pair[0]]
+		if not bool(who.phys.get("heat", false)) or float(who.heat) >= HEAT_MAX: continue
+		who.heat = minf(HEAT_MAX, float(who.heat) + damage * float(pair[1]))
+		if who.heat >= HEAT_MAX: events.append({"type": "heat_full", "actor": pair[0]})
 
 ## Air dash speeds (m/s). Every fighter has it: special in the air, once per airtime.
 const AIR_DASH_SPEED := 11.5
@@ -941,11 +1599,13 @@ func air_dash(i: int, axis: float, dive: bool = false, rise: bool = false) -> bo
 		dir = -signf(f.x)
 	f.facing = 1 if dir > 0.0 else -1
 	f.vx = dir * AIR_DASH_SPEED * (1.25 if f.speed_timer > 0.0 else 1.0)
-	f.vy = AIR_DASH_DIVE if dive else maxf(f.vy, AIR_DASH_RISE)
+	# Rise scales with the fighter's gravity so every fighter's dash climbs the same height.
+	var lift: float = sqrt(float(f.phys.gravity) / GRAVITY)
+	f.vy = AIR_DASH_DIVE if dive else maxf(f.vy, AIR_DASH_RISE * lift)
 	if rise:
 		# Up + special: a steep climb for recovering from below the stage.
 		f.vx = axis * AIR_DASH_SPEED * 0.4
-		f.vy = AIR_DASH_SPEED * 0.95
+		f.vy = AIR_DASH_SPEED * 0.95 * lift
 	f.air_dash_used = true
 	f.air_control_lock = 0.0
 	f.pose = "SpecialAttack"
@@ -1013,6 +1673,10 @@ func _ai_command(i: int) -> Dictionary:
 	var mem: Dictionary = ai_memory[i]
 	if finish_phase:
 		if i == finish_winner: return _ai_finisher(i, c, mem)
+		return c
+	if not f.pending.is_empty() and f.pending.stage == "windup" and bool(f.pending.ability.get("charge", false)):
+		# Charged signature: stronger computers charge longer.
+		c["special_held"] = float(f.sig_charge) < 0.3 + clampi(ai_level, 1, 9) * 0.12
 		return c
 	var lvl: int = clampi(ai_level, 1, 9)
 	var urgent: bool = f.state == "Ledge" or f.x < STAGE_LEFT or f.x > STAGE_RIGHT or (f.y < -0.3 and not f.is_grounded)
@@ -1100,6 +1764,12 @@ func _ai_think(i: int, lvl: int) -> Dictionary:
 			p.move = dir
 		return p
 
+	# Two-stage signatures: strike the marked opponent, recall the spear, melt down up close.
+	var follow: Dictionary = _sig_followup(i)
+	if not follow.is_empty() and (str(follow.sig.mech) != "meltdown" or adx < 3.0) and ai_rng.randf() < 0.08 + lvl * 0.03:
+		p.special = true
+		return p
+
 	# Grounded.
 	if dy > 1.2 and adx < 1.4:
 		p.standard = true
@@ -1173,10 +1843,21 @@ func _ai_finisher(i: int, c: Dictionary, mem: Dictionary) -> Dictionary:
 	mem.fin_step += 1
 	return c
 
+## The classic arena weapons (not the shop ones).
+static func base_weapons() -> Array:
+	return WEAPONS.keys().filter(func(k): return not WEAPONS[k].get("shop", false))
+
+## Puts a weapon straight into a fighter's hands (start weapon from the shop).
+func give_weapon(i: int, weapon_id: String) -> void:
+	if i >= fighters.size() or not WEAPONS.has(weapon_id): return
+	var idx: int = spawn_weapon(weapon_id, fighters[i].x, fighters[i].y + 0.5)
+	if idx >= 0: equip_weapon(i, idx)
+
 func spawn_random_item() -> void:
 	var special_types := ["titan_mushroom", "invulnerable_star", "speed_boots", "smash_hammer", "health_heart", "freeze_orb"]
 	if rng.randf() < 0.6:
-		spawn_weapon(WEAPONS.keys()[rng.randi() % WEAPONS.size()])
+		var pool: Array = weapon_pool if not weapon_pool.is_empty() else base_weapons()
+		spawn_weapon(pool[rng.randi() % pool.size()])
 		return
 	var chosen_type: String = special_types[rng.randi() % special_types.size()]
 	var target_plat: Dictionary = PLATFORMS[rng.randi() % PLATFORMS.size()]
@@ -1254,7 +1935,31 @@ static func build_moveset(p: Dictionary) -> Dictionary:
 	ds["all_around"] = true
 	ds["type"] = "shockwave"
 	m["dspecial"] = ds
+	_apply_kit_moves(m, p)
 	return m
+
+## Replaces generated moves with the fighter kit's own moves (fighter_kits.gd).
+static func _apply_kit_moves(m: Dictionary, p: Dictionary) -> void:
+	var kit_moves: Dictionary = FighterKits.for_family(str(p.get("family", ""))).get("moves", {})
+	var std: Dictionary = p.standard
+	var sp: Dictionary = p.special
+	for key in kit_moves:
+		var o: Array = kit_moves[key]
+		var extras: Dictionary = o[11] if o.size() > 11 else {}
+		var is_sp: bool = key in ["uspecial", "dspecial"]
+		var base_dmg: float = float(sp.damage) if is_sp else float(std.damage)
+		var base_push: float = float(sp.push) if is_sp else float(std.push)
+		var mv := _mv(str(o[0]), base_dmg * float(o[1]), float(o[2]), float(o[3]), float(o[4]), float(o[5]), float(o[6]),
+			float(o[7]), float(o[8]), float(o[9]), base_push * float(o[10]), bool(extras.get("free_angle", false)))
+		for k in extras:
+			if k != "free_angle": mv[k] = extras[k]
+		if key in ["nair", "fair", "bair", "uair", "dair"]: mv["aerial"] = true
+		if is_sp:
+			mv["special"] = true
+			mv["cooldown"] = float(extras.get("cooldown", 1.2 if key == "uspecial" else 1.6))
+		elif key == "jab":
+			mv["cooldown"] = float(extras.get("cooldown", float(std.cooldown) * 0.5))
+		m[key] = mv
 
 static func _mv(name: String, damage: float, windup: float, active: float, recovery: float,
 		x_min: float, x_max: float, y_min: float, y_max: float, angle: float, push: float, free_angle: bool = false) -> Dictionary:
@@ -1292,6 +1997,7 @@ static func read_input(f: Dictionary, cmd: Dictionary) -> Dictionary:
 		"axis": axis, "up": up, "down": down, "shield": shield,
 		"jump": bool(cmd.get("jump", false)), "standard": bool(cmd.get("standard", false)),
 		"special": bool(cmd.get("special", false)), "grab": bool(cmd.get("grab", false)),
+		"special_held": bool(cmd.get("special_held", false)),
 		"standard_held": bool(cmd.get("standard_held", false)), "smash": bool(cmd.get("smash", false)),
 		"jump_held": bool(cmd.get("jump_held", true)), "drop": bool(cmd.get("drop", false)),
 		"shield_pressed": shield and not bool(prev.get("shield", false)),
@@ -1415,7 +2121,7 @@ func try_ledge_grab(i: int) -> bool:
 		f.vx = 0.0
 		f.vy = 0.0
 		f.facing = -side
-		f.air_jumps = 2
+		f.air_jumps = int(f.phys.air_jumps)
 		f.air_dash_used = false
 		f.air_dodge_used = false
 		f.intangible = LEDGE_INTANGIBLE[mini(f.ledge_grabs, LEDGE_INTANGIBLE.size() - 1)]
@@ -1451,7 +2157,7 @@ func update_ledge(i: int, inp: Dictionary, dt: float) -> void:
 			f.ledge_cooldown = 0.45
 			f.intangible = 0.0
 		"jump":
-			f.vy = JUMP_FORCE * 1.05
+			f.vy = float(f.phys.jump) * 1.05
 			f.vx = toward * 1.5
 			f.ledge_cooldown = 0.3
 			events.append({"type": "jump", "actor": i})
@@ -1471,6 +2177,8 @@ func update_ledge(i: int, inp: Dictionary, dt: float) -> void:
 ## Finisher code per element group. Tokens: F/B (forward/back towards the loser),
 ## U (jump), D (down), A (attack), S (special).
 static func finisher_for(p: Dictionary) -> Dictionary:
+	var own: Dictionary = FighterKits.finisher(str(p.get("family", "")))
+	if not own.is_empty(): return own
 	var e: String = str(p.get("element", "")).to_lower()
 	if e.contains("fire") or e.contains("flame") or e.contains("lava") or e.contains("sun") or e.contains("blood") or e.contains("gold"):
 		return {"kind": "inferno", "name": "EINÄSCHERN", "code": ["F", "F", "S"]}
@@ -1544,7 +2252,8 @@ func _end_finish_phase(executed: bool) -> void:
 	w.pending = {}
 	if executed:
 		var fin: Dictionary = finisher_for(w.profile)
-		events.append({"type": "finisher", "actor": finish_winner, "target": finish_loser, "kind": fin.kind, "name": fin.name})
+		events.append({"type": "finisher", "actor": finish_winner, "target": finish_loser, "kind": fin.kind, "name": fin.name,
+			"variant": str(fin.get("variant", ""))})
 	events.append({"type": "finish", "winner": result, "finisher": executed})
 
 ## Picks the body pose while no move is running, so fighters visibly run, jump, fall,
@@ -1607,6 +2316,14 @@ static func in_attack_reach(attacker: Dictionary, tx: float, ty: float, reach: f
 func _on_land(i: int) -> void:
 	var f: Dictionary = fighters[i]
 	f.walk_v = 0.0
+	if f.slam:
+		f.slam = false
+		f.vx = 0.0
+		_slam_shockwave(i)
+		f.pending = {}
+		f.state = "Attack"
+		f.pose = "Slam"
+		f.pose_time = 0.3
 	f.air_dodge_used = false
 	f.ledge_grabs = 0
 	f.erase("_hop_frames")
@@ -1651,7 +2368,11 @@ func tick(commands: Array, dt: float = STEP) -> void:
 	for i in range(fighters.size()):
 		var f: Dictionary = fighters[i]
 		if f.state == "Defeated" or f.state == "Dazed": continue
+		if f.is_boss:
+			_boss_update(i, dt)
+			continue
 		var inp: Dictionary = read_input(f, commands[i] if i < commands.size() else {})
+		f.special_held = inp.special_held
 		if finish_phase and i == finish_winner:
 			_record_finish_tokens(i, inp)
 			# During the finisher window only movement and the code count, no attacks.
@@ -1680,13 +2401,21 @@ func tick(commands: Array, dt: float = STEP) -> void:
 		if f.intangible > 0: f.intangible = maxf(0.0, f.intangible - dt)
 		if f.counter > 0: f.counter = maxf(0.0, f.counter - dt)
 		if f.rage_timer > 0: f.rage_timer = maxf(0.0, f.rage_timer - dt)
+		if f.armor_timer > 0: f.armor_timer = maxf(0.0, f.armor_timer - dt)
+		if f.bulwark > 0: f.bulwark = maxf(0.0, f.bulwark - dt)
+		if f.mark_timer > 0:
+			f.mark_timer = maxf(0.0, f.mark_timer - dt)
+			if f.mark_timer <= 0.0: f.marked_by = -1
+		if f.volley > 0:
+			f.volley_t -= dt
+			if f.volley_t <= 0.0: _fire_volley(i)
 		if f.ledge_cooldown > 0: f.ledge_cooldown = maxf(0.0, f.ledge_cooldown - dt)
 		if f.slide > 0: f.slide = maxf(0.0, f.slide - dt)
 		if f.blocking:
 			f.shield_hp = maxf(0.0, f.shield_hp - SHIELD_DRAIN * dt)
 			if f.shield_hp <= 0.0: shield_break(i)
 		else:
-			f.shield_hp = minf(SHIELD_MAX, f.shield_hp + SHIELD_REGEN * dt)
+			f.shield_hp = minf(SHIELD_MAX * float(f.phys.shield), f.shield_hp + SHIELD_REGEN * dt)
 
 		if f.pose_time > 0:
 			f.pose_time = maxf(0.0, f.pose_time - dt)
@@ -1778,6 +2507,7 @@ func tick(commands: Array, dt: float = STEP) -> void:
 		if abs(f.vx) > 0.05:
 			f.x += f.vx * dt
 			f.vx = move_toward(f.vx, 0.0, friction * dt)
+		if f.slam: f.vx = f.slam_vx
 
 		# Grab execution
 		if f.state == "Grab" and f.freeze_timer <= 0.0:
@@ -1787,7 +2517,7 @@ func tick(commands: Array, dt: float = STEP) -> void:
 				for ti in range(fighters.size()):
 					if ti == i or is_ally(i, ti): continue
 					var target_f: Dictionary = fighters[ti]
-					if target_f.state == "Defeated" or target_f.invulnerable > 0 or target_f.grab_immunity > 0: continue
+					if target_f.state == "Defeated" or target_f.invulnerable > 0 or target_f.grab_immunity > 0 or target_f.is_boss: continue
 					if abs(target_f.x - f.x) <= 1.35 and abs(target_f.y - f.y) <= 1.05:
 						grabbed_target = ti
 						break
@@ -1868,17 +2598,17 @@ func tick(commands: Array, dt: float = STEP) -> void:
 				var up_attack: bool = f.is_grounded and inp.up and (inp.standard or inp.special)
 				if inp.jump and not up_attack:
 					if f.is_grounded:
-						f.vy = JUMP_FORCE * (1.15 if f.speed_timer > 0 else 1.0)
+						f.vy = float(f.phys.jump) * (1.15 if f.speed_timer > 0 else 1.0)
 						f.y += 0.05
 						f.is_grounded = false
-						f.air_jumps = 2
+						f.air_jumps = int(f.phys.air_jumps)
 						f.air_dash_used = false
 						f["_hop_frames"] = 0
 						f.walk_v = 0.0
 						events.append({"type": "jump", "actor": i})
 					elif f.air_jumps > 0 and f.vy < 4.5:
 						f.air_jumps -= 1
-						f.vy = JUMP_FORCE * 0.95
+						f.vy = float(f.phys.jump) * 0.95
 						if f.x < STAGE_LEFT: f.vx = maxf(f.vx, 3.8)
 						elif f.x > STAGE_RIGHT: f.vx = minf(f.vx, -3.8)
 						events.append({"type": "double_jump", "actor": i})
@@ -1886,13 +2616,13 @@ func tick(commands: Array, dt: float = STEP) -> void:
 				if absf(axis) > 0.05:
 					if f.is_grounded:
 						f.run_time += dt
-						var run: float = RUN_SPEED_MULT if f.run_time > RUN_TIME else 1.0
+						var run: float = float(f.phys.run) if f.run_time > RUN_TIME else 1.0
 						var target_v: float = axis * f.profile.speed * speed_scale * run
 						f.walk_v = move_toward(f.walk_v, target_v, GROUND_ACCEL * dt)
 						f.x += f.walk_v * dt
 						f.moving = true
 					elif f.air_control_lock <= 0.0:
-						f.x += axis * f.profile.speed * speed_scale * 0.90 * dt
+						f.x += axis * f.profile.speed * speed_scale * float(f.phys.air) * dt
 						f.moving = true
 
 					# Walking stops at the main stage edge (no accidental self-destructs);
@@ -1937,13 +2667,13 @@ func tick(commands: Array, dt: float = STEP) -> void:
 				f.erase("_hop_frames")
 		# Fast fall: tap down while falling.
 		if not f.is_grounded and inp.down_pressed and f.vy < 2.0 and f.state == "Ready":
-			f.vy = minf(f.vy, -13.0)
+			f.vy = minf(f.vy, -float(f.phys.fast_fall))
 			events.append({"type": "fast_fall", "actor": i})
 
 		# Vertical physics & Landing
 		var prev_y: float = f.y
 		if not f.is_grounded and f.state != "Grabbed":
-			f.vy -= GRAVITY * dt
+			f.vy -= float(f.phys.gravity) * dt
 			var next_y: float = f.y + f.vy * dt
 			var landed := false
 
@@ -1955,7 +2685,7 @@ func tick(commands: Array, dt: float = STEP) -> void:
 								f.y = plat.y
 								f.vy = 0.0
 								f.is_grounded = true
-								f.air_jumps = 2
+								f.air_jumps = int(f.phys.air_jumps)
 								f.air_dash_used = false
 								landed = true
 								_on_land(i)
@@ -1965,7 +2695,7 @@ func tick(commands: Array, dt: float = STEP) -> void:
 						f.y = 0.0
 						f.vy = 0.0
 						f.is_grounded = true
-						f.air_jumps = 2
+						f.air_jumps = int(f.phys.air_jumps)
 						f.air_dash_used = false
 						landed = true
 						_on_land(i)
@@ -2038,9 +2768,13 @@ func tick(commands: Array, dt: float = STEP) -> void:
 				f.vx = 0.0
 				f.vy = 0.0
 				f.is_grounded = false
-				f.air_jumps = 2
+				f.air_jumps = int(f.phys.air_jumps)
 				f.air_dash_used = false
 				f.invulnerable = 2.5
+				f.slam = false
+				f.bulwark = 0.0
+				f.iai = 0.0
+				f.marked_by = -1
 				f.stun = 0.0
 				f.state = "Ready"
 				f.pose = "Idle"
@@ -2059,19 +2793,70 @@ func tick(commands: Array, dt: float = STEP) -> void:
 	resolve_body_push()
 
 	# ── Contact resolution (Attacks against all enemies) ────────────────────────
-	var contacts: Array = []
+	var contacts: Array = queued_contacts.duplicate()
+	queued_contacts.clear()
 	for i in range(fighters.size()):
 		var f: Dictionary = fighters[i]
 		if f.pending.is_empty(): continue
 		f.pending.remaining -= dt
+		if f.pending.stage == "windup" and bool(f.pending.ability.get("charge", false)) and f.special_held \
+				and float(f.sig_charge) < float(f.pending.ability.sig.get("charge", 1.4)):
+			# Charging: the windup waits while special is held.
+			f.sig_charge = float(f.sig_charge) + dt
+			f.pending.remaining = maxf(f.pending.remaining, dt)
+			f.pose_time = maxf(f.pose_time, 0.3)
+			f.pose = "Charge"
 
 		if f.pending.stage == "windup" and f.pending.remaining <= 0:
 			f.pending.stage = "active"
 			f.pending.remaining = f.pending.active_time
 			f.pose = f.pending.get("pose", "SpecialAttack" if f.pending.special else "Attack")
 			var ab: Dictionary = f.pending.ability
+			if bool(ab.get("charge", false)):
+				var ch: float = clampf(float(f.sig_charge) / float(ab.sig.get("charge", 1.4)), 0.0, 1.0)
+				ab.range = lerpf(float(ab.sig.get("length", 5.0)), float(ab.sig.get("max_length", 14.0)), ch)
+				ab.damage = float(ab.damage) * (0.7 + 0.9 * ch)
+				ab.push = float(ab.push) * (0.8 + 0.8 * ch)
+				ab["charge_level"] = ch
+			for pr in projectiles:
+				if pr.owner == i and pr.get("echoing", false):
+					pr.echo_hits = []
+					pr.echo_fx = false
 			if ab.has("sig"): _sig_activate(i, ab)
 			if ab.has("spawn"): spawn_projectile(i, str(ab.spawn))
+			if ab.has("shot"): _fire_shot(i, ab)
+			if ab.has("blink"):
+				f.x += f.facing * float(ab.blink)
+				if f.is_grounded and absf(f.y) < 0.01: f.x = clampf(f.x, STAGE_LEFT, STAGE_RIGHT)
+			if ab.has("intangible"): f.intangible = maxf(f.intangible, float(ab.intangible))
+			if ab.has("armor_self"): f.armor_timer = maxf(f.armor_timer, float(ab.armor_self))
+			if ab.has("rage_self"): f.rage_timer = maxf(f.rage_timer, float(ab.rage_self))
+			if ab.has("counter_time"): f.counter = float(ab.counter_time)
+			if ab.has("super_gain"): f.super = minf(MAX_SUPER, f.super + float(ab.super_gain))
+			if ab.has("repel"):
+				# Repulsion: enemy shots in range fly back and now belong to this fighter.
+				for pr in projectiles:
+					if pr.owner == i or is_ally(i, pr.owner) or pr.get("stuck", false) or pr.get("pooled", false): continue
+					if Vector2(pr.x - f.x, pr.y - f.y - 1.0).length() > float(ab.repel): continue
+					pr.owner = i
+					var away: float = signf(pr.x - f.x) if absf(pr.x - f.x) > 0.05 else float(f.facing)
+					pr.vx = away * maxf(absf(pr.vx), 8.0) * 1.1
+					pr.vy = absf(pr.vy) * 0.3
+					pr.hit = []
+					pr.returning = false
+					events.append({"type": "reflect", "actor": i, "x": pr.x, "y": pr.y})
+			if ab.has("clone_swap"):
+				for pr in projectiles:
+					if pr.owner == i and pr.get("echoing", false):
+						var sx: float = f.x
+						var sy: float = f.y
+						f.x = pr.x
+						f.y = pr.y - 0.9
+						f.is_grounded = false
+						pr.x = sx
+						pr.y = sy + 0.9
+						events.append({"type": "clone_swap", "actor": i, "from_x": sx, "from_y": sy})
+						break
 			if bool(ab.get("breaks_weapon", false)): drop_weapon(i, "break")
 			if ab.has("motion_vx"): f.vx = f.facing * float(ab.motion_vx)
 			if ab.has("motion_vy"):
@@ -2095,6 +2880,49 @@ func tick(commands: Array, dt: float = STEP) -> void:
 					var dxp: float = f.x - pt.x
 					if absf(dxp) < float(attack.ability.range) + 1.0 and absf(pt.y - f.y) < 2.5:
 						pt.x += signf(dxp) * float(attack.ability.pull_force) * dt * (1.0 if absf(dxp) > 0.5 else 0.0)
+			if f.iai > 0.0 and attack.ability.has("sig") and str(attack.ability.sig.mech) == "iai":
+				# Iaido stance: the first opponent to step into reach is cut down in one flash.
+				f.iai = maxf(0.0, f.iai - dt)
+				var cut_target: int = _iai_target(i, float(attack.ability.sig.get("range", 3.8)))
+				if cut_target >= 0:
+					var ct: Dictionary = fighters[cut_target]
+					var from_x: float = f.x
+					var orig: int = int(f.facing)
+					f.x = ct.x + orig * 1.1
+					if f.is_grounded and absf(f.y) < 0.01: f.x = clampf(f.x, STAGE_LEFT, STAGE_RIGHT)
+					f.facing = -orig
+					var cut := {"name": "Iaido-Schnitt", "damage": float(attack.ability.damage), "push": float(attack.ability.push) * 2.0,
+						"angle": 35.0, "hitstun": 0.5, "range": 1.0}
+					contacts.append({"from": i, "to": cut_target, "attack": {"ability": cut, "special": true}, "push_dir": float(-orig)})
+					events.append({"type": "iai_cut", "actor": i, "target": cut_target, "from_x": from_x, "y": f.y})
+					f.iai = 0.0
+					f.pending.remaining = 0.0
+			if attack.ability.has("sig") and str(attack.ability.sig.mech) == "trail_dash" and absf(f.x - float(f.trail_last_x)) >= 0.7:
+				# Thunder path: the dash leaves sparks that shock anyone standing in them.
+				f.trail_last_x = f.x
+				var tsig: Dictionary = attack.ability.sig
+				spawn_projectile_spec(i, {"kind": "trail", "shape": "spark_trail", "color": tsig.get("color", Color.CYAN), "life": float(tsig.get("trail_life", 2.0)),
+					"size": 0.45, "rehit": 0.45, "pierce": true, "push": 0.12, "angle": 75.0},
+					float(f.profile.special.damage) * float(tsig.get("trail_dmg", 0.18)) * float(f.get("power_mult", 1.0)), f.x, f.y + 0.15, 0.0, 0.0)
+			if not bool(attack.ability.get("no_hit", false)) and not attack.ability.has("sig") and not attack.ability.has("weapon"):
+				# Shadow clones copy the attack from where they stand.
+				for pr in projectiles:
+					if pr.owner != i or not pr.get("echoing", false): continue
+					var ghost := {"x": pr.x, "y": pr.y - 0.9, "facing": _facing_from(i, pr.x)}
+					if not pr.get("echo_fx", false):
+						pr.echo_fx = true
+						events.append({"type": "echo_strike", "actor": i, "x": pr.x, "y": pr.y, "facing": ghost.facing})
+					for ti in range(fighters.size()):
+						if ti == i or is_ally(i, ti) or ti in pr.get("echo_hits", []): continue
+						var et: Dictionary = fighters[ti]
+						if et.state == "Defeated" or et.state == "Dazed": continue
+						var etouch: bool = move_box_hit(ghost, et.x, et.y, attack.ability, 1.0) if attack.ability.has("y_min") \
+							else in_attack_reach(ghost, et.x, et.y, float(attack.ability.range), 1.5, bool(attack.ability.get("all_around", false)))
+						if etouch:
+							pr.echo_hits.append(ti)
+							var eab: Dictionary = attack.ability.duplicate()
+							eab.damage = float(eab.damage) * float(pr.spec.get("echo_mult", 0.5))
+							contacts.append({"from": i, "to": ti, "attack": {"ability": eab, "special": attack.special}, "push_dir": float(ghost.facing), "src_x": pr.x})
 			var size_mult: float = 1.5 if f.titan_timer > 0 else 1.0
 			var attack_range: float = attack.ability.range * size_mult
 			var all_around: bool = is_all_around(attack.ability) or bool(attack.ability.get("all_around", false))
@@ -2104,8 +2932,14 @@ func tick(commands: Array, dt: float = STEP) -> void:
 				if ti == i or is_ally(i, ti) or ti in hit_list: continue
 				var target_f: Dictionary = fighters[ti]
 				if target_f.state == "Defeated" or target_f.state == "Dazed": continue
-				var touches: bool = move_box_hit(f, target_f.x, target_f.y, attack.ability, size_mult) if attack.ability.has("y_min") \
-					else in_attack_reach(f, target_f.x, target_f.y, attack_range, 1.5, all_around)
+				var tx: float = target_f.x
+				var ty: float = target_f.y
+				if target_f.is_boss:
+					# Big hurtbox: aim at the closest point of the boss body.
+					tx = target_f.x - clampf(target_f.x - f.x, -float(target_f.body_w), float(target_f.body_w))
+					ty = clampf(f.y + 0.3, target_f.y, target_f.y + float(target_f.body_h) - 1.6)
+				var touches: bool = move_box_hit(f, tx, ty, attack.ability, size_mult) if attack.ability.has("y_min") \
+					else in_attack_reach(f, tx, ty, attack_range, 1.5, all_around)
 				if touches:
 					hit_list.append(ti)
 					contacts.append({"from": i, "to": ti, "attack": attack})
@@ -2123,6 +2957,7 @@ func tick(commands: Array, dt: float = STEP) -> void:
 				f.pending.remaining = f.pending.recovery_time
 
 		if f.pending.stage == "recovery" and f.pending.remaining <= 0:
+			if f.is_boss: f.boss_roll = 0.0
 			f.pending = {}
 			if f.state == "Attack": f.state = "Ready"
 			f.pose = "Idle"
@@ -2144,6 +2979,17 @@ func tick(commands: Array, dt: float = STEP) -> void:
 			push_dir = signf(float(target.x) - float(attacker.x))
 
 		if target.invulnerable > 0 or target.intangible > 0: continue
+		if target.is_boss:
+			_hit_boss(contact.from, contact.to, a, is_special)
+			continue
+		if float(target.bulwark) > 0.0:
+			# Shield wall: hits from the front are stopped completely.
+			var src_x: float = float(contact.get("src_x", attacker.x))
+			if absf(src_x - target.x) < 0.05 or signf(src_x - target.x) == float(target.facing):
+				events.append({"type": "bulwark_block", "actor": contact.to, "target": contact.from})
+				if not contact.has("src_x"): attacker.vx = signf(attacker.x - target.x) * 3.5
+				attacker.hitstop = 3
+				continue
 		if float(target.get("counter", 0.0)) > 0.0 and not bool(contact.get("is_counter", false)):
 			# Counter stance: the attack is answered with a stronger strike.
 			target.counter = 0.0
@@ -2156,7 +3002,13 @@ func tick(commands: Array, dt: float = STEP) -> void:
 				"push_dir": signf(attacker.x - target.x) if absf(attacker.x - target.x) > 0.01 else float(target.facing)})
 			continue
 
-		var is_parry: bool = (
+		var unblockable: bool = bool(a.get("unblockable", false))
+		if unblockable and target.get("blocking", false):
+			# Shield-piercing strike: the shield shatters and the hit lands.
+			target.blocking = false
+			target.shield_hp = 0.0
+			events.append({"type": "shield_pierce", "actor": contact.to, "attacker": contact.from})
+		var is_parry: bool = not unblockable and (
 			target.get("blocking", false) and
 			target.parry_timer > 0 and
 			not target.parry_used and
@@ -2207,6 +3059,17 @@ func tick(commands: Array, dt: float = STEP) -> void:
 			var rage: float = 1.35 if float(attacker.get("rage_timer", 0.0)) > 0.0 else 1.0
 			var damage: float = base_dmg * combo_mult * super_bonus * titan_mult * rage * float(attacker.get("power_mult", 1.0))
 			target.damage_percent = clampf(target.damage_percent + damage, 0.0, 999.0)
+			if _armor_holds(target, damage):
+				# Armor: the damage counts, but the fighter is not interrupted or launched.
+				attacker.hitstop = 3
+				target.hitstop = 3
+				attacker.combo += 1
+				attacker.combo_timer = 2.0
+				_gain_heat(contact.from, contact.to, damage)
+				events.append({"type": "armor", "actor": contact.to, "attacker": contact.from, "damage": damage})
+				events.append({"type": "hit", "actor": contact.from, "target": contact.to, "damage": damage, "special": is_special,
+					"super_hit": false, "launch_impulse": 0.0, "damage_percent": target.damage_percent, "armored": true})
+				continue
 
 			if target.state == "Grabbed":
 				target.grabbed_by = -1
@@ -2233,6 +3096,12 @@ func tick(commands: Array, dt: float = STEP) -> void:
 			var total_impulse: float = ((base_push * 4.0 + smash_growth * 3.75) * (1.35 if super_bonus > 1.0 else (1.15 if is_special else 1.0))) / weight
 			if attacker.titan_timer > 0.0: total_impulse *= 1.6
 			total_impulse = clampf(total_impulse * float(target.get("kb_taken_mult", 1.0)), 0.9, 19.0)
+			if a.has("kb_scale"):
+				# One punch: knockback grows with the target's percent; past the threshold it is a sure KO.
+				total_impulse = minf(19.0, total_impulse * (1.0 + p_ratio / float(a.kb_scale)))
+				if p_ratio >= float(a.get("ko_at", 999.0)):
+					total_impulse = 30.0
+					events.append({"type": "one_punch_ko", "actor": contact.from, "target": contact.to})
 
 			# Directional influence: holding a direction bends the launch by up to DI_MAX_DEG.
 			var launch := Vector2(push_dir * cos(angle_rad), sin(angle_rad))
@@ -2253,6 +3122,10 @@ func tick(commands: Array, dt: float = STEP) -> void:
 			target.pose = "HitReact"
 			target.pose_time = stun_dur
 			if not target.pending.is_empty(): target.pending = {}
+			target.iai = 0.0
+			target.bulwark = 0.0
+			target.slam = false
+			target.volley = 0
 			target.blocking = false
 			target.walk_v = 0.0
 			target.ledge = 0
@@ -2271,12 +3144,32 @@ func tick(commands: Array, dt: float = STEP) -> void:
 				events.append({"type": "swap", "actor": contact.from, "target": contact.to})
 			if contact.has("lifesteal"):
 				attacker.damage_percent = maxf(0.0, attacker.damage_percent - damage * float(contact.lifesteal))
+			if contact.has("mark"):
+				target.marked_by = contact.from
+				target.mark_timer = MARK_TIME
+				events.append({"type": "marked", "actor": contact.from, "target": contact.to})
+			if contact.has("yank"):
+				# Boarding hook: the attacker is pulled to the target and follows up with a kick.
+				var yside: float = signf(attacker.x - target.x) if absf(attacker.x - target.x) > 0.05 else -float(attacker.facing)
+				var yfrom: float = attacker.x
+				attacker.x = target.x + yside * 0.9
+				attacker.y = target.y
+				attacker.vx = 0.0
+				attacker.vy = 0.0
+				attacker.is_grounded = false
+				attacker.facing = -int(yside)
+				target.vx = 0.0
+				target.vy = 0.0
+				var kick := {"name": "Enterstiefel", "damage": float(a.damage) * 2.0, "push": 0.85, "angle": 42.0, "hitstun": 0.4, "range": 1.2}
+				contacts.append({"from": contact.from, "to": contact.to, "attack": {"ability": kick, "special": true}, "push_dir": -yside})
+				events.append({"type": "yank", "actor": contact.from, "target": contact.to, "from_x": yfrom})
 			if a.has("freeze"):
 				target.freeze_timer = float(a.freeze)
 				events.append({"type": "freeze_hit", "actor": contact.from, "target": contact.to, "duration": float(a.freeze)})
 
 			attacker.combo += 1
 			attacker.combo_timer = 2.0
+			if not bool(a.get("no_heat", false)): _gain_heat(contact.from, contact.to, damage)
 			attacker.super = minf(MAX_SUPER, attacker.super + (12.0 if is_special else 6.0))
 			target.super = minf(MAX_SUPER, target.super + (8.0 if is_special else 4.0))
 
@@ -2422,6 +3315,9 @@ func tick(commands: Array, dt: float = STEP) -> void:
 		elif alive_indices.is_empty() and not finish_phase:
 			result = -1
 			events.append({"type": "finish", "winner": -1})
+		elif time_left <= 0.0 and not finish_phase and _living_boss() >= 0:
+			result = _living_boss()
+			events.append({"type": "finish", "winner": result})
 		elif time_left <= 0.0 and not finish_phase:
 			var best_k := -1
 			var best_score := -999999.0

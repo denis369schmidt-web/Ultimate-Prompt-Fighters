@@ -46,3 +46,6 @@ __pycache__/
 *.pyc
 *.html
 tripo_*.json
+
+# Third-party-derived files kept out of the game and the repo
+_quarantine_ip/

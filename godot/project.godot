@@ -19,7 +19,7 @@ textures/default_filters/use_nearest_mipmap_filter=false
 environment/defaults/default_clear_color=Color(0.015,0.024,0.048,1)
 lights_and_shadows/directional_shadow/size=2048
 lights_and_shadows/positional_shadow/atlas_size=2048
-anti_aliasing/quality/msaa_3d=0
+anti_aliasing/quality/msaa_3d=1
 anti_aliasing/quality/screen_space_aa=1
 
 [physics]

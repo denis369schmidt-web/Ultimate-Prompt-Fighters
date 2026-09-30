@@ -4,6 +4,8 @@ extends Node
 ## Content lives in story_data.gd; this script only plays it.
 
 const StoryData = preload("res://scripts/story_data.gd")
+const StoryDivina = preload("res://scripts/story_divina.gd")
+const Bosses = preload("res://scripts/bosses.gd")
 const Prompt = preload("res://scripts/prompt_interpreter.gd")
 
 const SAVE_PATH := "user://story.cfg"
@@ -29,6 +31,13 @@ var persist := true
 
 var chapter_index := -1
 var completed := 0                # number of finished chapters (unlocks the next one)
+## Campaign: "zeile" (Die letzte Zeile, linear) or "divina" (Die göttliche Prüfung: earth, hell,
+## heaven – every realm's first chapter is open, the rest unlock one by one).
+var campaign := "zeile"
+var done_ids := {}                # finished chapter ids of the divina campaign
+var menu_title: Label
+var menu_sub: Label
+var menu_realm_row: HBoxContainer
 var flags := {}                   # QTE results: flag -> bool
 var session := 0                  # bumped on abort; running coroutines stop
 var skipping := false             # ESC: fast-forward to the next fight
@@ -285,19 +294,34 @@ func _build_menu(root: Control) -> void:
 	menu_panel.add_child(v)
 	var head := _lbl("📖 STORYMODUS", 16, Color("f472b6"))
 	v.add_child(head)
-	var t := _lbl("PROMPT FIGHTER – " + StoryData.TITLE, 30, Color("f7c844"))
-	v.add_child(t)
-	var sub := _lbl("Eine Welt aus Worten wird gelöscht. Nur der letzte Promptgeborene kann die letzte Zeile schützen.", 13, Color("bfcee1"))
-	sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	sub.custom_minimum_size.x = 660
-	v.add_child(sub)
+	var tabs := HBoxContainer.new()
+	tabs.add_theme_constant_override("separation", 8)
+	v.add_child(tabs)
+	tabs.add_child(_menu_button("📖 DIE LETZTE ZEILE", Color("f7c844"), func(): set_campaign("zeile")))
+	tabs.add_child(_menu_button("🔥✨ DIE GÖTTLICHE PRÜFUNG", Color("ff5a1f"), func(): set_campaign("divina")))
+	menu_title = _lbl("", 28, Color("f7c844"))
+	v.add_child(menu_title)
+	menu_sub = _lbl("", 13, Color("bfcee1"))
+	menu_sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	menu_sub.custom_minimum_size.x = 660
+	v.add_child(menu_sub)
+	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(660, 330)
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	v.add_child(scroll)
 	menu_list = VBoxContainer.new()
 	menu_list.add_theme_constant_override("separation", 5)
-	v.add_child(menu_list)
+	menu_list.custom_minimum_size.x = 640
+	scroll.add_child(menu_list)
+	menu_realm_row = HBoxContainer.new()
+	menu_realm_row.add_theme_constant_override("separation", 10)
+	v.add_child(menu_realm_row)
+	menu_realm_row.add_child(_menu_button("🔥 HÖLLENREICH", Color("ef4444"), func(): start_chapter(_realm_target("hell"))))
+	menu_realm_row.add_child(_menu_button("✨ HIMMELREICH", Color("ffe08a"), func(): start_chapter(_realm_target("heaven"))))
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
 	v.add_child(row)
-	var cont := _menu_button("▶ WEITERSPIELEN", Color("4ade80"), func(): start_chapter(mini(completed, StoryData.chapter_count() - 1)))
+	var cont := _menu_button("▶ WEITERSPIELEN", Color("4ade80"), func(): start_chapter(continue_index()))
 	row.add_child(cont)
 	var back := _menu_button("ZURÜCK", Color("ef4444"), close_menu)
 	row.add_child(back)
@@ -317,17 +341,66 @@ func _menu_button(text: String, color: Color, cb: Callable) -> Button:
 
 func _refresh_menu() -> void:
 	for c in menu_list.get_children(): c.queue_free()
-	for k in range(StoryData.chapter_count()):
-		var ch: Dictionary = StoryData.CHAPTERS[k]
-		var unlocked: bool = k <= completed
-		var done: bool = k < completed
+	var divina: bool = campaign == "divina"
+	menu_title.text = "PROMPT FIGHTER – " + (StoryDivina.TITLE if divina else StoryData.TITLE)
+	menu_sub.text = StoryDivina.SUBTITLE if divina else "Eine Welt aus Worten wird gelöscht. Nur der letzte Promptgeborene kann die letzte Zeile schützen."
+	menu_realm_row.visible = divina
+	var realm_names := {"earth": "🌲 PROLOG · ERDE", "hell": "🔥 INFERNO · DAS HÖLLENREICH", "heaven": "✨ PARADISO · DAS HIMMELREICH"}
+	var last_realm := ""
+	var list: Array = chapters()
+	for k in range(list.size()):
+		var ch: Dictionary = list[k]
+		if divina and str(ch.realm) != last_realm:
+			last_realm = str(ch.realm)
+			menu_list.add_child(_lbl(realm_names.get(last_realm, last_realm), 14, Color("ff8a4a") if last_realm == "hell" else Color("ffe08a")))
+		var unlocked: bool = is_unlocked(k)
+		var done: bool = is_done(k)
 		var mark := "✓" if done else ("▶" if unlocked else "🔒")
 		var idx := k
-		var b := _menu_button("%s  KAPITEL %d  ·  %s" % [mark, k + 1, ch.title.to_upper() if unlocked else "???"],
-			Color("f7c844") if unlocked else Color("334155"), func(): start_chapter(idx))
+		var label_text: String = "%s  KAPITEL %d  ·  %s" % [mark, k + 1, ch.title.to_upper() if unlocked else "???"]
+		if divina: label_text = "%s  %s" % [mark, ch.title.to_upper() if unlocked else "???"]
+		var b := _menu_button(label_text, (Color("ef4444") if str(ch.get("realm", "")) == "hell" else Color("f7c844")) if unlocked else Color("334155"),
+			func(): start_chapter(idx))
 		b.disabled = not unlocked
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		menu_list.add_child(b)
+
+## Chapters and cast of the current campaign.
+func chapters() -> Array:
+	return StoryDivina.all() if campaign == "divina" else StoryData.CHAPTERS
+
+func cast_table() -> Dictionary:
+	return StoryDivina.CAST if campaign == "divina" else StoryData.CAST
+
+func set_campaign(id: String) -> void:
+	campaign = id
+	if menu_panel != null and menu_panel.visible: _refresh_menu()
+
+func is_done(k: int) -> bool:
+	if campaign == "divina": return done_ids.has(str(chapters()[k].id))
+	return k < completed
+
+func is_unlocked(k: int) -> bool:
+	if campaign != "divina": return k <= completed
+	var list: Array = chapters()
+	return bool(list[k].get("start", false)) or is_done(k) or (k > 0 and is_done(k - 1))
+
+## First unlocked, unfinished chapter (the whole journey in order).
+func continue_index() -> int:
+	var list: Array = chapters()
+	for k in range(list.size()):
+		if is_unlocked(k) and not is_done(k): return k
+	return list.size() - 1
+
+## First unfinished chapter of a realm (hell or heaven).
+func _realm_target(realm: String) -> int:
+	var list: Array = chapters()
+	var first := -1
+	for k in range(list.size()):
+		if str(list[k].realm) != realm: continue
+		if first < 0: first = k
+		if is_unlocked(k) and not is_done(k): return k
+	return first
 
 func open_menu() -> void:
 	_refresh_menu()
@@ -345,18 +418,20 @@ func load_progress() -> void:
 	if cfg.load(SAVE_PATH) == OK:
 		completed = clampi(int(cfg.get_value("story", "completed", 0)), 0, StoryData.chapter_count())
 		flags = cfg.get_value("story", "flags", {})
+		done_ids = cfg.get_value("divina", "done", {})
 
 func save_progress() -> void:
 	if not persist or DisplayServer.get_name() == "headless": return
 	var cfg := ConfigFile.new()
 	cfg.set_value("story", "completed", completed)
 	cfg.set_value("story", "flags", flags)
+	cfg.set_value("divina", "done", done_ids)
 	cfg.save(SAVE_PATH)
 
 # ─────────────────────────────────────────────────────────────── chapter flow ──
 
 func start_chapter(index: int) -> void:
-	if index < 0 or index >= StoryData.chapter_count(): return
+	if index < 0 or index >= chapters().size(): return
 	close_menu()
 	session += 1
 	running = true
@@ -370,18 +445,20 @@ func _alive(my_session: int) -> bool:
 	return running and my_session == session
 
 func _run_chapter(index: int, my_session: int) -> void:
-	var steps: Array = StoryData.CHAPTERS[index].steps
+	var steps: Array = chapters()[index].steps
 	await fade(1.0, 0.25)
 	_set_letterbox(true, 0.01)
 	for step in steps:
 		if not _alive(my_session): return
 		await run_step(step, my_session)
 	if not _alive(my_session): return
-	completed = maxi(completed, index + 1)
+	if campaign == "divina": done_ids[str(chapters()[index].id)] = true
+	else: completed = maxi(completed, index + 1)
+	if main.get("progression") != null: main.progression.story_chapter_done(60) # a finished chapter pays coins
 	save_progress()
 	await fade(1.0, 0.6)
 	_end_story_session()
-	if index + 1 < StoryData.chapter_count():
+	if index + 1 < chapters().size():
 		open_menu()
 
 ## Leaves the story and returns to fighter selection.
@@ -435,10 +512,12 @@ func run_step(step: Dictionary, my_session: int) -> void:
 
 func chapter_title() -> String:
 	if chapter_index < 0: return ""
-	return "KAPITEL %d: %s" % [chapter_index + 1, str(StoryData.CHAPTERS[chapter_index].title).to_upper()]
+	if campaign == "divina": return str(chapters()[chapter_index].title).to_upper()
+	return "KAPITEL %d: %s" % [chapter_index + 1, str(chapters()[chapter_index].title).to_upper()]
 
-static func cast_profile(id: String, slot: int) -> Dictionary:
-	var c: Dictionary = StoryData.CAST[id]
+static func cast_profile(id: String, slot: int, heroes: int = 1) -> Dictionary:
+	var c: Dictionary = StoryData.CAST.get(id, StoryDivina.CAST.get(id, {}))
+	if c.has("boss"): return Bosses.profile(str(c.boss), heroes)
 	var p: Dictionary = Prompt.interpret(c.prompt, slot)
 	p.name = c.name
 	return p
@@ -480,11 +559,11 @@ func _stage(step: Dictionary) -> void:
 		var entry: Dictionary = step.cast[k]
 		stage_ids.append(entry.id)
 		p_list.append(cast_profile(entry.id, k))
-	main.prepare_cutscene_stage(p_list, StoryData.CHAPTERS[chapter_index].arena)
+	main.prepare_cutscene_stage(p_list, chapters()[chapter_index].arena)
 	for k in range(step.cast.size()):
 		var f: Dictionary = _fighter(k)
 		f.x = float(step.cast[k].x)
-		f.y = 0.0
+		if not f.is_boss: f.y = 0.0
 		f.facing = int(step.cast[k].get("facing", 1))
 		f.pose = "Idle"
 		if k < main.views.size():
@@ -513,7 +592,7 @@ func _narrate(text: String, my_session: int) -> void:
 	if not auto_advance and not skipping: await tw2.finished
 
 func _say(step: Dictionary, my_session: int) -> void:
-	var c: Dictionary = StoryData.CAST.get(step.who, {})
+	var c: Dictionary = cast_table().get(step.who, {})
 	var col := Color(str(c.get("color", "49def4")))
 	dialog_name.text = str(c.get("name", step.who))
 	dialog_name.add_theme_color_override("font_color", col)
@@ -559,6 +638,10 @@ func _cam(step: Dictionary, my_session: int) -> void:
 			var side: float = float(f.get("facing", 1))
 			target_pos = Vector3(x + side * 1.1, 1.75, 3.4)
 			target_look = Vector3(x, 1.45, 0)
+			if f.get("is_boss", false):
+				# Bosses are huge: step back and look up at the body.
+				target_pos = Vector3(x + side * 1.6, float(f.y) + 2.2, 7.2)
+				target_look = Vector3(x, float(f.y) + 1.9, 0)
 		"low":
 			target_pos = Vector3(x - float(f.get("facing", 1)) * 0.6, 0.45, 3.6)
 			target_look = Vector3(x, 1.8, 0)
@@ -800,8 +883,11 @@ func _await_retry_choice() -> bool:
 
 func _start_fight(step: Dictionary) -> void:
 	var p_list: Array = []
+	var heroes: int = 0
+	for id in step.cast:
+		if not cast_table().get(id, {}).has("boss"): heroes += 1
 	for k in range(step.cast.size()):
-		p_list.append(cast_profile(step.cast[k], k))
+		p_list.append(cast_profile(step.cast[k], k, heroes))
 	_hide_overlays()
 	_set_letterbox(false, 0.25)
 	fade(0.0, 0.2)
@@ -811,6 +897,8 @@ func _start_fight(step: Dictionary) -> void:
 	for k in range(mini(lives.size(), sim.fighters.size())):
 		sim.fighters[k].lives = int(lives[k])
 	if step.has("teams"): sim.set_teams(step.teams)
+	for f in sim.fighters:
+		if f.is_boss: sim.time_left = 300.0 # boss fights get more time
 	var mods: Dictionary = step.get("mods", {})
 	for key in mods:
 		var k: int = int(key)
@@ -857,7 +945,9 @@ func _show_result(title: String, hint: String, time: float, my_session: int) -> 
 func _credits(my_session: int) -> void:
 	_hide_overlays()
 	await fade(1.0, 1.0)
-	credits_label.text = "\n".join([
+	if campaign == "divina":
+		credits_label.text = "\n".join(StoryDivina.CREDITS)
+	else: credits_label.text = "\n".join([
 		"PROMPT FIGHTER", StoryData.TITLE, "", "",
 		"VOLT – der letzte Promptgeborene", "AURA – Hüterin des Lichthains", "KORSAR – Kapitän der Salzkrähe",
 		"SIR KALDEN · CINDER BASTION · DREYAR · WARROK", "SCHATTEN-VOLT", "NOVA, die einst NULLA hieß", "",
@@ -888,10 +978,36 @@ func _input(event: InputEvent) -> void:
 		if event.keycode == KEY_ESCAPE:
 			close_menu()
 		elif event.keycode in [KEY_ENTER, KEY_KP_ENTER]:
-			start_chapter(mini(completed, StoryData.chapter_count() - 1))
+			start_chapter(continue_index())
 		get_viewport().set_input_as_handled() # the selection screen below must not react
 		return
 	if not running: return
+	if event is InputEventJoypadButton and event.pressed:
+		# Controller: A continues / retries, B or Menu skips / gives up, View leaves a paused fight.
+		var jb: int = event.button_index
+		if result_box.visible and _retry_choice == -1:
+			if jb == JOY_BUTTON_A: _retry_choice = 1
+			elif jb == JOY_BUTTON_B or jb == JOY_BUTTON_BACK: _retry_choice = 0
+			get_viewport().set_input_as_handled()
+			return
+		if in_fight:
+			if main.paused and jb == JOY_BUTTON_BACK:
+				abort()
+				open_menu()
+				get_viewport().set_input_as_handled()
+			return
+		if not qte_active:
+			if jb == JOY_BUTTON_A or jb == JOY_BUTTON_X:
+				if typing: typing = false
+				else: advanced.emit()
+				get_viewport().set_input_as_handled()
+				return
+			if jb == JOY_BUTTON_B or jb == JOY_BUTTON_START:
+				skipping = true
+				typing = false
+				advanced.emit()
+				get_viewport().set_input_as_handled()
+				return
 	# Retry / give up after a lost fight.
 	if result_box.visible and _retry_choice == -1 and event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode in [KEY_ENTER, KEY_KP_ENTER, KEY_SPACE]:

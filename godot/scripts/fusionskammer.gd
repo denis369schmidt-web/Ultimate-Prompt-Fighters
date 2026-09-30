@@ -29,22 +29,22 @@ const BODY_MODULES := {
 	"samurai": {
 		"id": "body_samurai", "family": "samurai_dreyar", "name": "Meister-Samurai Dreyar",
 		"weight": 1.02, "base_hp": 112.0, "stats": {"vit": 18, "pwr": 26, "def": 16, "spd": 22, "tech": 18},
-		"anim_family": "zoro", "scale": 1.0, "model_file": "res://assets/models/mixamo/samurai_dreyar.glb"
+		"anim_family": "jubei", "scale": 1.0, "model_file": "res://assets/models/mixamo/samurai_dreyar.glb"
 	},
 	"pirate": {
 		"id": "body_pirate", "family": "pirate_captain", "name": "Piratenkapitän Freibeuter",
 		"weight": 1.00, "base_hp": 110.0, "stats": {"vit": 20, "pwr": 24, "def": 16, "spd": 22, "tech": 18},
-		"anim_family": "luffy", "scale": 1.0, "model_file": "res://assets/models/mixamo/pirate_captain.glb"
+		"anim_family": "tobi", "scale": 1.0, "model_file": "res://assets/models/mixamo/pirate_captain.glb"
 	},
 	"brawler": {
 		"id": "body_brawler", "family": "martial_yaku", "name": "Street Martial Artist Yaku",
 		"weight": 0.98, "base_hp": 112.0, "stats": {"vit": 20, "pwr": 28, "def": 16, "spd": 24, "tech": 12},
-		"anim_family": "saitama", "scale": 1.0, "model_file": "res://assets/models/mixamo/martial_yaku.glb"
+		"anim_family": "bruno", "scale": 1.0, "model_file": "res://assets/models/mixamo/martial_yaku.glb"
 	},
 	"grandmaster": {
 		"id": "body_grandmaster", "family": "monk_ganfaul", "name": "Shaolin Großmeister Ganfaul",
 		"weight": 1.00, "base_hp": 114.0, "stats": {"vit": 20, "pwr": 24, "def": 18, "spd": 20, "tech": 18},
-		"anim_family": "tanjiro", "scale": 1.0, "model_file": "res://assets/models/mixamo/monk_ganfaul.glb"
+		"anim_family": "hikaru", "scale": 1.0, "model_file": "res://assets/models/mixamo/monk_ganfaul.glb"
 	},
 	"vampire": {
 		"id": "body_vampire", "family": "vampire_lord", "name": "Gothic Vampirfürst",
@@ -107,21 +107,21 @@ const BODY_MODULES := {
 		"weight": 1.05, "base_hp": 115.0, "stats": {"vit": 18, "pwr": 26, "def": 18, "spd": 20, "tech": 18},
 		"anim_family": "specter", "scale": 1.95, "model_file": "res://assets/models/tripo_nyx_harvester.glb"
 	},
-	# Classics & Anime
-	"subzero": {
-		"id": "body_subzero", "family": "subzero", "name": "Lin Kuei Cryomancer",
+	# Eigene Helden
+	"glaciem": {
+		"id": "body_glaciem", "family": "glaciem", "name": "Frostassassine Glaciem",
 		"weight": 1.05, "base_hp": 115.0, "stats": {"vit": 20, "pwr": 24, "def": 20, "spd": 20, "tech": 16},
-		"anim_family": "subzero", "scale": 1.05, "model_file": "res://assets/models/subzero.glb"
+		"anim_family": "glaciem", "scale": 1.0, "model_file": "res://assets/models/mixamo/exo_gray.glb"
 	},
-	"goku": {
-		"id": "body_goku", "family": "goku", "name": "Sturmmönch Kairo",
+	"kairo": {
+		"id": "body_kairo", "family": "kairo", "name": "Sturmmönch Kairo",
 		"weight": 1.00, "base_hp": 118.0, "stats": {"vit": 20, "pwr": 28, "def": 18, "spd": 22, "tech": 12},
-		"anim_family": "goku", "scale": 0.01, "model_file": "res://assets/models/goku.glb"
+		"anim_family": "kairo", "scale": 1.0, "model_file": "res://assets/models/mixamo/gladiator_heraklios.glb"
 	},
-	"pain": {
-		"id": "body_pain", "family": "pain", "name": "Schwerkraftprophet Oryn",
+	"oryn": {
+		"id": "body_oryn", "family": "oryn", "name": "Schwerkraftprophet Oryn",
 		"weight": 1.00, "base_hp": 112.0, "stats": {"vit": 18, "pwr": 26, "def": 18, "spd": 18, "tech": 20},
-		"anim_family": "pain", "scale": 1.05, "model_file": "res://assets/models/pain.glb"
+		"anim_family": "oryn", "scale": 1.0, "model_file": "res://assets/models/mixamo/paladin_nord.glb"
 	}
 }
 
@@ -287,13 +287,13 @@ static func remix_character(prompt_text: String, slot_index: int = 0) -> Diction
 		body_key = "paladin"
 	elif has_any(lower, ["golem", "warrok", "stein", "rock", "koloss", "lava", "cinder", "brute", "titan"]):
 		body_key = "golem"
-	elif has_any(lower, ["samurai", "katana", "zoro", "dreyar", "schwert"]):
+	elif has_any(lower, ["samurai", "katana", "jubei", "dreyar", "schwert"]):
 		body_key = "samurai"
-	elif has_any(lower, ["pirat", "pirate", "seemann", "luffy", "kapitän"]):
+	elif has_any(lower, ["pirat", "pirate", "seemann", "tobi", "kapitän"]):
 		body_key = "pirate"
-	elif has_any(lower, ["brawler", "boxer", "faust", "fist", "martial", "yaku", "saitama"]):
+	elif has_any(lower, ["brawler", "boxer", "faust", "fist", "martial", "yaku", "bruno"]):
 		body_key = "brawler"
-	elif has_any(lower, ["monk", "mönch", "shaolin", "meister", "ganfaul", "tanjiro"]):
+	elif has_any(lower, ["monk", "mönch", "shaolin", "meister", "ganfaul", "hikaru"]):
 		body_key = "grandmaster"
 	elif has_any(lower, ["vampir", "vampire", "blut", "gothic", "lord"]):
 		body_key = "vampire"
@@ -311,12 +311,12 @@ static func remix_character(prompt_text: String, slot_index: int = 0) -> Diction
 		body_key = "kitsune"
 	elif has_any(lower, ["wyrm", "drache", "dragon"]):
 		body_key = "blue_wyrm"
-	elif has_any(lower, ["subzero", "sub-zero", "kori", "eis"]):
-		body_key = "subzero"
-	elif has_any(lower, ["kairo", "sturmmönch", "goku", "saiyajin", "dbz"]):
-		body_key = "goku"
-	elif has_any(lower, ["oryn", "schwerkraft", "pain", "nagato", "akatsuki"]):
-		body_key = "pain"
+	elif has_any(lower, ["glaciem", "frostassassine", "eis"]):
+		body_key = "glaciem"
+	elif has_any(lower, ["kairo", "sturmmönch", "solar"]):
+		body_key = "kairo"
+	elif has_any(lower, ["oryn", "schwerkraft", "prophet"]):
+		body_key = "oryn"
 
 	var body_data: Dictionary = BODY_MODULES[body_key]
 

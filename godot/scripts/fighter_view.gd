@@ -53,26 +53,6 @@ const NINJA_ARCTIC_VISOR_EM = preload("res://assets/textures/skins/ninja_arctic_
 const NINJA_CRIMSON_VISOR_ALBEDO = preload("res://assets/textures/skins/ninja_crimson_visor_albedo.png")
 const NINJA_CRIMSON_VISOR_EM = preload("res://assets/textures/skins/ninja_crimson_visor_emission.png")
 
-# --- SUBZERO TEXTURES ---
-const SUBZERO_ARMOR_ALBEDO = preload("res://assets/textures/skins/subzero_armor_albedo.png")
-const SUBZERO_ICE_EM = preload("res://assets/textures/skins/subzero_ice_emission.png")
-const SUBZERO_KORI_ALBEDO = preload("res://assets/textures/skins/subzero_kori_albedo.png")
-const SUBZERO_KORI_NORMAL = preload("res://assets/textures/skins/subzero_kori_normal.png")
-const SUBZERO_KORI_EMISSION = preload("res://assets/textures/skins/subzero_kori_emission.png")
-
-# --- PAIN TEXTURES ---
-const PAIN_CLOAK_ALBEDO = preload("res://assets/textures/skins/pain_cloak_albedo.png")
-const PAIN_RINNEGAN_EM = preload("res://assets/textures/skins/pain_rinnegan_emission.png")
-const PAIN_CLOAK_MASTER_ALBEDO = preload("res://assets/textures/skins/pain_cloak_master_albedo.png")
-const PAIN_CLOAK_MASTER_NORMAL = preload("res://assets/textures/skins/pain_cloak_master_normal.png")
-const PAIN_RINNEGAN_MASTER_EMISSION = preload("res://assets/textures/skins/pain_rinnegan_master_emission.png")
-
-# --- GOKU TEXTURES ---
-const GOKU_GI_ALBEDO = preload("res://assets/textures/skins/goku_gi_albedo.png")
-const GOKU_UNDERSHIRT_ALBEDO = preload("res://assets/textures/skins/goku_undershirt_albedo.png")
-const GOKU_GI_MASTER_ALBEDO = preload("res://assets/textures/skins/goku_gi_master_albedo.png")
-const GOKU_KI_MASTER_EMISSION = preload("res://assets/textures/skins/goku_ki_master_emission.png")
-
 # --- VALKYRIE TEXTURES ---
 const VALKYRIE_PLATE_ALBEDO = preload("res://assets/textures/skins/valkyrie_plate_albedo.png")
 const VALKYRIE_PLATE_NORMAL = preload("res://assets/textures/skins/valkyrie_plate_normal.png")
@@ -98,43 +78,6 @@ const PHOENIX_FEATHER_ALBEDO = preload("res://assets/textures/skins/phoenix_feat
 const PHOENIX_FEATHER_NORMAL = preload("res://assets/textures/skins/phoenix_feather_normal.png")
 const PHOENIX_FEATHER_EMISSION = preload("res://assets/textures/skins/phoenix_feather_emission.png")
 
-# --- LUFFY TEXTURES ---
-const LUFFY_STRAW_ALBEDO = preload("res://assets/textures/skins/luffy_straw_albedo.png")
-const LUFFY_STRAW_NORMAL = preload("res://assets/textures/skins/luffy_straw_normal.png")
-const LUFFY_VEST_ALBEDO = preload("res://assets/textures/skins/luffy_vest_albedo.png")
-const LUFFY_VEST_NORMAL = preload("res://assets/textures/skins/luffy_vest_normal.png")
-const LUFFY_DENIM_ALBEDO = preload("res://assets/textures/skins/luffy_denim_albedo.png")
-const LUFFY_DENIM_NORMAL = preload("res://assets/textures/skins/luffy_denim_normal.png")
-
-# --- SONIC TEXTURES ---
-const SONIC_FUR_ALBEDO = preload("res://assets/textures/skins/sonic_fur_albedo.png")
-const SONIC_FUR_NORMAL = preload("res://assets/textures/skins/sonic_fur_normal.png")
-const SONIC_QUILL_EMISSION = preload("res://assets/textures/skins/sonic_quill_emission.png")
-const SONIC_SHOE_ALBEDO = preload("res://assets/textures/skins/sonic_shoe_albedo.png")
-const SONIC_SHOE_NORMAL = preload("res://assets/textures/skins/sonic_shoe_normal.png")
-const SONIC_BUCKLE_EMISSION = preload("res://assets/textures/skins/sonic_buckle_emission.png")
-const SONIC_SKIN_ALBEDO = preload("res://assets/textures/skins/sonic_skin_albedo.png")
-
-# --- AKAZA TEXTURES ---
-const AKAZA_SKIN_ALBEDO = preload("res://assets/textures/skins/akaza_skin_albedo.png")
-const AKAZA_SKIN_NORMAL = preload("res://assets/textures/skins/akaza_skin_normal.png")
-const AKAZA_HAORI_ALBEDO = preload("res://assets/textures/skins/akaza_haori_albedo.png")
-const AKAZA_HAORI_NORMAL = preload("res://assets/textures/skins/akaza_haori_normal.png")
-const AKAZA_HAKAMA_ALBEDO = preload("res://assets/textures/skins/akaza_hakama_albedo.png")
-const AKAZA_HAKAMA_NORMAL = preload("res://assets/textures/skins/akaza_hakama_normal.png")
-const AKAZA_COMPASS_ALBEDO = preload("res://assets/textures/skins/akaza_compass_albedo.png")
-const AKAZA_COMPASS_EMISSION = preload("res://assets/textures/skins/akaza_compass_emission.png")
-
-# --- BLUE-EYES WHITE DRAGON TEXTURES ---
-const BLUE_EYES_SCALE_ALBEDO = preload("res://assets/textures/skins/blue_eyes_scale_albedo.png")
-const BLUE_EYES_SCALE_NORMAL = preload("res://assets/textures/skins/blue_eyes_scale_normal.png")
-const BLUE_EYES_WING_ALBEDO = preload("res://assets/textures/skins/blue_eyes_wing_albedo.png")
-const BLUE_EYES_WING_NORMAL = preload("res://assets/textures/skins/blue_eyes_wing_normal.png")
-const BLUE_EYES_CHEST_ALBEDO = preload("res://assets/textures/skins/blue_eyes_chest_albedo.png")
-const BLUE_EYES_CHEST_NORMAL = preload("res://assets/textures/skins/blue_eyes_chest_normal.png")
-const BLUE_EYES_BURST_ALBEDO = preload("res://assets/textures/skins/blue_eyes_burst_albedo.png")
-const BLUE_EYES_BURST_EMISSION = preload("res://assets/textures/skins/blue_eyes_burst_emission.png")
-
 # --- VFX PARTICLES & ATTACK SPRITES ---
 const LAVA_EMBER_TEX = preload("res://assets/textures/vfx/lava_ember.png")
 const ELECTRIC_SPARK_TEX = preload("res://assets/textures/vfx/electric_spark.png")
@@ -143,11 +86,11 @@ const VFX_SLASH_ICE = preload("res://assets/textures/vfx/slash_ice.png")
 const VFX_SLASH_FIRE = preload("res://assets/textures/vfx/slash_fire.png")
 const VFX_SLASH_WIND = preload("res://assets/textures/vfx/slash_wind.png")
 const VFX_SLASH_BLOOD = preload("res://assets/textures/vfx/slash_blood.png")
-const VFX_BLAST_KAMEHAMEHA = preload("res://assets/textures/vfx/blast_kamehameha.png")
-const VFX_BLAST_DEATH_BEAM = preload("res://assets/textures/vfx/blast_death_beam.png")
-const VFX_BLAST_SHINRA = preload("res://assets/textures/vfx/blast_shinra.png")
-const VFX_BLAST_RASENGAN = preload("res://assets/textures/vfx/blast_rasengan.png")
-const VFX_IMPACT_SERIOUS_PUNCH = preload("res://assets/textures/vfx/impact_serious_punch.png")
+const VFX_BLAST_BEAM_WIDE = preload("res://assets/textures/vfx/blast_beam_wide.png")
+const VFX_BLAST_BEAM_NEEDLE = preload("res://assets/textures/vfx/blast_beam_needle.png")
+const VFX_BLAST_SHOCKWAVE = preload("res://assets/textures/vfx/blast_shockwave.png")
+const VFX_BLAST_SPIRAL = preload("res://assets/textures/vfx/blast_spiral.png")
+const VFX_IMPACT_HEAVY_PUNCH = preload("res://assets/textures/vfx/impact_heavy_punch.png")
 const VFX_IMPACT_LIGHTNING = preload("res://assets/textures/vfx/impact_lightning_strike.png")
 const VFX_IMPACT_ICE_SPIKES = preload("res://assets/textures/vfx/impact_ice_spikes.png")
 
@@ -162,12 +105,6 @@ var aura_particles: CPUParticles3D
 var pulse_time := 0.0
 
 var shield: MeshInstance3D
-var sonic_spin_sphere: Node3D = null
-var akaza_compass_nodes: Array = []
-var blue_eyes_burst_beam: Node3D = null
-var frieza_death_beam: Node3D = null
-var frieza_supernova: Node3D = null
-var charizard_flame: Node3D = null
 var custom_attack_node: Node3D = null
 var custom_special_node: Node3D = null
 var attack_sprite_inst: MeshInstance3D = null
@@ -182,6 +119,9 @@ var scale_base := Vector3.ZERO
 var squash := 0.0
 var lean := 0.0
 var was_grounded := true
+## Own gear and outfit of the house heroes (hero_gear.gd), null for everyone else.
+var hero_gear: Node3D = null
+const HeroGear = preload("res://scripts/hero_gear.gd")
 
 ## Recently used model scenes stay loaded, so switching back to a fighter does not
 ## re-read large GLB files from disk. Least recently used entries are evicted.
@@ -192,14 +132,14 @@ static var _model_cache_order: Array = []
 ## Rigged, textured bodies for fighters whose original models were blocky primitives
 ## (and for fighters that shared a body with another card). Each body is unique.
 const MIXAMO_BODIES := {
-	"goku": "gladiator_heraklios", "vegeta": "exo_red", "frieza": "demon_warlord",
-	"naruto": "kachujin_dragon", "sasuke": "assassin_night", "pain": "paladin_nord",
-	"subzero": "exo_gray", "sonic": "crypto_cyber", "akaza": "maw_alien",
-	"blue_eyes": "maria_prop", "charizard": "parasite_beast", "anubis": "cyber_xbot",
+	"kairo": "gladiator_heraklios", "varakh": "exo_red", "xylar": "demon_warlord",
+	"ren": "kachujin_dragon", "amethya": "assassin_night", "oryn": "paladin_nord",
+	"glaciem": "exo_gray", "zip": "crypto_cyber", "raiga": "maw_alien",
+	"albion": "maria_prop", "pyrax": "parasite_beast", "anubis": "cyber_xbot",
 	"phoenix": "eve_warrior", "specter": "arissa_fighter", "dragon": "castle_guard",
-	"golem": "pumpkin_abomination", "luffy": "brute_titan", "zoro": "elven_archer",
+	"golem": "pumpkin_abomination", "tobi": "brute_titan", "jubei": "elven_archer",
 	"nekra": "zombie_girl", "grimbolt": "goblin_warrior", "echo": "cyber_ybot",
-	"kettenwart": "war_zombie", "don_valente": "boss_enforcer",
+	"kettenwart": "war_zombie", "don_valente": "boss_enforcer", "lepora": "eve_warrior", "bruno": "samurai_dreyar",
 }
 
 static func load_model_scene(path: String) -> PackedScene:
@@ -216,6 +156,16 @@ static func load_model_scene(path: String) -> PackedScene:
 
 func setup(p: Dictionary) -> void:
 	profile = p
+	var boss_body := ""
+	if p.has("boss"):
+		boss_body = str(load("res://scripts/bosses.gd").data(str(p.boss)).get("body", ""))
+		if boss_body == "" or not ResourceLoader.exists(boss_body):
+			# Abstract bosses (seraph, wheels, cherub, fly): procedural body, no skeleton, animates itself.
+			boss_body = ""
+			model = load("res://scripts/boss_models.gd").build(str(p.boss))
+			set_meta("model_path", "boss:" + str(p.boss))
+			add_child(model)
+			return
 	var m_path := "res://assets/models/%s.glb" % p.family
 	if p.has("model_path") and ResourceLoader.exists(p.model_path):
 		m_path = p.model_path
@@ -233,13 +183,13 @@ func setup(p: Dictionary) -> void:
 		m_path = "res://assets/models/mixamo/samurai_dreyar.glb"
 	elif p.family == "specter" and ResourceLoader.exists("res://assets/models/mixamo/vampire_lord.glb"):
 		m_path = "res://assets/models/mixamo/vampire_lord.glb"
-	elif p.family == "zoro" and ResourceLoader.exists("res://assets/models/mixamo/samurai_dreyar.glb"):
+	elif p.family == "jubei" and ResourceLoader.exists("res://assets/models/mixamo/samurai_dreyar.glb"):
 		m_path = "res://assets/models/mixamo/samurai_dreyar.glb"
-	elif p.family == "luffy" and ResourceLoader.exists("res://assets/models/mixamo/pirate_captain.glb"):
+	elif p.family == "tobi" and ResourceLoader.exists("res://assets/models/mixamo/pirate_captain.glb"):
 		m_path = "res://assets/models/mixamo/pirate_captain.glb"
-	elif p.family == "saitama" and ResourceLoader.exists("res://assets/models/mixamo/martial_yaku.glb"):
+	elif p.family == "bruno" and ResourceLoader.exists("res://assets/models/mixamo/martial_yaku.glb"):
 		m_path = "res://assets/models/mixamo/martial_yaku.glb"
-	elif p.family == "tanjiro" and ResourceLoader.exists("res://assets/models/mixamo/monk_ganfaul.glb"):
+	elif p.family == "hikaru" and ResourceLoader.exists("res://assets/models/mixamo/monk_ganfaul.glb"):
 		m_path = "res://assets/models/mixamo/monk_ganfaul.glb"
 	elif p.family == "steel_knight" and ResourceLoader.exists("res://assets/models/mixamo/steel_knight.glb"):
 		m_path = "res://assets/models/mixamo/steel_knight.glb"
@@ -254,6 +204,9 @@ func setup(p: Dictionary) -> void:
 	elif p.family == "swat_specops" and ResourceLoader.exists("res://assets/models/mixamo/swat_specops.glb"):
 		m_path = "res://assets/models/mixamo/swat_specops.glb"
 
+	if boss_body != "":
+		m_path = boss_body
+		set_meta("boss_body", true)
 	model = load_model_scene(m_path).instantiate()
 	set_meta("model_path", m_path)
 	add_child(model)
@@ -265,12 +218,11 @@ func setup(p: Dictionary) -> void:
 			max_mesh_height = maxf(max_mesh_height, m.mesh.get_aabb().size.y)
 
 	var target_h: float = 2.15 if p.family in ["warrok_brute", "mutant_titan", "golem", "golden_golem", "pumpkin_abomination", "kettenwart"] else 1.80
-	if p.family == "grimbolt": target_h = 1.3   # small goblin
+	if p.has("boss"): target_h = float(load("res://scripts/bosses.gd").data(str(p.boss)).get("height", 3.3))
+	elif p.family == "grimbolt": target_h = 1.3   # small goblin
 	elif p.family == "don_valente": target_h = 1.9
 	if max_mesh_height > 0.05:
 		model.scale = Vector3.ONE * (target_h / max_mesh_height)
-	elif p.family in ["goku", "blue_eyes"]:
-		model.scale = Vector3.ONE * 0.01
 	else:
 		model.scale = Vector3.ONE * 1.0
 
@@ -338,7 +290,10 @@ func setup(p: Dictionary) -> void:
 					elif b_key == "left_shin" and ("leftleg" in bn or "leftshin" in bn) and not "up" in bn: bone_map[b_key] = b_idx; break
 					elif b_key == "right_shin" and ("rightleg" in bn or "rightshin" in bn) and not "up" in bn: bone_map[b_key] = b_idx; break
 
-	_normalize_by_head(target_h)
+	if _is_scanned_model(p.family):
+		_fit_scanned_model(p.family, target_h)
+	else:
+		_normalize_by_head(target_h)
 	setup_freeze_block()
 
 	var p_text: String = str(p.get("prompt", "")).to_lower()
@@ -415,72 +370,72 @@ func setup(p: Dictionary) -> void:
 			skin_glow_color = p.get("color", Color("ff5511"))
 		skin_metallic = 0.85
 		skin_roughness = 0.24
-	elif p.family == "subzero":
+	elif p.family == "glaciem":
 		triplanar_scale = Vector3(0.020, 0.020, 0.020)
 		skin_glow_color = Color("4ad4ff")
 		skin_metallic = 0.88
 		skin_roughness = 0.22
-	elif p.family == "pain":
+	elif p.family == "oryn":
 		triplanar_scale = Vector3(0.018, 0.018, 0.018)
 		skin_glow_color = Color("9900ee")
 		skin_metallic = 0.15
 		skin_roughness = 0.65
-	elif p.family == "luffy":
+	elif p.family == "tobi":
 		triplanar_scale = Vector3(0.018, 0.018, 0.018)
 		skin_glow_color = Color("ff2b2b")
 		skin_metallic = 0.05
 		skin_roughness = 0.55
-	elif p.family == "sonic":
+	elif p.family == "zip":
 		triplanar_scale = Vector3(0.018, 0.018, 0.018)
 		skin_glow_color = Color("00a2ff")
 		skin_metallic = 0.08
 		skin_roughness = 0.35
-	elif p.family == "akaza":
+	elif p.family == "raiga":
 		triplanar_scale = Vector3(0.018, 0.018, 0.018)
 		skin_glow_color = Color("00e5ff")
 		skin_metallic = 0.05
 		skin_roughness = 0.45
-	elif p.family == "blue_eyes":
+	elif p.family == "albion":
 		triplanar_scale = Vector3(0.018, 0.018, 0.018)
 		skin_glow_color = Color("70d6ff")
 		skin_metallic = 0.35
 		skin_roughness = 0.28
-	elif p.family == "naruto":
+	elif p.family == "ren":
 		triplanar_scale = Vector3(0.018, 0.018, 0.018)
-		skin_glow_color = Color("4ae0ff") # Rasengan Cyan
+		skin_glow_color = Color("4ae0ff")
 		skin_metallic = 0.10
 		skin_roughness = 0.50
-	elif p.family == "vegeta":
+	elif p.family == "varakh":
 		triplanar_scale = Vector3(0.018, 0.018, 0.018)
 		skin_glow_color = Color("ffe838") # Final Flash Gold
 		skin_metallic = 0.30
 		skin_roughness = 0.35
-	elif p.family == "zoro":
+	elif p.family == "jubei":
 		triplanar_scale = Vector3(0.018, 0.018, 0.018)
 		skin_glow_color = Color("3bfac8") # Wind Slash Emerald
 		skin_metallic = 0.25
 		skin_roughness = 0.40
-	elif p.family == "saitama":
+	elif p.family == "bruno":
 		triplanar_scale = Vector3(0.018, 0.018, 0.018)
 		skin_glow_color = Color("ff3322") # Serious Force Crimson
 		skin_metallic = 0.15
 		skin_roughness = 0.35
-	elif p.family == "tanjiro":
+	elif p.family == "hikaru":
 		triplanar_scale = Vector3(0.018, 0.018, 0.018)
 		skin_glow_color = Color("ff6524") # Hinokami Fire Orange
 		skin_metallic = 0.18
 		skin_roughness = 0.45
-	elif p.family == "sasuke":
+	elif p.family == "amethya":
 		triplanar_scale = Vector3(0.018, 0.018, 0.018)
-		skin_glow_color = Color("60d5ff") # Chidori Electric Azure
+		skin_glow_color = Color("60d5ff")
 		skin_metallic = 0.20
 		skin_roughness = 0.38
-	elif p.family == "frieza":
+	elif p.family == "xylar":
 		triplanar_scale = Vector3(0.018, 0.018, 0.018)
 		skin_glow_color = Color("b438ff") # Imperial Purple
 		skin_metallic = 0.25
 		skin_roughness = 0.25
-	elif p.family == "charizard":
+	elif p.family == "pyrax":
 		triplanar_scale = Vector3(0.018, 0.018, 0.018)
 		skin_glow_color = Color("ff6610") # Fire Dragon Flame
 		skin_metallic = 0.05
@@ -579,7 +534,7 @@ func setup(p: Dictionary) -> void:
 
 			if not p.family in ["ninja_legacy", "golem_legacy"]:
 				mat.uv1_triplanar = false
-				# Arc System Works / Guilty Gear Strive styled crisp grazing rim contour
+				# Crisp grazing rim contour (cel look)
 				mat.rim_enabled = true
 				mat.rim = 0.78
 				mat.rim_tint = 0.45
@@ -776,54 +731,6 @@ func setup(p: Dictionary) -> void:
 					mat.roughness = 0.22
 					mat.rim_enabled = true
 					mat.rim = 0.65
-			elif p.family == "goku":
-				if "Hair" in mesh.name or "Spike" in mesh.name or "Bang" in mesh.name or "Crown" in mesh.name:
-					# Ultra Ego / Super Saiyan Ultra Radiant Purple Spiked Hair
-					mat.albedo_color = Color("9b30ff")
-					mat.roughness = 0.22
-					mat.metallic = 0.25
-					mat.rim_enabled = true
-					mat.rim = 1.0
-					mat.rim_tint = 0.85
-					mat.emission_enabled = true
-					mat.emission_texture = GOKU_KI_MASTER_EMISSION
-					mat.emission = Color("8a2be2")
-					mat.emission_energy_multiplier = 0.85
-				elif "Gi" in mesh.name or "Pants" in mesh.name or "Tunic" in mesh.name:
-					# Authentic Turtle School Orange Martial Arts Gi
-					mat.albedo_texture = GOKU_GI_MASTER_ALBEDO
-					mat.albedo_color = Color("ffffff")
-					mat.roughness = 0.82
-					mat.metallic = 0.02
-				elif "Undershirt" in mesh.name or "Belt" in mesh.name or "Sash" in mesh.name or "Wrist" in mesh.name or "Boot" in mesh.name or "Knot" in mesh.name:
-					# Navy Blue undershirt, sash belt & martial arts wristbands
-					mat.albedo_texture = GOKU_UNDERSHIRT_ALBEDO
-					mat.albedo_color = Color("ffffff")
-					mat.roughness = 0.75
-					mat.metallic = 0.05
-				elif "Skin" in mat.resource_name or "Arm" in mesh.name or "Neck" in mesh.name or "Head" in mesh.name or "GokuBody" in mesh.name:
-					# Toned anime martial artist tan skin
-					mat.albedo_color = Color("f5caaa")
-					mat.roughness = 0.52
-					mat.metallic = 0.0
-					mat.rim_enabled = true
-					mat.rim = 0.35
-				elif "Pole" in mesh.name or "Staff" in mesh.name:
-					# Power Pole (Nyoi-bo) crimson red & gold
-					mat.albedo_color = Color("c62828")
-					mat.metallic = 0.85
-					mat.roughness = 0.15
-				elif "Aura" in mesh.name or "Ki" in mesh.name or "Core" in mesh.name:
-					mat.albedo_color = Color(2.0, 1.0, 2.5)
-					mat.emission_enabled = true
-					mat.emission_texture = GOKU_KI_MASTER_EMISSION
-					mat.emission = Color("b347ff")
-					mat.emission_energy_multiplier = 5.5
-					glow_materials.append(mat)
-					base_emissions.append(5.5)
-				else:
-					mat.albedo_color = Color("ff5722")
-					mat.roughness = 0.85
 			elif p.family == "phoenix":
 				if "Feather" in mesh.name or "Wing" in mesh.name or "Paul" in mesh.name or "Chest" in mesh.name or "Crown" in mesh.name:
 					mat.albedo_texture = PHOENIX_FEATHER_ALBEDO
@@ -898,512 +805,7 @@ func setup(p: Dictionary) -> void:
 					mat.albedo_color = Color("181028")
 					mat.metallic = 0.65
 					mat.roughness = 0.22
-			elif p.family == "subzero":
-				if "Eye" in mesh.name or "Ice" in mesh.name or "Kori" in mesh.name or "Spike" in mesh.name:
-					mat.albedo_texture = SUBZERO_KORI_ALBEDO
-					mat.normal_enabled = true
-					mat.normal_texture = SUBZERO_KORI_NORMAL
-					mat.normal_scale = 2.0
-					mat.albedo_color = Color("8ae8ff")
-					mat.metallic = 0.20
-					mat.roughness = 0.06
-					mat.emission_enabled = true
-					mat.emission_texture = SUBZERO_KORI_EMISSION
-					mat.emission = Color("4ad4ff")
-					mat.emission_energy_multiplier = 3.5
-					glow_materials.append(mat)
-					base_emissions.append(3.5)
-				elif "Medallion" in mesh.name:
-					mat.albedo_color = Color("e5b820")
-					mat.metallic = 0.95
-					mat.roughness = 0.16
-				elif "Armor" in mesh.name or "Shin" in mesh.name or "Pauldron" in mesh.name or "Gauntlet" in mesh.name or "Guard" in mesh.name or "Kneecap" in mesh.name:
-					mat.albedo_texture = SUBZERO_ARMOR_ALBEDO
-					mat.albedo_color = Color("ffffff")
-					mat.metallic = 0.85
-					mat.roughness = 0.25
-					mat.rim_enabled = true
-					mat.rim = 0.85
-					mat.rim_tint = 0.70
-				elif "Mask" in mesh.name:
-					mat.albedo_color = Color("0088ee")
-					mat.metallic = 0.70
-					mat.roughness = 0.28
-					mat.rim_enabled = true
-					mat.rim = 0.90
-				elif "Tabard" in mesh.name or "Tasset" in mesh.name:
-					mat.albedo_color = Color("0066ee")
-					mat.roughness = 0.52
-					mat.metallic = 0.10
-					mat.rim_enabled = true
-					mat.rim = 0.60
-				elif "Cowl" in mesh.name or "Belt" in mesh.name or "Boot" in mesh.name:
-					mat.albedo_color = Color("0c0e12")
-					mat.roughness = 0.80
-					mat.metallic = 0.05
-				elif "Body" in mesh.name:
-					mat.albedo_color = Color("14161c")
-					mat.roughness = 0.85
-					mat.metallic = 0.04
-				else:
-					mat.albedo_color = Color("0055bb")
-					mat.roughness = 0.65
-			elif p.family == "pain":
-				if "Rinnegan" in mesh.name or "Eye" in mesh.name or "EyeRing" in mesh.name:
-					mat.albedo_color = Color("7010bb")
-					mat.metallic = 0.15
-					mat.roughness = 0.08
-					mat.emission_enabled = true
-					mat.emission_texture = PAIN_RINNEGAN_MASTER_EMISSION
-					mat.emission = Color("9900ee")
-					mat.emission_energy_multiplier = 4.0
-					glow_materials.append(mat)
-					base_emissions.append(4.0)
-				elif "Cloud" in mesh.name:
-					mat.albedo_color = Color("d41208")
-					mat.roughness = 0.68
-					mat.metallic = 0.04
-				elif "Cloak" in mesh.name:
-					mat.albedo_texture = PAIN_CLOAK_MASTER_ALBEDO
-					mat.normal_enabled = true
-					mat.normal_texture = PAIN_CLOAK_MASTER_NORMAL
-					mat.normal_scale = 1.8
-					mat.albedo_color = Color("ffffff")
-					mat.roughness = 0.75
-					mat.metallic = 0.02
-				elif "Headband" in mesh.name:
-					mat.albedo_color = Color("c2c8d2")
-					mat.metallic = 0.92
-					mat.roughness = 0.20
-				elif "Pierce" in mesh.name or "EarRing" in mesh.name:
-					mat.albedo_color = Color("2e323a")
-					mat.metallic = 0.95
-					mat.roughness = 0.12
-				elif "Hair" in mesh.name:
-					mat.albedo_color = Color("ff5500")
-					mat.roughness = 0.38
-					mat.metallic = 0.08
-					mat.rim_enabled = true
-					mat.rim = 0.95
-				elif "body" in mesh.name.to_lower() or "skin" in mesh.name.to_lower() or "geo" in mesh.name.to_lower() or "arm" in mesh.name.to_lower() or "leg" in mesh.name.to_lower() or "head" in mesh.name.to_lower() or "hand" in mesh.name.to_lower():
-					mat.albedo_color = Color("f6d8c8")
-					mat.roughness = 0.52
-					mat.metallic = 0.0
-					mat.rim_enabled = true
-					mat.rim = 0.65
-					mat.subsurf_scatter_enabled = true
-					mat.subsurf_scatter_strength = 0.22
-				else:
-					mat.albedo_color = Color("222226")
-					mat.roughness = 0.70
-			elif p.family == "luffy":
-				if "Vest" in mesh.name:
-					mat.albedo_texture = LUFFY_VEST_ALBEDO
-					mat.normal_enabled = true
-					mat.normal_texture = LUFFY_VEST_NORMAL
-					mat.normal_scale = 2.0
-					mat.albedo_color = Color("ffffff")
-					mat.roughness = 0.72
-					mat.metallic = 0.0
-				elif "Shorts" in mesh.name:
-					mat.albedo_texture = LUFFY_DENIM_ALBEDO
-					mat.normal_enabled = true
-					mat.normal_texture = LUFFY_DENIM_NORMAL
-					mat.normal_scale = 2.0
-					mat.albedo_color = Color("ffffff")
-					mat.roughness = 0.78
-					mat.metallic = 0.0
-				elif "Cuff" in mesh.name:
-					mat.albedo_color = Color("eeeeee")
-					mat.roughness = 0.85
-				elif "StrawHat" in mesh.name or "Hat" in mesh.name:
-					mat.albedo_texture = LUFFY_STRAW_ALBEDO
-					mat.normal_enabled = true
-					mat.normal_texture = LUFFY_STRAW_NORMAL
-					mat.normal_scale = 2.2
-					mat.albedo_color = Color("ffffff")
-					mat.roughness = 0.68
-				elif "Ribbon" in mesh.name:
-					mat.albedo_color = Color("cc1010")
-					mat.roughness = 0.65
-				elif "Button" in mesh.name:
-					mat.albedo_color = Color("f0c020")
-					mat.metallic = 0.90
-					mat.roughness = 0.20
-				elif "Sandal" in mesh.name:
-					mat.albedo_color = Color("5a3818")
-					mat.roughness = 0.80
-				elif "Hair" in mesh.name:
-					mat.albedo_color = Color("101014")
-					mat.roughness = 0.35
-				elif "Eye" in mesh.name or "Pupil" in mesh.name:
-					mat.albedo_color = Color("ffffff") if "White" in mesh.name else Color("050505")
-					mat.roughness = 0.15
-				elif "Body" in mesh.name or "GEO" in mesh.name or "body_male" in mesh.name:
-					mat.albedo_color = Color("f5caaa")
-					mat.roughness = 0.52
-					mat.metallic = 0.0
-					mat.rim_enabled = true
-					mat.rim = 0.35
-				else:
-					mat.albedo_color = Color("e01515")
-					mat.roughness = 0.65
-			elif p.family == "sonic":
-				if "Fur" in mesh.name or "Quill" in mesh.name or "Head" in mesh.name or "Torso" in mesh.name or "Spine" in mesh.name or "Tail" in mesh.name or "Leg" in mesh.name or "Ear_L" in mesh.name or "Ear_R" in mesh.name:
-					mat.albedo_texture = SONIC_FUR_ALBEDO
-					mat.normal_enabled = true
-					mat.normal_texture = SONIC_FUR_NORMAL
-					mat.normal_scale = 1.6
-					mat.albedo_color = Color("ffffff")
-					mat.roughness = 0.42
-					mat.metallic = 0.05
-					mat.rim_enabled = true
-					mat.rim = 0.75
-					mat.rim_tint = 0.60
-				elif "Shoe" in mesh.name:
-					mat.albedo_texture = SONIC_SHOE_ALBEDO
-					mat.normal_enabled = true
-					mat.normal_texture = SONIC_SHOE_NORMAL
-					mat.normal_scale = 1.8
-					mat.albedo_color = Color("ffffff")
-					mat.roughness = 0.35
-					mat.metallic = 0.15
-				elif "Buckle" in mesh.name:
-					mat.albedo_color = Color("f5c227")
-					mat.metallic = 0.95
-					mat.roughness = 0.12
-					mat.emission_enabled = true
-					mat.emission_texture = SONIC_BUCKLE_EMISSION
-					mat.emission = Color("ffd240")
-					mat.emission_energy_multiplier = 3.0
-					glow_materials.append(mat)
-					base_emissions.append(3.0)
-				elif "Muzzle" in mesh.name or "Ear_Inner" in mesh.name or "Belly" in mesh.name or "Arm" in mesh.name:
-					mat.albedo_texture = SONIC_SKIN_ALBEDO
-					mat.albedo_color = Color("ffffff")
-					mat.roughness = 0.55
-					mat.metallic = 0.0
-					mat.rim_enabled = true
-					mat.rim = 0.40
-				elif "Glove" in mesh.name or "Sock" in mesh.name or "Cuff" in mesh.name:
-					mat.albedo_color = Color("f0f2f6")
-					mat.roughness = 0.70
-					mat.metallic = 0.02
-				elif "Iris" in mesh.name:
-					mat.albedo_color = Color("00e575")
-					mat.roughness = 0.10
-					mat.metallic = 0.20
-					mat.emission_enabled = true
-					mat.emission = Color("00ff88")
-					mat.emission_energy_multiplier = 2.8
-					glow_materials.append(mat)
-					base_emissions.append(2.8)
-				elif "EyeWhite" in mesh.name:
-					mat.albedo_color = Color("ffffff")
-					mat.roughness = 0.15
-				elif "Nose" in mesh.name or "Pupil" in mesh.name:
-					mat.albedo_color = Color("0a0a0c")
-					mat.roughness = 0.25
-				elif "Spin" in mesh.name:
-					mat.albedo_color = Color("1e90ff")
-					mat.roughness = 0.08
-					mat.metallic = 0.40
-					mat.emission_enabled = true
-					mat.emission = Color("00a2ff")
-					mat.emission_energy_multiplier = 4.0
-					glow_materials.append(mat)
-					base_emissions.append(4.0)
-					sonic_spin_sphere = mesh
-					mesh.visible = false
-				else:
-					mat.albedo_texture = SONIC_FUR_ALBEDO
-					mat.albedo_color = Color("1060ee")
-					mat.roughness = 0.45
-			elif p.family == "akaza":
-				if "Compass" in mesh.name:
-					mat.albedo_texture = AKAZA_COMPASS_ALBEDO
-					mat.emission_enabled = true
-					mat.emission_texture = AKAZA_COMPASS_EMISSION
-					mat.emission = Color("00ffff")
-					mat.emission_energy_multiplier = 4.5
-					mat.roughness = 0.12
-					mat.metallic = 0.20
-					glow_materials.append(mat)
-					base_emissions.append(4.5)
-					akaza_compass_nodes.append(mesh)
-					mesh.visible = false
-				elif "Hair" in mesh.name:
-					mat.albedo_color = Color("e6005c")
-					mat.roughness = 0.35
-					mat.metallic = 0.05
-					mat.rim_enabled = true
-					mat.rim = 0.85
-					mat.rim_tint = 0.50
-				elif "Eye" in mesh.name:
-					mat.albedo_color = Color("ffea00")
-					mat.emission_enabled = true
-					mat.emission = Color("ffea00")
-					mat.emission_energy_multiplier = 3.5
-					mat.roughness = 0.08
-					glow_materials.append(mat)
-					base_emissions.append(3.5)
-				elif "Tattoo" in mesh.name:
-					mat.albedo_color = Color("0088cc")
-					mat.roughness = 0.30
-					mat.metallic = 0.10
-					mat.emission_enabled = true
-					mat.emission = Color("00b4d8")
-					mat.emission_energy_multiplier = 2.2
-					glow_materials.append(mat)
-					base_emissions.append(2.2)
-				elif "Haori" in mesh.name:
-					mat.albedo_texture = AKAZA_HAORI_ALBEDO
-					mat.normal_enabled = true
-					mat.normal_texture = AKAZA_HAORI_NORMAL
-					mat.normal_scale = 1.8
-					mat.albedo_color = Color("ffffff")
-					mat.roughness = 0.65
-					mat.metallic = 0.02
-				elif "FurCollar" in mesh.name or "Fur" in mesh.name:
-					mat.albedo_color = Color("f5f5fa")
-					mat.roughness = 0.85
-					mat.metallic = 0.0
-					mat.rim_enabled = true
-					mat.rim = 0.75
-				elif "Hakama" in mesh.name or "Pelvis" in mesh.name:
-					mat.albedo_texture = AKAZA_HAKAMA_ALBEDO
-					mat.normal_enabled = true
-					mat.normal_texture = AKAZA_HAKAMA_NORMAL
-					mat.normal_scale = 1.6
-					mat.albedo_color = Color("ffffff")
-					mat.roughness = 0.75
-					mat.metallic = 0.02
-				elif "Rope" in mesh.name or "Bead" in mesh.name:
-					mat.albedo_color = Color("cc1122")
-					mat.roughness = 0.60
-					mat.metallic = 0.05
-				elif "Anklet" in mesh.name:
-					mat.albedo_color = Color("0077b6")
-					mat.roughness = 0.25
-					mat.metallic = 0.40
-				else:
-					mat.albedo_texture = AKAZA_SKIN_ALBEDO
-					mat.normal_enabled = true
-					mat.normal_texture = AKAZA_SKIN_NORMAL
-					mat.normal_scale = 1.5
-					mat.albedo_color = Color("ffffff")
-					mat.roughness = 0.48
-					mat.metallic = 0.0
-					mat.rim_enabled = true
-					mat.rim = 0.45
-			elif p.family == "blue_eyes":
-				if "Burst_Beam" in mesh.name:
-					mat.albedo_texture = BLUE_EYES_BURST_ALBEDO
-					mat.emission_enabled = true
-					mat.emission_texture = BLUE_EYES_BURST_EMISSION
-					mat.emission = Color("90e0ef")
-					mat.emission_energy_multiplier = 5.0
-					mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-					mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-					glow_materials.append(mat)
-					base_emissions.append(5.0)
-					blue_eyes_burst_beam = mesh
-					mesh.visible = false
-				elif "Burst_Core" in mesh.name:
-					mat.albedo_color = Color("d0f4de")
-					mat.emission_enabled = true
-					mat.emission = Color("00b4d8")
-					mat.emission_energy_multiplier = 4.5
-					glow_materials.append(mat)
-					base_emissions.append(4.5)
-				elif "Eye" in mesh.name:
-					mat.albedo_color = Color("caf0f8")
-					mat.emission_enabled = true
-					mat.emission = Color("00b4d8")
-					mat.emission_energy_multiplier = 3.5
-					mat.metallic = 0.20
-					mat.roughness = 0.08
-					glow_materials.append(mat)
-					base_emissions.append(3.5)
-				elif "Wing_Membrane" in mesh.name:
-					mat.albedo_texture = BLUE_EYES_WING_ALBEDO
-					mat.normal_enabled = true
-					mat.normal_texture = BLUE_EYES_WING_NORMAL
-					mat.normal_scale = 1.6
-					mat.roughness = 0.45
-					mat.metallic = 0.15
-					mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-				elif "Chest" in mesh.name:
-					mat.albedo_texture = BLUE_EYES_CHEST_ALBEDO
-					mat.normal_enabled = true
-					mat.normal_texture = BLUE_EYES_CHEST_NORMAL
-					mat.normal_scale = 1.8
-					mat.roughness = 0.35
-					mat.metallic = 0.30
-				elif "Horn" in mesh.name or "Brow" in mesh.name or "Fin" in mesh.name or "Blade" in mesh.name:
-					mat.albedo_color = Color("c5d5e5")
-					mat.roughness = 0.22
-					mat.metallic = 0.45
-					mat.rim_enabled = true
-					mat.rim = 0.60
-				elif "Claw" in mesh.name or "Spur" in mesh.name:
-					mat.albedo_color = Color("e0e8f0")
-					mat.roughness = 0.18
-					mat.metallic = 0.65
-				else:
-					mat.albedo_texture = BLUE_EYES_SCALE_ALBEDO
-					mat.normal_enabled = true
-					mat.normal_texture = BLUE_EYES_SCALE_NORMAL
-					mat.normal_scale = 1.7
-					mat.roughness = 0.32
-					mat.metallic = 0.28
-					mat.rim_enabled = true
-					mat.rim = 0.55
-					mat.rim_tint = 0.40
-			elif p.family == "frieza":
-				if "Death_Beam" in mesh.name or "DeathBeam" in mesh.name:
-					mat.albedo_color = Color("ffffff")
-					mat.emission_enabled = true
-					mat.emission = Color("b438ff")
-					mat.emission_energy_multiplier = 5.0
-					glow_materials.append(mat)
-					base_emissions.append(5.0)
-					frieza_death_beam = mesh
-				elif "Supernova" in mesh.name:
-					mat.albedo_color = Color("ffeedd")
-					mat.emission_enabled = true
-					mat.emission = Color("ff4400")
-					mat.emission_energy_multiplier = 5.5
-					glow_materials.append(mat)
-					base_emissions.append(5.5)
-					frieza_supernova = mesh
-				elif "Purple" in mesh.name or "Gem" in mesh.name or "Dome" in mesh.name or "Shield" in mesh.name or "Shin" in mesh.name or "ear" in mesh.name:
-					mat.albedo_color = Color("7815b8")
-					mat.metallic = 0.35
-					mat.roughness = 0.18
-					mat.rim_enabled = true
-					mat.rim = 0.65
-				elif "Eye" in mesh.name:
-					mat.albedo_color = Color("ff1530")
-					mat.emission_enabled = true
-					mat.emission = Color("ff2040")
-					mat.emission_energy_multiplier = 3.0
-					glow_materials.append(mat)
-					base_emissions.append(3.0)
-				elif "Eyeliner" in mesh.name:
-					mat.albedo_color = Color("220630")
-					mat.roughness = 0.50
-				else:
-					mat.albedo_color = Color("f0f2f8")
-					mat.roughness = 0.28
-					mat.metallic = 0.10
-					mat.rim_enabled = true
-					mat.rim = 0.45
-			elif p.family == "charizard":
-				if "Flame" in mesh.name or "Fire" in mesh.name:
-					mat.albedo_color = Color("ffdd44")
-					mat.emission_enabled = true
-					mat.emission = Color("ff5500")
-					mat.emission_energy_multiplier = 6.0
-					mat.roughness = 0.1
-					glow_materials.append(mat)
-					base_emissions.append(6.0)
-					charizard_flame = mesh
-				elif "Cream" in mesh.name or "Belly" in mesh.name or "Underbelly" in mesh.name or "Throat" in mesh.name or "Chin" in mesh.name:
-					mat.albedo_color = Color("f8df96")
-					mat.roughness = 0.42
-					mat.metallic = 0.02
-				elif "Wing_Membrane" in mesh.name or "Membrane" in mesh.name:
-					mat.albedo_color = Color("b32824")
-					mat.roughness = 0.48
-					mat.metallic = 0.02
-					mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-				elif "Claw" in mesh.name or "Tooth" in mesh.name or "Teeth" in mesh.name:
-					mat.albedo_color = Color("f5f5f0")
-					mat.roughness = 0.22
-					mat.metallic = 0.08
-				elif "Eye" in mesh.name:
-					mat.albedo_color = Color("e81824")
-					mat.emission_enabled = true
-					mat.emission = Color("ff2028")
-					mat.emission_energy_multiplier = 3.2
-					glow_materials.append(mat)
-					base_emissions.append(3.2)
-				elif "Pupil" in mesh.name or "Nostril" in mesh.name or "Mouth" in mesh.name:
-					mat.albedo_color = Color("1a0a0c")
-					mat.roughness = 0.70
-				elif "Tongue" in mesh.name:
-					mat.albedo_color = Color("e04558")
-					mat.roughness = 0.35
-				else:
-					mat.albedo_color = Color("f27822")
-					mat.roughness = 0.36
-					mat.metallic = 0.05
-					mat.rim_enabled = true
-					mat.rim = 0.50
-					mat.rim_tint = 0.35
-			elif p.family == "goku":
-				if "Hair" in mesh.name:
-					mat.albedo_color = skin_glow_color if ("purple" in p_text or "ultra" in p_text or "ego" in p_text) else Color("ffd020")
-					mat.roughness = 0.30
-					mat.metallic = 0.08
-					mat.rim_enabled = true
-					mat.rim = 0.90
-					mat.rim_tint = 0.50
-				elif "Gi" in mesh.name or "Pants" in mesh.name:
-					mat.albedo_color = Color("e85500")
-					mat.roughness = 0.85
-					mat.metallic = 0.02
-				elif "Undershirt" in mesh.name or "Sash" in mesh.name or "Belt" in mesh.name:
-					mat.albedo_color = Color("0d2258")
-					mat.roughness = 0.78
-					mat.metallic = 0.02
-				elif "Boot" in mesh.name:
-					mat.albedo_color = Color("0a1636")
-					mat.roughness = 0.65
-				elif "Head" in mesh.name or "Body" in mesh.name or "Face" in mesh.name or "Arm" in mesh.name:
-					mat.albedo_color = Color("f6caa2")
-					mat.roughness = 0.50
-					mat.metallic = 0.0
-					mat.rim_enabled = true
-					mat.rim = 0.60
-					mat.subsurf_scatter_enabled = true
-					mat.subsurf_scatter_strength = 0.22
-				else:
-					mat.albedo_color = Color("e85500")
-					mat.roughness = 0.80
-			elif p.family == "vegeta":
-				if "Hair" in mesh.name:
-					mat.albedo_color = Color("ffd020") if ("ssj" in p_text or "gold" in p_text or "super" in p_text) else Color("141418")
-					mat.roughness = 0.30
-					mat.metallic = 0.10
-					mat.rim_enabled = true
-					mat.rim = 0.90
-				elif "Armor" in mesh.name or "Chest" in mesh.name or "Plate" in mesh.name:
-					mat.albedo_color = Color("f4f4f4")
-					mat.metallic = 0.45
-					mat.roughness = 0.25
-					mat.clearcoat_enabled = true
-					mat.clearcoat = 0.80
-				elif "Gold" in mesh.name or "Strap" in mesh.name:
-					mat.albedo_color = Color("f5b820")
-					mat.metallic = 0.90
-					mat.roughness = 0.18
-				elif "Glove" in mesh.name or "Boot" in mesh.name:
-					mat.albedo_color = Color("e8e8ea")
-					mat.roughness = 0.45
-				elif "Head" in mesh.name or "Body" in mesh.name or "Face" in mesh.name or "Arm" in mesh.name:
-					mat.albedo_color = Color("f6caa2")
-					mat.roughness = 0.50
-					mat.metallic = 0.0
-					mat.rim_enabled = true
-					mat.rim = 0.60
-					mat.subsurf_scatter_enabled = true
-					mat.subsurf_scatter_strength = 0.22
-				else:
-					mat.albedo_color = Color("0d2058")
-					mat.roughness = 0.72
-			elif p.family in ["golden_golem", "tripo_fran_statue", "tripo_fantasy_female", "tripo_nyx_harvester", "tripo_cat_girl", "tripo_dragon_blue", "tripo_white_sci", "tripo_skeleton_dog", "tripo_wooden_forest", "tripo_nine_tailed", "tripo_quadruped_tree"] or p.family.begins_with("tripo_"):
+			elif p.family in ["golden_golem", "tripo_fantasy_female", "tripo_nyx_harvester", "tripo_cat_girl", "tripo_dragon_blue", "tripo_white_sci", "tripo_skeleton_dog", "tripo_wooden_forest", "tripo_nine_tailed", "tripo_quadruped_tree"] or p.family.begins_with("tripo_"):
 				mat.uv1_triplanar = false
 				mat.rim_enabled = true
 				mat.rim = 0.78
@@ -1443,6 +845,15 @@ func setup(p: Dictionary) -> void:
 				elif p.family in ["tripo_wooden_forest", "tripo_quadruped_tree"]:
 					mat.metallic = 0.04
 					mat.roughness = 0.82
+					if mat.albedo_texture == null:
+						# The Sylvan Beast scan ships untextured: mossy bark from the rock scan.
+						mat.albedo_texture = load("res://assets/polyhaven/textures/mossy_rock/mossy_rock_diff_2k.jpg")
+						mat.normal_enabled = true
+						mat.normal_texture = load("res://assets/polyhaven/textures/mossy_rock/mossy_rock_nor_gl_2k.jpg")
+						mat.uv1_triplanar = true
+						mat.uv1_scale = Vector3.ONE * 1.6
+						mat.albedo_color = Color(0.95, 1.0, 0.85)
+						mat.rim = 0.35
 			else: # Ninja
 				if "Eye" in mesh.name or "Visor" in mesh.name or "Conduit" in mesh.name or "PowerPort" in mesh.name or "GreaveGlow" in mesh.name or "BackNode" in mesh.name or "Center" in mesh.name:
 					# Sharp glowing cyber-shinobi energy nodes & assassin eye slits
@@ -1514,9 +925,9 @@ func setup(p: Dictionary) -> void:
 					mat.metallic = 0.04
 
 			# ─────────────────────────────────────────────────────────────────
-			# INVERTED HULL BLACK OUTLINE PASS (GUILTY GEAR / DRAGON BALL STYLE)
+			# INVERTED HULL BLACK OUTLINE PASS (cel look)
 			# ─────────────────────────────────────────────────────────────────
-			var is_vfx_or_slit := "Eye" in mesh.name or "Rinnegan" in mesh.name or "Spark" in mesh.name or "Fire" in mesh.name or "Beam" in mesh.name or "Conduit" in mesh.name or "PowerPort" in mesh.name
+			var is_vfx_or_slit := "Eye" in mesh.name or "Rune" in mesh.name or "Spark" in mesh.name or "Fire" in mesh.name or "Beam" in mesh.name or "Conduit" in mesh.name or "PowerPort" in mesh.name
 			if not is_vfx_or_slit:
 				var outline := StandardMaterial3D.new()
 				outline.cull_mode = BaseMaterial3D.CULL_FRONT
@@ -1636,6 +1047,10 @@ func setup(p: Dictionary) -> void:
 	setup_equipment(p)
 	setup_freeze_block()
 	setup_character_vfx(p)
+	if has_meta("boss_body"):
+		load("res://scripts/boss_models.gd").decorate(self, str(p.boss))
+	elif not p.has("boss"):
+		hero_gear = HeroGear.equip(self, str(p.get("family", "")))
 
 func setup_character_vfx(p: Dictionary) -> void:
 	var fam: String = p.get("family", "")
@@ -1645,23 +1060,23 @@ func setup_character_vfx(p: Dictionary) -> void:
 	custom_attack_node = Node3D.new()
 	custom_attack_node.name = "CustomAttackVFX"
 
-	var atk_tex: Texture2D = VFX_IMPACT_SERIOUS_PUNCH
+	var atk_tex: Texture2D = VFX_IMPACT_HEAVY_PUNCH
 	var atk_size := Vector2(1.5, 1.5)
 	var atk_col := Color("ffffff")
 
-	if fam in ["zoro", "samurai_dreyar", "steel_knight", "pirate_captain"]:
+	if fam in ["jubei", "samurai_dreyar", "steel_knight", "pirate_captain"]:
 		atk_tex = VFX_SLASH_KATANA
 		atk_col = Color("67e8f9")
 		atk_size = Vector2(1.8, 1.8)
-	elif fam in ["tanjiro", "sonic", "sylvan"] or elem == "wind":
+	elif fam in ["hikaru", "zip", "sylvan"] or elem == "wind":
 		atk_tex = VFX_SLASH_WIND
 		atk_col = Color("86efac")
 		atk_size = Vector2(1.8, 1.8)
-	elif fam in ["subzero", "frost", "sorceress_medea"] or elem == "ice":
+	elif fam in ["glaciem", "frost", "sorceress_medea"] or elem == "ice":
 		atk_tex = VFX_SLASH_ICE
 		atk_col = Color("7dd3fc")
 		atk_size = Vector2(1.7, 1.7)
-	elif fam in ["charizard", "phoenix", "golem"] or elem == "fire":
+	elif fam in ["pyrax", "phoenix", "golem"] or elem == "fire":
 		atk_tex = VFX_SLASH_FIRE
 		atk_col = Color("fed7aa")
 		atk_size = Vector2(1.8, 1.8)
@@ -1673,8 +1088,8 @@ func setup_character_vfx(p: Dictionary) -> void:
 		atk_tex = VFX_IMPACT_LIGHTNING
 		atk_col = Color("e0f2fe")
 		atk_size = Vector2(1.7, 1.7)
-	elif fam in ["saitama", "mutant_titan", "warrok_brute", "martial_yaku", "monk_ganfaul"]:
-		atk_tex = VFX_IMPACT_SERIOUS_PUNCH
+	elif fam in ["bruno", "mutant_titan", "warrok_brute", "martial_yaku", "monk_ganfaul"]:
+		atk_tex = VFX_IMPACT_HEAVY_PUNCH
 		atk_col = Color("fef08a")
 		atk_size = Vector2(2.1, 2.1)
 
@@ -1696,35 +1111,35 @@ func setup_character_vfx(p: Dictionary) -> void:
 	custom_attack_node.visible = false
 	add_child(custom_attack_node)
 
-	# 2. SPECIAL ATTACK VFX (Signatures, Kamehameha, Shinra, Rasengan, etc.)
+	# 2. SPECIAL ATTACK VFX (signature beams, shockwaves, spirals …)
 	custom_special_node = Node3D.new()
 	custom_special_node.name = "CustomSpecialVFX"
 
-	var spec_tex: Texture2D = VFX_BLAST_KAMEHAMEHA
+	var spec_tex: Texture2D = VFX_BLAST_BEAM_WIDE
 	var spec_size := Vector2(2.6, 2.6)
 	var spec_col := Color("ffffff")
 
-	if fam == "goku" or fam == "vegeta":
-		spec_tex = VFX_BLAST_KAMEHAMEHA
+	if fam == "kairo" or fam == "varakh":
+		spec_tex = VFX_BLAST_BEAM_WIDE
 		spec_size = Vector2(4.5, 1.8)
 		spec_col = Color("38bdf8")
-	elif fam == "frieza":
-		spec_tex = VFX_BLAST_DEATH_BEAM
+	elif fam == "xylar":
+		spec_tex = VFX_BLAST_BEAM_NEEDLE
 		spec_size = Vector2(4.5, 1.2)
 		spec_col = Color("d946ef")
-	elif fam == "pain":
-		spec_tex = VFX_BLAST_SHINRA
+	elif fam == "oryn":
+		spec_tex = VFX_BLAST_SHOCKWAVE
 		spec_size = Vector2(3.2, 3.2)
 		spec_col = Color("c084fc")
-	elif fam == "naruto":
-		spec_tex = VFX_BLAST_RASENGAN
+	elif fam == "ren":
+		spec_tex = VFX_BLAST_SPIRAL
 		spec_size = Vector2(2.4, 2.4)
 		spec_col = Color("60a5fa")
-	elif fam in ["subzero", "frost", "sorceress_medea"]:
+	elif fam in ["glaciem", "frost", "sorceress_medea"]:
 		spec_tex = VFX_IMPACT_ICE_SPIKES
 		spec_size = Vector2(2.8, 2.8)
 		spec_col = Color("93c5fd")
-	elif fam in ["zoro", "samurai_dreyar"]:
+	elif fam in ["jubei", "samurai_dreyar"]:
 		spec_tex = VFX_SLASH_WIND
 		spec_size = Vector2(3.0, 3.0)
 		spec_col = Color("4ade80")
@@ -1732,11 +1147,11 @@ func setup_character_vfx(p: Dictionary) -> void:
 		spec_tex = VFX_SLASH_BLOOD
 		spec_size = Vector2(3.2, 3.2)
 		spec_col = Color("f43f5e")
-	elif fam in ["saitama", "mutant_titan", "warrok_brute"]:
-		spec_tex = VFX_IMPACT_SERIOUS_PUNCH
+	elif fam in ["bruno", "mutant_titan", "warrok_brute"]:
+		spec_tex = VFX_IMPACT_HEAVY_PUNCH
 		spec_size = Vector2(3.5, 3.5)
 		spec_col = Color("fbbf24")
-	elif fam in ["charizard", "phoenix", "golem"]:
+	elif fam in ["pyrax", "phoenix", "golem"]:
 		spec_tex = VFX_SLASH_FIRE
 		spec_size = Vector2(3.0, 3.0)
 		spec_col = Color("fb923c")
@@ -1845,6 +1260,112 @@ func _normalize_by_head(target_h: float) -> void:
 	if ratio < 0.8 or ratio > 1.25:
 		model.scale *= ratio
 		base_model_scale = model.scale
+
+## Tripo scans (and the gold golem) come centred on their origin and, when rigged, as
+## quadrupeds whose "head" bone is not near the top, so neither mesh height nor head
+## height fits them. They are fitted by their real bounds instead.
+static func _is_scanned_model(family: String) -> bool:
+	return family.begins_with("tripo_") or family == "golden_golem"
+
+## Scan creatures are bigger than humanoids but must not fill the stage.
+const SCAN_HEIGHT := {"tripo_dragon_blue": 2.3, "tripo_skeleton_dog": 1.9, "tripo_nine_tailed": 2.2, "tripo_quadruped_tree": 2.3}
+const SCAN_MAX_WIDTH := 3.2
+## Scans face +X; Mixamo bodies (and the facing logic in update_state) face +Z.
+const SCAN_YAW := -90.0
+const SCAN_YAW_OVERRIDE := {"tripo_skeleton_dog": 180.0}
+
+## Bounds of all meshes in this view's space (skinned meshes in their bind pose).
+func _model_bounds() -> AABB:
+	var inv: Transform3D = global_transform.affine_inverse()
+	var box := AABB()
+	var first := true
+	for m in model.find_children("*", "MeshInstance3D", true, false):
+		if m.mesh == null: continue
+		var b: AABB = inv * m.global_transform * m.mesh.get_aabb()
+		box = b if first else box.merge(b)
+		first = false
+	return box
+
+## Statue scans stand on a display base; this share of their height is cut away.
+const PEDESTAL_CUT := {"tripo_nyx_harvester": 0.12, "tripo_fantasy_female": 0.05, "tripo_wooden_forest": 0.03, "tripo_nine_tailed": 0.14}
+static var _cut_meshes := {}
+## Lowest kept point per family, as a share of the uncut height (the vertex arrays and so
+## the mesh bounds still include the removed base).
+static var _cut_floor := {}
+## Cutting a million-vertex scan takes seconds, so the result is baked here once.
+const CUT_DIR := "res://assets/models/cut"
+
+## Drops every triangle that lies completely below the cut height (view space), and flat
+## ones a little above it: the top face of a base sits where the feet stand.
+func _cut_pedestal(family: String) -> void:
+	var box: AABB = _model_bounds()
+	var cut_y: float = box.position.y + box.size.y * float(PEDESTAL_CUT[family])
+	var flat_y: float = box.position.y + box.size.y * float(PEDESTAL_CUT[family]) * 1.3
+	var inv: Transform3D = global_transform.affine_inverse()
+	var lowest := INF
+	var k := 0
+	for m in model.find_children("*", "MeshInstance3D", true, false):
+		if m.mesh == null: continue
+		var key := "%s/%d" % [family, k]
+		var baked := "%s/%s_%d.res" % [CUT_DIR, family, k]
+		k += 1
+		if not _cut_meshes.has(key) and ResourceLoader.exists(baked):
+			_cut_meshes[key] = load(baked)
+		if not _cut_meshes.has(key):
+			var xf: Transform3D = inv * m.global_transform
+			var out := ArrayMesh.new()
+			for s in range(m.mesh.get_surface_count()):
+				var arrays: Array = m.mesh.surface_get_arrays(s)
+				var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+				var idx: PackedInt32Array = arrays[Mesh.ARRAY_INDEX] if arrays[Mesh.ARRAY_INDEX] != null else PackedInt32Array(range(verts.size()))
+				var pos := PackedVector3Array()
+				pos.resize(verts.size())
+				for v in range(verts.size()):
+					pos[v] = xf * verts[v]
+				var kept := PackedInt32Array()
+				for t in range(0, idx.size() - 2, 3):
+					var a: Vector3 = pos[idx[t]]
+					var b: Vector3 = pos[idx[t + 1]]
+					var c: Vector3 = pos[idx[t + 2]]
+					var top: float = maxf(a.y, maxf(b.y, c.y))
+					if top < cut_y: continue
+					if top < flat_y:
+						var n: Vector3 = (b - a).cross(c - a)
+						if n.length_squared() > 0.0 and absf(n.normalized().y) > 0.85: continue
+					kept.append(idx[t]); kept.append(idx[t + 1]); kept.append(idx[t + 2])
+					lowest = minf(lowest, minf(a.y, minf(b.y, c.y)))
+				if kept.is_empty(): continue
+				arrays[Mesh.ARRAY_INDEX] = kept
+				out.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays, [], {}, m.mesh.surface_get_format(s) & Mesh.ARRAY_FLAG_USE_8_BONE_WEIGHTS)
+				out.surface_set_material(out.get_surface_count() - 1, m.mesh.surface_get_material(s))
+			if lowest < INF: out.set_meta("floor", (lowest - box.position.y) / box.size.y)
+			DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(CUT_DIR))
+			ResourceSaver.save(out, baked, ResourceSaver.FLAG_COMPRESS)
+			_cut_meshes[key] = out
+		m.mesh = _cut_meshes[key]
+		if m.mesh.has_meta("floor"): lowest = minf(lowest, box.position.y + box.size.y * float(m.mesh.get_meta("floor")))
+	if lowest < INF: _cut_floor[family] = (lowest - box.position.y) / box.size.y
+
+## Scales a scan to its target height (capped in width) and stands it on the floor.
+func _fit_scanned_model(family: String, target_h: float) -> void:
+	if not is_inside_tree(): return
+	var turn := Basis(Vector3.UP, deg_to_rad(float(SCAN_YAW_OVERRIDE.get(family, SCAN_YAW))))
+	for c in model.get_children():
+		if c is Node3D: c.transform = Transform3D(turn, Vector3.ZERO) * c.transform
+	if PEDESTAL_CUT.has(family): _cut_pedestal(family)
+	var box: AABB = _model_bounds()
+	if box.size.y <= 0.01: return
+	var ratio: float = float(SCAN_HEIGHT.get(family, target_h)) / box.size.y
+	var wide: float = maxf(box.size.x, box.size.z) * ratio
+	if wide > SCAN_MAX_WIDTH: ratio *= SCAN_MAX_WIDTH / wide
+	model.scale *= ratio
+	base_model_scale = model.scale
+	# Lift the children: model.position.y itself is animated every frame.
+	var fitted: AABB = _model_bounds()
+	var floor_y: float = fitted.position.y + fitted.size.y * float(_cut_floor.get(family, 0.0))
+	var lift: float = -floor_y / maxf(0.001, model.scale.y)
+	for c in model.get_children():
+		if c is Node3D: c.position.y += lift
 
 func _char_dir(v: Vector3) -> Vector3:
 	return (rig_right * v.x + rig_up * v.y + rig_forward * v.z).normalized()
@@ -2168,6 +1689,8 @@ func _pose_targets(pose: String, t: float, p: float) -> Dictionary:
 func update_procedural_skeleton(pose: String, delta: float, facing: float, is_frozen: bool) -> void:
 	if skeleton == null or is_frozen: return
 	if animation != null and animation.is_playing() and clip_map.has(pose): return
+	# Humanoid poses only: on quadruped rigs (no arm bones) they would stand the spine upright.
+	if not (bone_map.has("left_arm") and bone_map.has("right_arm")): return
 	if not rig_ready: _prepare_rig()
 	if pose != proc_pose:
 		proc_pose = pose
@@ -2188,6 +1711,13 @@ func _process(delta: float) -> void:
 		glow_materials[i].emission_energy_multiplier = base_em * pulse
 
 func update_state(state: Dictionary, delta: float) -> void:
+	if profile.has("boss") and not has_meta("boss_body"):
+		position.x = state.x
+		position.y = state.get("y", 0.0)
+		var cam := get_viewport().get_camera_3d() if is_inside_tree() else null
+		model.apply_state(state, cam.global_position if cam else Vector3(0, 1.5, 8))
+		visible = state.get("state", "") != "Defeated" or visible
+		return
 	position.x = state.x
 	position.y = state.get("y", 0.0)
 	var target_rot: float = state.facing * 0.65
@@ -2227,18 +1757,6 @@ func update_state(state: Dictionary, delta: float) -> void:
 		model.visible = true
 
 	var pose: String = state.pose
-	if sonic_spin_sphere:
-		sonic_spin_sphere.visible = (pose == "SpecialAttack")
-	for cnode in akaza_compass_nodes:
-		cnode.visible = (pose == "SpecialAttack")
-	if blue_eyes_burst_beam:
-		blue_eyes_burst_beam.visible = (pose == "SpecialAttack")
-	if frieza_death_beam:
-		frieza_death_beam.visible = (pose == "SpecialAttack")
-	if frieza_supernova:
-		frieza_supernova.visible = (pose == "SpecialAttack")
-	if charizard_flame:
-		charizard_flame.scale = Vector3.ONE * (1.5 if pose in ["SpecialAttack", "Attack"] else 1.0)
 
 	if custom_attack_node:
 		var is_atk: bool = (pose in ["Attack", "LightAttack"])
@@ -2310,6 +1828,7 @@ func update_state(state: Dictionary, delta: float) -> void:
 	var hip_drop: float = {"Sweep": -0.4, "SlashLow": -0.32, "Crouch": -0.28, "Counter": -0.18, "Slam": -0.22, "Dodge": -0.3, "Beam": -0.1}.get(pose, 0.0)
 	model.position.y += hip_drop * (1.0 if pose == current_pose else 0.0)
 
+	if hero_gear != null: hero_gear.apply_state(state)
 	if shield:
 		var is_blocking: bool = state.get("blocking", false)
 		shield.visible = is_blocking
@@ -2318,6 +1837,10 @@ func update_state(state: Dictionary, delta: float) -> void:
 			shield.rotation.y = state.facing * 0.65
 
 func flash() -> void:
+	if profile.has("boss") and not has_meta("boss_body"):
+		model.flash()
+		return
+	if hero_gear != null: hero_gear.flash()
 	for i in range(glow_materials.size()):
 		var mat: StandardMaterial3D = glow_materials[i]
 		mat.emission_energy_multiplier = 4.0

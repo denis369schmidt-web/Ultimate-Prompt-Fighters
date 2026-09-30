@@ -2,8 +2,8 @@ extends SceneTree
 
 func _initialize():
 	var models = [
-		"subzero", "goku", "golden_golem", "tripo_dragon_blue",
-		"tripo_cat_girl", "tripo_fran_statue", "tripo_nyx_harvester",
+		"glaciem", "kairo", "golden_golem", "tripo_dragon_blue",
+		"tripo_cat_girl", "lepora", "tripo_nyx_harvester",
 		"tripo_white_sci", "tripo_skeleton_dog", "tripo_wooden_forest",
 		"tripo_nine_tailed", "tripo_quadruped_tree"
 	]

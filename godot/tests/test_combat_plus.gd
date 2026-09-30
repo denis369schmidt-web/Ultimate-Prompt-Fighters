@@ -47,7 +47,7 @@ func test_shield() -> void:
 	place(b, 1.0, 0.0, -1)
 	m.tick([cmd(), cmd({"block": true})])
 	m.tick([cmd(), cmd({"block": true})])
-	check(b.blocking and b.shield_hp < Combat.SHIELD_MAX, "holding shield raises it and drains it")
+	check(b.blocking and b.shield_hp < Combat.SHIELD_MAX * float(b.phys.shield), "holding shield raises it and drains it")
 	for n in range(12): m.tick([cmd(), cmd({"block": true})]) # past the parry window
 	var before: float = b.shield_hp
 	m.queue_attack(0, false)
@@ -267,7 +267,7 @@ func test_short_hop_and_fast_fall() -> void:
 	check(heights[1] < heights[0] * 0.8, "releasing jump early is a short hop (%.2f vs %.2f m)" % [heights[1], heights[0]])
 	var m = match_ready()
 	var f: Dictionary = m.fighters[0]
-	place(f, -3.0, 3.0)
+	place(f, -5.0, 3.0) # no platform below
 	f.is_grounded = false
 	f.vy = 0.5
 	m.tick([cmd({"down": true}), cmd()])
@@ -365,7 +365,7 @@ func test_finisher() -> void:
 	check(off.result == 0 and not off.finish_phase, "with finishers disabled the last KO ends the match at once")
 
 func test_weapons() -> void:
-	check(Combat.WEAPONS.size() == 8, "8 arena weapons exist (5 swords + 3 others)")
+	check(Combat.base_weapons().size() == 8, "8 arena weapons exist (5 swords + 3 others)")
 	# Pick up a sword with grab and hit harder than bare-handed.
 	var dealt := []
 	for armed in [false, true]:
@@ -489,13 +489,13 @@ func test_signatures() -> void:
 	check(mechs.size() >= 14, "at least 14 different special mechanics (%d)" % mechs.size())
 	var prompts := {
 		"ninja": "Blitzschneller Schattenninja mit elektrischen Klingen", "golem": "Gepanzerter Lavagolem mit brennenden Fäusten",
-		"goku": "Kairo der Sturmmönch mit Solar-Kanone", "luffy": "Tobi der Gummikapitän mit Schleuderfaust",
-		"akaza": "Raiga der Kompassdämon mit Kompassnova", "tripo_quadruped_tree": "Sylvan Beast Treant quadruped creature Tripo",
+		"kairo": "Kairo der Sturmmönch mit Solar-Kanone", "tobi": "Tobi der Gummikapitän mit Schleuderfaust",
+		"raiga": "Raiga der Kompassdämon mit Kompassnova", "tripo_quadruped_tree": "Sylvan Beast Treant quadruped creature Tripo",
 		"wizard_sorcerer": "Erzmagier Pyrus Feuerzauberer mit Meteorschlag und Flammenstab", "nekra": "Nekra die Seelenhirtin mit Knochengarten",
 		"grimbolt": "Grimbolt der Goblin-Tüftler mit Zeitbombe", "echo": "Echo das Hologramm mit Phasentausch",
 		"kettenwart": "Kettenwart der Kerkermeister mit Seelenketten", "don_valente": "Don Valente der Unterweltpate mit Leibwächter-Geschütz",
-		"naruto": "Ren der Wirbelfuchs mit Spiralkern", "sasuke": "Kage der Donnerklinge mit Tausend Funken",
-		"pain": "Oryn der Schwerkraftprophet mit Abstoßungswelle", "anubis": "Jackal God Anubis wielding dual Khopesh",
+		"ren": "Ren der Wirbelfuchs mit Spiralkern", "amethya": "Kage der Donnerklinge mit Tausend Funken",
+		"oryn": "Oryn der Schwerkraftprophet mit Abstoßungswelle", "anubis": "Jackal God Anubis wielding dual Khopesh",
 	}
 	for fam in prompts:
 		var m = sig_match(prompts[fam])
@@ -532,7 +532,9 @@ func test_signatures() -> void:
 	m = sig_match("Raiga der Kompassdämon mit Kompassnova")
 	place(m.fighters[1], -0.5, 0.0, 1)
 	m.queue_attack(0, true)
-	for n in range(10): m.tick(idle_commands())
+	for n in range(40):
+		m.tick(idle_commands())
+		if m.fighters[0].counter > 0.0: break
 	m.fighters[1].cooldowns = [0.0, 0.0]
 	m.queue_attack(1, false)
 	var countered := false

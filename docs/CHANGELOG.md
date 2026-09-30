@@ -4,6 +4,69 @@ Format: neueste Einträge oben. Jeder Schritt nennt Spieler-Wirkung und technisc
 
 ## [Unreleased]
 
+### Schritt 10 – Göttliche Prüfung, 19 Bosse, Startmenü, Shop, Arenen, Belohnungssysteme (2026-09-30)
+
+**Storymodus „DIE GÖTTLICHE PRÜFUNG“** (`story_divina.gd`, frei nach Dante): 21 Kapitel – Prolog im dunklen Wald (Wölfin, Vergil), INFERNO durch neun Höllenkreise (10 Dämonenfürsten), Aufstieg durch den Erdmittelpunkt, PARADISO mit Beatrice durch neun Himmelssphären (9 Engelschöre), Epilog im Empyreum. Kampagnen-Reiter im Storymenü; Prolog, Hölle und Himmel sind jeweils direkt startbar, die Kapitel eines Reichs schalten nacheinander frei. Story-Kämpfe gegen Bosse mit Verbündetem (Vergil bzw. Beatrice).
+
+**19 Bosse** (`bosses.gd`): Himmel – Angelus, Michael, Principatus, Potestas, Virtus, Dominatio, Ophaniel, Keruvim, Seraphael; Hölle – Ahriman, Lilith, Asmodeus, Beelzebub, Mammon, Baphomet, Belphegor, Bel Marduk, Leviathan, Luzifer. Datengetriebene Angriffsmuster (Hieb, Salven, Regen, Schwärme, Sturm/Sog, Sturzflug, Walze, Ringwelle, Strahl, Säulen, Nova, Trägheitsfeld). Humanoide Bosse auf modellierten, animierten Körpern mit Stil „lebende Statue“ (Marmor, Gold, Silber, Obsidian mit glühenden Adern, Bronze, Knochen, Frost), dekoriert mit Federflügeln/Fledermausflügeln, Heiligenschein, Hörnern, Krone; Ahriman = Marmorbüsten-Scan, Leviathan = Drachenmodell; Seraph/Ophan/Cherub/Fliege prozedural mit gemalten Federn, Irisfasern, geäderten Augen. 5 neue Boss-Arenen (Höllentor, Flammenkreis, Stadt Dis, Cocytus, Himmelssphären). Boss-Menü mit Himmels-/Höllen-Rush.
+
+**Startmenü**: Startbildschirm „DRÜCKE START“, danach das Hauptmenü im gewählten Hintergrund – das ins Bild gemalte Menü (STORY · VERSUS · EXTRAS · OPTIONS · SHOP · CREDITS) ist klickbar und per Pad bedienbar.
+
+**Shop** (`backgrounds.gd`, `rewards.gd`): 23 Startmenü-Hintergründe (aus den Vorlagen geschnitten, hochskaliert), jeder schaltet seine **spielbare Arena** frei (13 Motiv-Baukästen: Neon-Gasse, Tempel/Dschungel, Holo-Stadt, Lagerhalle/Eiswerk, Stadion, Orbitalring, Dächer/Sturm, Kolosseum, Polarlicht, Hangar, Kriegsgebiet/Ruinen, Dojo, Gießerei). **8 neue Waffen** (Schattenkatana, Frostaxt, Feuerpeitsche, Kristallbogen, Drachenlanze, Seelensense, Donnerhammer, Plasmakanone) – gekauft spawnen sie in allen Arenen, eine als Startwaffe. **14 Skins** (Gold, Chrom, Marmor, Smaragd, Frost, Obsidian, Neon, Schatten, Lava, Kristall, Geist, Galaxie + 2 Pfad-exklusive). Glückstruhe, XP-Booster.
+
+**Belohnungssysteme**: Münzen für jeden Kampf (¼ der XP), Bosse, Story-Kapitel; Level-up-Münzen und alle 5 Level eine Truhe; Erfolge zahlen 100 Münzen; Siegesserie bis ×1,5; Kampfnote S–D als Münz-Multiplikator; erster Sieg des Tages; Kopfgeld-Kämpfer des Tages; Liga (Bronze → Champion) mit Aufstiegsbelohnungen; 7-Tage-Login-Kalender; Glücksrad (täglich gratis, Jackpot); Tages- und Wochenaufgaben; Ruhmespfad mit 30 Stufen; Meisterschafts-Sterne pro Kämpfer zahlen Münzen; 12 Titel; Sammlungsfortschritt; 7 neue Erfolge. Alles unter EXTRAS bzw. SHOP, Hinweise im Hauptmenü, ausführliche Belohnungsübersicht nach jedem Kampf.
+
+**Controller**: Alle Menüs per Pad – Leuchtrahmen springt per Steuerkreuz zum nächsten Knopf, A drückt, B zurück; Kämpferauswahl: LB/RB Arena, ⧉ Modus, R3 Teams, X Bosse, B Hauptmenü; Storydialoge A weiter, B überspringen, Wiederholen/Aufgeben per A/B.
+
+Tests: 10 Suiten (neu: divina, shop, rewards).
+
+### Schritt 9 – Paket 2, Team-Modi, Engel-Bosse (2026-09-30)
+
+**Paket 2 – Ki-Kämpfer & Ninjas** (Kits in `fighter_kits.gd`, Mechaniken in `combat.gd`, Finisher-Filme in `main.gd`):
+
+| Kämpfer | Archetyp | Signatur (neue Mechanik) | Finisher |
+|---|---|---|---|
+| Kairo | Allrounder, ↓Spezial lädt Super | **Aufladbarer Strahl**: Spezial halten → länger/stärker, voll geladen bühnenweit | SOLARFLUT ← → Schlag |
+| Varakh | Druck-Zoner | **Ki-Salve**: 6 gezielte Schüsse, der letzte explodiert · ↓Spezial Stolzexplosion (Rüstung) | STERNENFALL ↑ ↓ Schlag |
+| Xylar | schwebender Zoner (3 Luftsprünge) | **Nova-Kugel**: wächst über dem Kopf, wird geworfen; größer = mehr Schaden/Explosion · →Smash Todesfinger-Schuss | SUPERNOVA ↑ ↑ Schlag |
+| Ren | Trickser | **Schattendoppelgänger**: stürmt vor, bleibt stehen und kopiert 5 s lang Rens Angriffe · ↓Spezial Platztausch mit dem Klon | SCHATTENARMEE → ← Spezial |
+| Amethya | Rushdown | **Donnerpfad**: Dash hinterlässt elektrische Funkenspur · ↓Spezial Donnerkäfig (lähmt) | DONNERSTURZ ↓ ← Spezial |
+| Oryn | Kontrolle | **Singularität**: zieht Gegner an, explodiert · ↓Spezial Abstoßung (wirft Geschosse zurück) | PLANETENBANN ← ↑ Spezial |
+| Bruno | Punisher | **Ernstfall-Schlag**: durchbricht Schild, Knockback wächst mit Prozent, ab 120 % sicherer K.O. | ERNSTER SCHLAG → ↓ Schlag |
+
+**Team-Modi:** Knopf „Spieler“ schaltet 1 gegen 1 → 4er-FFA → **Team 2 gegen 2** → **Team 3 gegen 1** (Einzelkämpfer +50 % Kraft, −40 % Knockback). Kein Friendly Fire, Team-Kürzel [A]/[B] im HUD, „TEAM A GEWINNT!“.
+
+**Bosskampf – biblisch korrekte Engel** (`bosses.gd` Daten, `boss_models.gd` prozedurale Körper, Boss-KI in `combat.gd`): Helden (Slots 1–2, bei 4 Spielern 1–3; KI-Verbündete oder Koop) gegen einen Engel mit Lebensleiste, keine Knockback-Wirkung, Phase 2 ab 50 %, 300 s Zeit. Jeder Angriff wird mit roten Gefahrenzonen/Ringen vorgewarnt.
+- **KERUVIM · Wächter des Tores** (Himmelspforte): vier Gesichter, Flammenschwert – Schwerthieb, Feueratem in 8 Richtungen, Flügelsturm, Sturzflug mit Beben.
+- **OPHANIEL · Der Räderthron** (Räderhimmel): drei Goldräder voller Augen – Augenlaser, Radwalze quer über die Bühne, Ringwelle, Augensturm.
+- **SERAPHAEL · Das brennende Auge** (Empyreum): Riesenauge in sechs Flügeln – Richtstrahl, Federregen, Feuersäulen unter jedem Helden, Heilige Nova.
+- Boss-Menü (👁 BOSSKAMPF, Pad: X) mit Einzelbossen und **Boss-Rush**; nach einem Sieg „NÄCHSTER BOSS ▶“. Drei eigene Boss-Arenen.
+- Boss-Optik: gezeichnete Federn, Irisfasern, geäderte Augäpfel, gehämmertes Gold, Stofffalten (alles im Code erzeugt), runde Glutpartikel; Augen folgen der Kamera. 2× MSAA für glatte Kanten.
+
+Tests: 569/569 (neu: `test_bosses.gd` 34, `test_kits.gd` 142).
+
+### Schritt 8 – Kit-System, Paket 1 (Story-Besetzung), Xbox-Standardsteuerung (2026-09-30)
+
+**Paket 0 – Kit-System** (`scripts/fighter_kits.gd`): pro Kämpfer Archetyp, Gewicht, Lauftempo, Angriffsnamen, Bewegungsphysik (Sprungkraft, Schwerkraft, Fast-Fall, Luftbeweglichkeit, Luftsprünge, Laufgeschwindigkeit, Schildgröße), eigenes Moveset (15 Angriffe mit Frame-Daten, Hitbox, Winkel, Knockback) und eigener Finisher. Kämpfer ohne Kit spielen unverändert. Neue Kampfbausteine in `combat.gd`: Rüstung auf Angriffen und als Buff, Schüsse aus normalen Angriffen, Ausweich-Blink, Selbst-Buffs (Wut, Rüstung, Konter), zweistufige Specials, Signatur-Mechaniken als Up/Down-Special. Luftdash-Auftrieb skaliert mit der Schwerkraft (gleiche Rückkehrhöhe für alle).
+
+**Paket 1 – 7 Kämpfer mit eigener Identität** (Signaturen in `signatures.gd`, Finisher-Filme in `main.gd`):
+
+| Kämpfer | Archetyp | Signatur (neue Mechanik) | Finisher |
+|---|---|---|---|
+| Volt Ninja | Rushdown: hoher Sprung, schneller Fall | **Raijin-Mal**: Kunai markiert, Spezial erneut = Blitzschlag hinter das Ziel · ↓Spezial Rauchtausch (Blink + unverwundbar) | RAIJIN-HINRICHTUNG ← → Spezial |
+| Boltar | Allrounder, 3 Luftsprünge, schwebend | **Lichtspeer**: Speer steckt im Boden, Spezial erneut = Rückruf mit Treffern, Fangen = sofort wieder bereit | LICHTURTEIL ↑ ↑ Spezial |
+| Magmor | Schwergewicht mit Rüstung | **Magmaklumpen** hinterlässt Lavapfütze; **Glut-Anzeige** füllt sich bei Treffern → KERNSCHMELZE · ↓Spezial Magmapanzer | VULKANGRAB ↓ ↓ Spezial |
+| Seraphine | Mix: Säbel & Pistole (→Tilt schießt) | **Enterhaken**: zieht sie zum Gegner + Enterstiefel · ↓Spezial Kanonenschlag von hinten | BREITSEITE ← ← Schlag |
+| Cardinal | Verteidiger, großer Schild | **Schildwall**: Treffer von vorn wirkungslos, Geschosse werden reflektiert, dann Schildstoß · ↓Spezial Konter | SCHILDRICHTER → → Schlag |
+| Kommandant | Punisher, lange Klinge | **Iaido-Haltung**: wer in Reichweite tritt, wird im Vorbeiziehen niedergeschnitten · ↓Spezial Windklinge | TAUSEND SCHNITTE ← ↓ Spezial |
+| Warrok | schwerstes Schwergewicht, Rüstung | **Titanensprung**: springt auf den Gegner, Landebeben trifft alle am Boden · ↓Spezial Kriegsschrei | ERDBRECHER ↓ ↑ Schlag |
+
+Die KI nutzt die zweiten Stufen (Blitzschlag, Rückruf, Kernschmelze). Auswahlmenü zeigt Archetyp und Gewicht, HUD zeigt Magmors Glut.
+
+**Xbox-Standardsteuerung** (Genre-Standard wie Smash/Brawlhalla): Stick/Steuerkreuz bewegen, Stick nach oben = Sprung (Tap-Jump), A Schlag, B Spezial, X/Y Sprung, **LB/RB Greifen**, **LT/RT Schild**, **rechter Stick = Smash-Angriffe** (in der Luft Luftangriffe), ☰ Pause. Menüs komplett per Pad: Cursor pro Controller, A wählen, Y Zufall, B zurück, ☰ Kampf starten; Pause: B weiter, ⧉ zur Auswahl; Ergebnis: A Revanche, B Auswahl.
+
+Tests: 475/475 (neu: `test_kits.gd` 82). Visuelle Prüfung: `tests/render_kits.gd`.
+
 ### Schritt 7 – Profi-Assets und AAA-Beleuchtung (2026-09-29)
 
 - **Poly Haven (CC0):** 8 HDRIs, 16 gescannte 2K-PBR-Materialsätze und 33 professionelle 3D-Modelle (`scripts/fetch_polyhaven_assets.py`, Lizenzen in `ASSET_LICENSES.md`).

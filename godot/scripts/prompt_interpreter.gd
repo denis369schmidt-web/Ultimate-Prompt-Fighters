@@ -1,6 +1,8 @@
 extends RefCounted
 ## Pure local provider. Replace interpret() with a validated provider later, never execute prompt text.
 
+const FighterKits = preload("res://scripts/fighter_kits.gd")
+
 const STAT_KEYS = ["vitality", "power", "defense", "speed", "technique"]
 const ELEMENTS = {
 	"electric": ["blitz", "elektr", "electric", "storm"],
@@ -22,7 +24,7 @@ static func interpret(raw: Variant, slot: int = 0) -> Dictionary:
 	var skeleton_reaper_early := has_any(lower, ["skeleton reaper", "skelettkrieger", "skelett schnitter"])
 	var sylvan_early := has_any(lower, ["sylvan beast", "quadruped", "sylvan", "tree beast"])
 	var golden_golem := has_any(lower, ["golden golem", "gold golem", "goldener golem", "aureus", "gold titan", "tripo golem", "golden armored golem", "golden armor golem", "gold golem"])
-	var fran := has_any(lower, ["fran", "viera", "final fantasy", "viera warrior", "rabbit warrior", "fran archer", "fran viera"])
+	var fran := has_any(lower, ["lepora", "mondjägerin", "mondbogen", "moon huntress", "huntress bow"])
 	var thorn_witch := not sorceress_medea_early and has_any(lower, ["thorn witch", "bramble", "sorceress", "dornenhexe", "cracked skin", "thorn", "thorn sorceress"])
 	var nyx_harvester := not skeleton_reaper_early and has_any(lower, ["nyx", "harvester", "soul harvester", "winged demon", "seelenernter", "nyx harvester"])
 	var cat_girl := has_any(lower, ["cat girl", "katzenkriegerin", "feline", "kitsune warrior", "cat warrior", "kitsune"])
@@ -33,27 +35,27 @@ static func interpret(raw: Variant, slot: int = 0) -> Dictionary:
 	var nine_tailed := has_any(lower, ["nine tailed", "nine-tailed fox", "neunschwaenzig", "celestial fox", "celestial kyuubi"])
 	var sylvan_beast := has_any(lower, ["sylvan beast", "quadruped", "sylvan", "tree beast"])
 
-	var vegeta := has_any(lower, ["varakh", "sternenprinz", "nova-strahl", "vegeta", "prinz vegeta", "final flash", "galick gun", "big bang attack", "saiyan prince", "saiyajin prinz"])
-	var goku := not vegeta and has_any(lower, ["kairo", "sturmmönch", "solar-kanone", "goku", "son goku", "saiyajin", "saiyan", "kakarot", "ultra ego", "kamehameha", "ultra instinct", "ssj"])
-	var frieza := not vegeta and not goku and has_any(lower, ["xylar", "leerenkaiser", "nadelstrahl", "freezer", "frieza", "death beam", "death ball", "supernova", "golden frieza", "kaiser des universums", "imperator frieza"])
-	var luffy := not goku and not vegeta and not frieza and has_any(lower, ["tobi der", "gummikapitän", "schleuderfaust", "luffy", "ruffy", "straw hat", "strohhut", "gum gum", "gum-gum", "one piece", "mugiwara", "gum gum pistole"])
-	var zoro := not goku and not vegeta and not luffy and not frieza and has_any(lower, ["jubei", "dreiklingen", "tigerschnitt", "zoro", "roronoa", "santoryu", "drei schwerter", "three sword", "katana", "enma", "wado ichimonji", "onigiri"])
-	var naruto := not goku and not vegeta and not luffy and not zoro and not frieza and has_any(lower, ["wirbelfuchs", "spiralkern", "naruto", "uzumaki", "rasengan", "hokage", "kyuubi", "kurama", "sage mode", "schattendoppelgänger", "shadow clone"])
-	var pain := not goku and not vegeta and not luffy and not zoro and not naruto and not frieza and has_any(lower, ["oryn", "schwerkraftprophet", "abstoßungswelle", "pain", "nagato", "akatsuki", "tendo", "deva path", "shinra tensei"])
-	var sasuke := not goku and not vegeta and not luffy and not zoro and not naruto and not pain and not frieza and has_any(lower, ["donnerklinge", "tausend funken", "kage der", "sasuke", "uchiha", "chidori", "sharingan", "kusanagi", "amaterasu", "chidori blitz"])
-	var saitama := not goku and not vegeta and not luffy and not zoro and not naruto and not pain and not sasuke and not frieza and has_any(lower, ["bruno", "einschlag-held", "ernstfall", "saitama", "one punch", "serious punch", "caped baldy", "glatze", "hero for fun", "ernster schlag"])
-	var tanjiro := not goku and not vegeta and not luffy and not zoro and not naruto and not pain and not sasuke and not saitama and not frieza and has_any(lower, ["hikaru", "sonnentänzer", "morgenrot", "tanjiro", "kamado", "hinokami", "sonnenatmung", "wasseratmung", "nichirin", "hanafuda", "kagura"])
-	var subzero := not goku and not vegeta and not luffy and not zoro and not naruto and not sasuke and not saitama and not tanjiro and not frieza and has_any(lower, ["glaciem", "frostassassine", "eissplitter", "sub zero", "subzero", "sub-zero", "cryomancer", "ice ninja", "lin kuei", "kori", "mortal kombat"])
-	var sonic := not goku and not vegeta and not luffy and not zoro and not naruto and not sasuke and not saitama and not tanjiro and not subzero and not pain and not frieza and has_any(lower, ["tempoigel", "turbo-rolle", "zip der", "sonic", "hedgehog", "blue blur", "spin dash", "sega", "chaos emerald", "supersonic"])
-	var akaza := not goku and not vegeta and not luffy and not zoro and not naruto and not sasuke and not saitama and not tanjiro and not subzero and not pain and not sonic and not frieza and has_any(lower, ["raiga", "kompassdämon", "kompassnova", "akaza", "akaze", "upper rank", "upper moon", "hakai satsu", "compass needle", "soryu", "demon slayer", "kimetsu", "destructivedeath"])
-	var blue_eyes := not goku and not vegeta and not luffy and not zoro and not naruto and not sasuke and not saitama and not tanjiro and not subzero and not pain and not sonic and not akaza and not frieza and has_any(lower, ["albion", "silberwyrm", "sturmstrahl", "weiße drache", "weisse drache", "weisser drache", "weißer drache", "blue-eyes", "blue eyes", "white dragon", "burst stream", "white lightning", "yu-gi-oh", "yugioh", "kaiba", "eiskalten blick", "eiskalter blick"])
-	var anubis := not goku and not vegeta and not luffy and not zoro and not naruto and not sasuke and not saitama and not tanjiro and not subzero and not pain and not sonic and not akaza and not blue_eyes and not frieza and has_any(lower, ["anubis", "jackal", "khopesh", "ägyptisch", "egypt", "pharaoh", "pharao", "underworld", "unterwelt", "osiris", "jackal god"])
-	var phoenix := not goku and not vegeta and not luffy and not zoro and not naruto and not sasuke and not saitama and not tanjiro and not subzero and not pain and not sonic and not akaza and not blue_eyes and not anubis and not frieza and has_any(lower, ["phoenix", "phönix", "empress", "kaiserin", "glaive", "fire queen", "firebird", "feuervogel", "fenix"])
-	var specter := not goku and not vegeta and not luffy and not zoro and not naruto and not sasuke and not saitama and not tanjiro and not subzero and not pain and not sonic and not akaza and not blue_eyes and not anubis and not phoenix and not frieza and has_any(lower, ["specter", "spectre", "void lance", "phantom warrior", "kristall phantom", "wraith", "crystal"])
-	var valkyrie := not goku and not vegeta and not luffy and not zoro and not naruto and not sasuke and not saitama and not tanjiro and not subzero and not pain and not sonic and not akaza and not blue_eyes and not anubis and not phoenix and not specter and not frieza and has_any(lower, ["valkyrie", "walküre", "moe", "angel", "engel", "lichtflügel", "waifu"])
-	var charizard := not goku and not vegeta and not luffy and not zoro and not naruto and not sasuke and not saitama and not tanjiro and not subzero and not pain and not sonic and not akaza and not blue_eyes and not frieza and has_any(lower, ["pyrax", "glutwyvern", "glutsturm", "glurak", "charizard", "feuerdrache", "fire dragon", "flammenwurf", "fire blast", "seismic toss", "feuer-drache", "pokemon"])
-	var dragon := not goku and not vegeta and not luffy and not zoro and not naruto and not sasuke and not saitama and not tanjiro and not subzero and not pain and not sonic and not akaza and not blue_eyes and not anubis and not phoenix and not specter and not valkyrie and not frieza and not charizard and (has_any(lower, ["drachenritter", "drake", "wyrm", "slayer", "drakon", "drache"]) or (lower.contains("dragon") and not lower.contains("dragon ball") and not lower.contains("dragonball")))
-	var heavy := not goku and not vegeta and not luffy and not zoro and not naruto and not sasuke and not saitama and not tanjiro and not subzero and not pain and not sonic and not akaza and not blue_eyes and not anubis and not phoenix and not specter and not valkyrie and not dragon and not frieza and not charizard and has_any(lower, ["golem", "panzer", "lavagolem", "tank", "stein", "heavy", "titan"])
+	var varakh := has_any(lower, ["varakh", "scharlachfürst", "sternenprinz", "nova-strahl"])
+	var kairo := not varakh and has_any(lower, ["kairo", "sturmmönch", "solar-kanone"])
+	var xylar := not varakh and not kairo and has_any(lower, ["xylar", "leerenkaiser", "nadelstrahl"])
+	var tobi := not kairo and not varakh and not xylar and has_any(lower, ["tobi der", "federfaust", "schleuderfaust", "gummikapitän"])
+	var jubei := not kairo and not varakh and not tobi and not xylar and has_any(lower, ["jubei", "windklinge", "sturmschnitt", "schattenschütze", "dreiklingen", "tigerschnitt"])
+	var ren := not kairo and not varakh and not tobi and not jubei and not xylar and has_any(lower, ["ren die", "kirschkriegerin", "blütenwirbel", "wirbelfuchs", "spiralkern"])
+	var oryn := not kairo and not varakh and not tobi and not jubei and not ren and not xylar and has_any(lower, ["oryn", "schwerkraftprophet", "abstoßungswelle"])
+	var amethya := not kairo and not varakh and not tobi and not jubei and not ren and not oryn and not xylar and has_any(lower, ["amethya", "donnerhexe", "amethystblitz", "donnerklinge", "tausend funken"])
+	var bruno := not kairo and not varakh and not tobi and not jubei and not ren and not oryn and not amethya and not xylar and has_any(lower, ["bruno", "einschlag-held", "meteorfaust", "ernstfall"])
+	var hikaru := not kairo and not varakh and not tobi and not jubei and not ren and not oryn and not amethya and not bruno and not xylar and has_any(lower, ["hikaru", "glutklinge", "morgenrot", "sonnentänzer"])
+	var glaciem := not kairo and not varakh and not tobi and not jubei and not ren and not amethya and not bruno and not hikaru and not xylar and has_any(lower, ["glaciem", "frostassassine", "eissplitter", "ice ninja", "cryomancer"])
+	var zip := not kairo and not varakh and not tobi and not jubei and not ren and not amethya and not bruno and not hikaru and not glaciem and not oryn and not xylar and has_any(lower, ["zip der", "blitzkurier", "turbo-sprint", "turbo-rolle", "tempoigel"])
+	var raiga := not kairo and not varakh and not tobi and not jubei and not ren and not amethya and not bruno and not hikaru and not glaciem and not oryn and not zip and not xylar and has_any(lower, ["raiga", "donnerfaust", "sternschlag", "kompassdämon", "kompassnova"])
+	var albion := not kairo and not varakh and not tobi and not jubei and not ren and not amethya and not bruno and not hikaru and not glaciem and not oryn and not zip and not raiga and not xylar and has_any(lower, ["albion", "silberwyrm", "sturmstrahl", "weißer drache", "weisser drache", "weiße drache", "weisse drache", "white dragon"])
+	var anubis := not kairo and not varakh and not tobi and not jubei and not ren and not amethya and not bruno and not hikaru and not glaciem and not oryn and not zip and not raiga and not albion and not xylar and has_any(lower, ["anubis", "jackal", "khopesh", "ägyptisch", "egypt", "pharaoh", "pharao", "underworld", "unterwelt", "osiris", "jackal god"])
+	var phoenix := not kairo and not varakh and not tobi and not jubei and not ren and not amethya and not bruno and not hikaru and not glaciem and not oryn and not zip and not raiga and not albion and not anubis and not xylar and has_any(lower, ["phoenix", "phönix", "empress", "kaiserin", "glaive", "fire queen", "firebird", "feuervogel", "fenix"])
+	var specter := not kairo and not varakh and not tobi and not jubei and not ren and not amethya and not bruno and not hikaru and not glaciem and not oryn and not zip and not raiga and not albion and not anubis and not phoenix and not xylar and has_any(lower, ["specter", "spectre", "void lance", "phantom warrior", "kristall phantom", "wraith", "crystal"])
+	var valkyrie := not kairo and not varakh and not tobi and not jubei and not ren and not amethya and not bruno and not hikaru and not glaciem and not oryn and not zip and not raiga and not albion and not anubis and not phoenix and not specter and not xylar and has_any(lower, ["valkyrie", "walküre", "moe", "angel", "engel", "lichtflügel", "waifu"])
+	var pyrax := not kairo and not varakh and not tobi and not jubei and not ren and not amethya and not bruno and not hikaru and not glaciem and not oryn and not zip and not raiga and not albion and not xylar and has_any(lower, ["pyrax", "glutwyvern", "glutsturm", "feuerdrache", "feuer-drache", "fire dragon", "flammenwurf"])
+	var dragon := not kairo and not varakh and not tobi and not jubei and not ren and not amethya and not bruno and not hikaru and not glaciem and not oryn and not zip and not raiga and not albion and not anubis and not phoenix and not specter and not valkyrie and not xylar and not pyrax and (has_any(lower, ["drachenritter", "drake", "wyrm", "slayer", "drakon", "drache"]) or lower.contains("dragon"))
+	var heavy := not kairo and not varakh and not tobi and not jubei and not ren and not amethya and not bruno and not hikaru and not glaciem and not oryn and not zip and not raiga and not albion and not anubis and not phoenix and not specter and not valkyrie and not dragon and not xylar and not pyrax and has_any(lower, ["golem", "panzer", "lavagolem", "tank", "stein", "heavy", "titan"])
 
 	var steel_knight := has_any(lower, ["steel knight", "stahlritter", "ritter in vollplatte", "eiserner ritter", "iron knight"])
 	var vanguard_soldier := has_any(lower, ["vanguard", "vanguard soldat", "heavy vanguard"])
@@ -81,7 +83,7 @@ static func interpret(raw: Variant, slot: int = 0) -> Dictionary:
 	elif kettenwart: fam = "kettenwart"
 	elif don_valente: fam = "don_valente"
 	elif golden_golem: fam = "golden_golem"
-	elif fran: fam = "tripo_fran_statue"
+	elif fran: fam = "lepora"
 	elif thorn_witch: fam = "tripo_fantasy_female"
 	elif nyx_harvester: fam = "tripo_nyx_harvester"
 	elif cat_girl: fam = "tripo_cat_girl"
@@ -102,21 +104,21 @@ static func interpret(raw: Variant, slot: int = 0) -> Dictionary:
 	elif vampire_lord: fam = "vampire_lord"
 	elif wizard_sorcerer: fam = "wizard_sorcerer"
 	elif warrok_brute: fam = "warrok_brute"
-	elif goku: fam = "goku"
-	elif vegeta: fam = "vegeta"
-	elif frieza: fam = "frieza"
-	elif charizard: fam = "charizard"
-	elif luffy: fam = "luffy"
-	elif zoro: fam = "zoro"
-	elif naruto: fam = "naruto"
-	elif sasuke: fam = "sasuke"
-	elif saitama: fam = "saitama"
-	elif tanjiro: fam = "tanjiro"
-	elif subzero: fam = "subzero"
-	elif pain: fam = "pain"
-	elif sonic: fam = "sonic"
-	elif akaza: fam = "akaza"
-	elif blue_eyes: fam = "blue_eyes"
+	elif kairo: fam = "kairo"
+	elif varakh: fam = "varakh"
+	elif xylar: fam = "xylar"
+	elif pyrax: fam = "pyrax"
+	elif tobi: fam = "tobi"
+	elif jubei: fam = "jubei"
+	elif ren: fam = "ren"
+	elif amethya: fam = "amethya"
+	elif bruno: fam = "bruno"
+	elif hikaru: fam = "hikaru"
+	elif glaciem: fam = "glaciem"
+	elif oryn: fam = "oryn"
+	elif zip: fam = "zip"
+	elif raiga: fam = "raiga"
+	elif albion: fam = "albion"
 	elif anubis: fam = "anubis"
 	elif phoenix: fam = "phoenix"
 	elif specter: fam = "specter"
@@ -159,13 +161,13 @@ static func interpret(raw: Variant, slot: int = 0) -> Dictionary:
 			"values": [26, 28, 22, 12, 12], "element": "metal_gold", "weight": 1.40,
 			"std_name": "Midas Strike", "std_range": 2.30, "std_cd": 0.58, "std_windup": 0.12, "std_push": 0.35,
 			"spec_name": "Midas Quake", "spec_type": "shockwave", "spec_range": 3.80, "spec_cd": 3.6, "spec_windup": 0.32, "spec_push": 0.90, "spec_angle": 45.0, "spec_dmg_bonus": 3.0,
-			"fname": "GOLDEN GOLEM", "modules": ["golden_armor", "titan_core"]
+			"fname": "BRUNHILD (AXTKRIEGERIN)", "modules": ["golden_armor", "titan_core"]
 		},
-		"tripo_fran_statue": {
+		"lepora": {
 			"values": [18, 24, 14, 26, 18], "element": "wind_arrow", "weight": 0.95,
-			"std_name": "Viera Kick", "std_range": 2.10, "std_cd": 0.44, "std_windup": 0.08, "std_push": 0.20,
+			"std_name": "Mondtritt", "std_range": 2.10, "std_cd": 0.44, "std_windup": 0.08, "std_push": 0.20,
 			"spec_name": "Mist Arrow", "spec_type": "beam", "spec_range": 4.20, "spec_cd": 2.8, "spec_windup": 0.18, "spec_push": 0.65, "spec_angle": 32.0, "spec_dmg_bonus": 1.5,
-			"fname": "FRAN (VIERA)", "modules": ["viera_bow", "mist_quiver"]
+			"fname": "LEPORA (MONDJÄGERIN)", "modules": ["moon_bow", "mist_quiver"]
 		},
 		"tripo_fantasy_female": {
 			"values": [20, 26, 16, 22, 16], "element": "nature_thorn", "weight": 0.98,
@@ -183,13 +185,13 @@ static func interpret(raw: Variant, slot: int = 0) -> Dictionary:
 			"values": [18, 26, 14, 28, 14], "element": "claw_strike", "weight": 0.92,
 			"std_name": "Feral Scratch", "std_range": 2.05, "std_cd": 0.40, "std_windup": 0.06, "std_push": 0.18,
 			"spec_name": "Cat Rush Strike", "spec_type": "dash_slash", "spec_range": 3.20, "spec_cd": 2.6, "spec_windup": 0.16, "spec_push": 0.65, "spec_angle": 35.0, "spec_dmg_bonus": 1.8,
-			"fname": "CAT GIRL WARRIOR", "modules": ["ornate_sash", "feral_claws"]
+			"fname": "SHIRA (ONI-KLINGE)", "modules": ["ornate_sash", "feral_claws"]
 		},
 		"tripo_dragon_blue": {
 			"values": [26, 28, 20, 16, 10], "element": "ice_breath", "weight": 1.35,
 			"std_name": "Wyrm Tail", "std_range": 2.50, "std_cd": 0.52, "std_windup": 0.10, "std_push": 0.30,
 			"spec_name": "Glacial Breath", "spec_type": "beam", "spec_range": 4.00, "spec_cd": 3.6, "spec_windup": 0.30, "spec_push": 0.85, "spec_angle": 42.0, "spec_dmg_bonus": 2.5,
-			"fname": "BLUE WYRM", "modules": ["blue_scales", "frost_breath"]
+			"fname": "FROSTWYRM", "modules": ["blue_scales", "frost_breath"]
 		},
 		"tripo_white_sci": {
 			"values": [20, 26, 22, 18, 14], "element": "plasma_pulse", "weight": 1.20,
@@ -219,13 +221,13 @@ static func interpret(raw: Variant, slot: int = 0) -> Dictionary:
 			"values": [26, 26, 22, 14, 12], "element": "wood_beast", "weight": 1.30,
 			"std_name": "Sylvan Charge", "std_range": 2.35, "std_cd": 0.50, "std_windup": 0.10, "std_push": 0.32,
 			"spec_name": "Forest Stomp", "spec_type": "shockwave", "spec_range": 3.60, "spec_cd": 3.4, "spec_windup": 0.28, "spec_push": 0.88, "spec_angle": 45.0, "spec_dmg_bonus": 2.6,
-			"fname": "SYLVAN BEAST", "modules": ["moss_hide", "sylvan_horn"]
+			"fname": "MOSSBACK (STEINBESTIE)", "modules": ["moss_hide", "sylvan_horn"]
 		},
 		"steel_knight": {
 			"values": [24, 24, 26, 12, 14], "element": "metal", "weight": 1.15,
 			"std_name": "Ritterschlag", "std_range": 2.20, "std_cd": 0.50, "std_windup": 0.10, "std_push": 0.28,
 			"spec_name": "Schildstoß", "spec_type": "shockwave", "spec_range": 3.40, "spec_cd": 3.2, "spec_windup": 0.22, "spec_push": 0.85, "spec_angle": 40.0, "spec_dmg_bonus": 2.0,
-			"fname": "STEEL KNIGHT", "modules": ["plate_armor", "iron_blade"]
+			"fname": "CARDINAL (ROTER MÖNCH)", "modules": ["plate_armor", "iron_blade"]
 		},
 		"vanguard_soldier": {
 			"values": [24, 24, 22, 16, 14], "element": "plasma", "weight": 1.10,
@@ -243,7 +245,7 @@ static func interpret(raw: Variant, slot: int = 0) -> Dictionary:
 			"values": [16, 26, 14, 24, 20], "element": "shadow_bone", "weight": 0.90,
 			"std_name": "Knochenklinge", "std_range": 2.15, "std_cd": 0.42, "std_windup": 0.07, "std_push": 0.22,
 			"spec_name": "Seelenernte", "spec_type": "beam", "spec_range": 3.80, "spec_cd": 3.0, "spec_windup": 0.20, "spec_push": 0.72, "spec_angle": 32.0, "spec_dmg_bonus": 2.0,
-			"fname": "SKELETON REAPER", "modules": ["bone_scythe", "death_mantle"]
+			"fname": "FLAYER (HÄUTER)", "modules": ["bone_scythe", "death_mantle"]
 		},
 		"mutant_titan": {
 			"values": [28, 28, 24, 10, 10], "element": "acid", "weight": 1.35,
@@ -261,16 +263,16 @@ static func interpret(raw: Variant, slot: int = 0) -> Dictionary:
 			"values": [20, 28, 16, 22, 14], "element": "wind_slash", "weight": 1.05,
 			"std_name": "Klingenwirbel", "std_range": 2.25, "std_cd": 0.46, "std_windup": 0.08, "std_push": 0.25,
 			"spec_name": "Drachenschneide", "spec_type": "dash_slash", "spec_range": 3.40, "spec_cd": 3.0, "spec_windup": 0.22, "spec_push": 0.78, "spec_angle": 38.0, "spec_dmg_bonus": 2.0,
-			"fname": "SAMURAI DREYAR", "modules": ["samurai_armor", "twin_katanas"]
+			"fname": "KOMMANDANT (SILBERWOLF)", "modules": ["samurai_armor", "twin_katanas"]
 		},
 		"pirate_captain": {
 			"values": [22, 26, 18, 20, 14], "element": "water", "weight": 1.08,
 			"std_name": "Entermesser-Hieb", "std_range": 2.10, "std_cd": 0.44, "std_windup": 0.08, "std_push": 0.24,
 			"spec_name": "Breitseiten-Schuss", "spec_type": "beam", "spec_range": 3.60, "spec_cd": 3.2, "spec_windup": 0.24, "spec_push": 0.80, "spec_angle": 35.0, "spec_dmg_bonus": 2.2,
-			"fname": "KAPITÄN CORSAIR", "modules": ["corsair_coat", "flintlock_cutlass"]
+			"fname": "SERAPHINE (KORSARIN)", "modules": ["corsair_coat", "flintlock_cutlass"]
 		},
 		"vampire_lord": {
-			"values": [18, 28, 14, 22, 18], "element": "blood_demon", "weight": 1.02,
+			"values": [18, 28, 14, 22, 18], "element": "blood_oni", "weight": 1.02,
 			"std_name": "Blutkrallen", "std_range": 2.15, "std_cd": 0.42, "std_windup": 0.07, "std_push": 0.22,
 			"spec_name": "Karmesin-Nebel", "spec_type": "radial", "spec_range": 3.50, "spec_cd": 3.0, "spec_windup": 0.20, "spec_push": 0.75, "spec_angle": 360.0, "spec_dmg_bonus": 2.5,
 			"fname": "VAMPIRFÜRST VLAD", "modules": ["vampire_cape", "blood_chalice"]
@@ -287,131 +289,131 @@ static func interpret(raw: Variant, slot: int = 0) -> Dictionary:
 			"spec_name": "Vulkan-Eruption", "spec_type": "shockwave", "spec_range": 3.70, "spec_cd": 3.6, "spec_windup": 0.35, "spec_push": 0.95, "spec_angle": 50.0, "spec_dmg_bonus": 3.5,
 			"fname": "WARROK KOLOSS", "modules": ["magma_carapace", "volcanic_fists"]
 		},
-		"charizard": {
+		"pyrax": {
 			"values": [22, 28, 18, 20, 12], "element": "fire", "weight": 1.15,
 			"std_name": "Glutklaue", "std_range": 2.30, "std_cd": 0.48, "std_windup": 0.09, "std_push": 0.28,
 			"spec_name": "Glutsturm", "spec_type": "fire_burst", "spec_range": 3.65, "spec_cd": 3.4, "spec_windup": 0.28, "spec_push": 0.72, "spec_angle": 38.0, "spec_dmg_bonus": 2.0,
 			"fname": "PYRAX (GLUTWYVERN)", "modules": ["flame_tail", "dragon_wings"]
 		},
-		"frieza": {
+		"xylar": {
 			"values": [20, 28, 16, 22, 14], "element": "ki_purple", "weight": 1.02,
-			"std_name": "Schweifpeitsche", "std_range": 2.20, "std_cd": 0.48, "std_windup": 0.09, "std_push": 0.24,
+			"std_name": "Leerenpeitsche", "std_range": 2.20, "std_cd": 0.48, "std_windup": 0.09, "std_push": 0.24,
 			"spec_name": "Nadelstrahl", "spec_type": "beam", "spec_range": 3.70, "spec_cd": 3.4, "spec_windup": 0.24, "spec_push": 0.78, "spec_angle": 38.0, "spec_dmg_bonus": 2.0,
-			"fname": "XYLAR (LEERENKAISER)", "modules": ["bio_armor", "death_beam"]
+			"fname": "XYLAR (LEERENKAISER)", "modules": ["void_carapace", "void_needle"]
 		},
-		"goku": {
+		"kairo": {
 			"values": [20, 26, 16, 20, 18], "element": "ki_purple", "weight": 1.05,
 			"std_name": "Standard Strike", "std_range": 2.15, "std_cd": 0.57, "std_windup": 0.12, "std_push": 0.20,
 			"spec_name": "Solar-Kanone", "spec_type": "beam", "spec_range": 3.60, "spec_cd": 3.4, "spec_windup": 0.36, "spec_push": 0.72, "spec_angle": 42.0, "spec_dmg_bonus": 0.0,
-			"fname": "KAIRO (STURMMÖNCH)", "modules": ["turtle_gi", "power_pole"]
+			"fname": "KAIRO (STURMMÖNCH)", "modules": ["storm_robe", "sun_staff"]
 		},
-		"vegeta": {
+		"varakh": {
 			"values": [18, 28, 16, 22, 16], "element": "ki_gold", "weight": 1.06,
 			"std_name": "Prinzenschlag", "std_range": 2.10, "std_cd": 0.54, "std_windup": 0.11, "std_push": 0.26,
 			"spec_name": "Nova-Strahl", "spec_type": "beam", "spec_range": 3.60, "spec_cd": 3.5, "spec_windup": 0.38, "spec_push": 0.78, "spec_angle": 42.0, "spec_dmg_bonus": 2.0,
-			"fname": "VARAKH (STERNENPRINZ)", "modules": ["saiyan_armor", "final_flash"]
+			"fname": "VARAKH (SCHARLACHFÜRST)", "modules": ["scarlet_plate", "nova_core"]
 		},
-		"luffy": {
+		"tobi": {
 			"values": [18, 28, 16, 26, 12], "element": "rubber", "weight": 0.95,
 			"std_name": "Standard Strike", "std_range": 2.85, "std_cd": 0.52, "std_windup": 0.10, "std_push": 0.28,
 			"spec_name": "Schleuderfaust", "spec_type": "reach_strike", "spec_range": 3.20, "spec_cd": 2.9, "spec_windup": 0.28, "spec_push": 0.75, "spec_angle": 35.0, "spec_dmg_bonus": 0.0,
-			"fname": "TOBI (GUMMIKAPITÄN)", "modules": ["straw_hat", "gum_gum"]
+			"fname": "TOBI (FEDERFAUST)", "modules": ["spring_bracers", "sling_fist"]
 		},
-		"zoro": {
+		"jubei": {
 			"values": [22, 28, 18, 18, 14], "element": "wind_slash", "weight": 1.12,
-			"std_name": "Dreiklingenhieb", "std_range": 2.40, "std_cd": 0.50, "std_windup": 0.10, "std_push": 0.28,
-			"spec_name": "Tigerschnitt", "spec_type": "dash_slash", "spec_range": 3.10, "spec_cd": 3.0, "spec_windup": 0.24, "spec_push": 0.75, "spec_angle": 38.0, "spec_dmg_bonus": 0.0,
-			"fname": "JUBEI (DREIKLINGEN-WANDERER)", "modules": ["santoryu_blades", "wado_ichimonji"]
+			"std_name": "Windklingenhieb", "std_range": 2.40, "std_cd": 0.50, "std_windup": 0.10, "std_push": 0.28,
+			"spec_name": "Sturmschnitt", "spec_type": "dash_slash", "spec_range": 3.10, "spec_cd": 3.0, "spec_windup": 0.24, "spec_push": 0.75, "spec_angle": 38.0, "spec_dmg_bonus": 0.0,
+			"fname": "JUBEI (WINDKLINGE)", "modules": ["wind_blades", "storm_katana"]
 		},
-		"naruto": {
-			"values": [22, 24, 16, 24, 14], "element": "wind_rasen", "weight": 0.98,
+		"ren": {
+			"values": [22, 24, 16, 24, 14], "element": "wind_spiral", "weight": 0.98,
 			"std_name": "Wirbelkombo", "std_range": 2.05, "std_cd": 0.48, "std_windup": 0.09, "std_push": 0.22,
-			"spec_name": "Spiralkern", "spec_type": "vortex_strike", "spec_range": 3.00, "spec_cd": 2.8, "spec_windup": 0.20, "spec_push": 0.68, "spec_angle": 35.0, "spec_dmg_bonus": 0.0,
-			"fname": "REN (WIRBELFUCHS)", "modules": ["orange_jacket", "rasengan_core"]
+			"spec_name": "Blütenwirbel", "spec_type": "vortex_strike", "spec_range": 3.00, "spec_cd": 2.8, "spec_windup": 0.20, "spec_push": 0.68, "spec_angle": 35.0, "spec_dmg_bonus": 0.0,
+			"fname": "REN (KIRSCHKRIEGERIN)", "modules": ["blossom_coat", "petal_vortex"]
 		},
-		"sasuke": {
-			"values": [16, 26, 14, 28, 16], "element": "electric_chidori", "weight": 0.98,
+		"amethya": {
+			"values": [16, 26, 14, 28, 16], "element": "electric_arc", "weight": 0.98,
 			"std_name": "Donnerschnitt", "std_range": 2.20, "std_cd": 0.46, "std_windup": 0.08, "std_push": 0.22,
-			"spec_name": "Tausend Funken", "spec_type": "electric_dash", "spec_range": 3.15, "spec_cd": 2.7, "spec_windup": 0.18, "spec_push": 0.68, "spec_angle": 35.0, "spec_dmg_bonus": 0.0,
-			"fname": "KAGE (DONNERKLINGE)", "modules": ["uchiha_vest", "chidori_lightning"]
+			"spec_name": "Amethystblitz", "spec_type": "electric_dash", "spec_range": 3.15, "spec_cd": 2.7, "spec_windup": 0.18, "spec_push": 0.68, "spec_angle": 35.0, "spec_dmg_bonus": 0.0,
+			"fname": "AMETHYA (DONNERHEXE)", "modules": ["thunder_coat", "amethyst_arc"]
 		},
-		"saitama": {
-			"values": [24, 34, 18, 16, 8], "element": "serious_force", "weight": 1.05,
-			"std_name": "Normal Punch", "std_range": 2.25, "std_cd": 0.42, "std_windup": 0.08, "std_push": 0.32,
-			"spec_name": "Ernstfall-Schlag", "spec_type": "serious_blow", "spec_range": 3.40, "spec_cd": 3.6, "spec_windup": 0.26, "spec_push": 0.85, "spec_angle": 40.0, "spec_dmg_bonus": 2.0,
-			"fname": "BRUNO (EINSCHLAG-HELD)", "modules": ["yellow_suit", "hero_cape"]
+		"bruno": {
+			"values": [24, 34, 18, 16, 8], "element": "impact_force", "weight": 1.05,
+			"std_name": "Meteorhaken", "std_range": 2.25, "std_cd": 0.42, "std_windup": 0.08, "std_push": 0.32,
+			"spec_name": "Meteorfaust", "spec_type": "serious_blow", "spec_range": 3.40, "spec_cd": 3.6, "spec_windup": 0.26, "spec_push": 0.85, "spec_angle": 40.0, "spec_dmg_bonus": 2.0,
+			"fname": "BRUNO (EINSCHLAG-HELD)", "modules": ["impact_gauntlets", "meteor_boots"]
 		},
-		"tanjiro": {
+		"hikaru": {
 			"values": [20, 26, 16, 22, 16], "element": "sun_flame", "weight": 1.02,
 			"std_name": "Morgenklinge", "std_range": 2.30, "std_cd": 0.50, "std_windup": 0.10, "std_push": 0.24,
 			"spec_name": "Morgenrotschnitt", "spec_type": "flame_slash", "spec_range": 3.05, "spec_cd": 3.0, "spec_windup": 0.22, "spec_push": 0.70, "spec_angle": 38.0, "spec_dmg_bonus": 0.0,
-			"fname": "HIKARU (SONNENTÄNZER)", "modules": ["checkered_haori", "nichirin_sword"]
+			"fname": "HIKARU (GLUTKLINGE)", "modules": ["ember_mantle", "dawn_blade"]
 		},
-		"subzero": {
+		"glaciem": {
 			"values": [18, 26, 16, 24, 16], "element": "ice", "weight": 1.05,
 			"std_name": "Standard Strike", "std_range": 1.80, "std_cd": 0.54, "std_windup": 0.10, "std_push": 0.20,
 			"spec_name": "Eissplitter", "spec_type": "ice_slow", "spec_range": 2.55, "spec_cd": 2.8, "spec_windup": 0.26, "spec_push": 0.62, "spec_angle": 42.0, "spec_dmg_bonus": 0.0,
-			"fname": "GLACIEM (FROSTASSASSINE)", "modules": ["cryo_armor", "kori_blade"]
+			"fname": "GLACIEM (FROSTASSASSINE)", "modules": ["frost_mantle", "ice_dagger"]
 		},
-		"pain": {
+		"oryn": {
 			"values": [20, 27, 17, 19, 17], "element": "gravity", "weight": 1.05,
 			"std_name": "Standard Strike", "std_range": 2.30, "std_cd": 0.56, "std_windup": 0.11, "std_push": 0.20,
 			"spec_name": "Abstoßungswelle", "spec_type": "radial_blast", "spec_range": 3.00, "spec_cd": 3.0, "spec_windup": 0.30, "spec_push": 0.62, "spec_angle": 45.0, "spec_dmg_bonus": 0.0,
-			"fname": "ORYN (SCHWERKRAFTPROPHET)", "modules": ["rinnegan", "akatsuki"]
+			"fname": "ORYN (SCHWERKRAFTPROPHET)", "modules": ["rune_halo", "gravity_robe"]
 		},
-		"sonic": {
+		"zip": {
 			"values": [16, 22, 14, 34, 14], "element": "wind", "weight": 0.88,
 			"std_name": "Standard Strike", "std_range": 1.65, "std_cd": 0.44, "std_windup": 0.08, "std_push": 0.22,
-			"spec_name": "Turbo-Rolle", "spec_type": "electric_dash", "spec_range": 3.35, "spec_cd": 2.6, "spec_windup": 0.16, "spec_push": 0.65, "spec_angle": 35.0, "spec_dmg_bonus": 0.0,
-			"fname": "ZIP (TEMPOIGEL)", "modules": ["power_sneakers", "spin_dash"]
+			"spec_name": "Turbo-Sprint", "spec_type": "electric_dash", "spec_range": 3.35, "spec_cd": 2.6, "spec_windup": 0.16, "spec_push": 0.65, "spec_angle": 35.0, "spec_dmg_bonus": 0.0,
+			"fname": "ZIP (BLITZKURIER)", "modules": ["jet_boots", "turbo_core"]
 		},
-		"akaza": {
-			"values": [22, 28, 16, 22, 12], "element": "blood_demon", "weight": 1.02,
-			"std_name": "Kompassfaust", "std_range": 2.10, "std_cd": 0.48, "std_windup": 0.09, "std_push": 0.24,
-			"spec_name": "Kompassnova", "spec_type": "radial_blast", "spec_range": 2.80, "spec_cd": 2.7, "spec_windup": 0.22, "spec_push": 0.70, "spec_angle": 40.0, "spec_dmg_bonus": 0.0,
-			"fname": "RAIGA (KOMPASSDÄMON)", "modules": ["soryu_style", "compass_needle"]
+		"raiga": {
+			"values": [22, 28, 16, 22, 12], "element": "blood_oni", "weight": 1.02,
+			"std_name": "Donnerhieb", "std_range": 2.10, "std_cd": 0.48, "std_windup": 0.09, "std_push": 0.24,
+			"spec_name": "Sternschlag", "spec_type": "radial_blast", "spec_range": 2.80, "spec_cd": 2.7, "spec_windup": 0.22, "spec_push": 0.70, "spec_angle": 40.0, "spec_dmg_bonus": 0.0,
+			"fname": "RAIGA (DONNERFAUST)", "modules": ["thunder_fists", "star_sigil"]
 		},
-		"blue_eyes": {
+		"albion": {
 			"values": [22, 30, 20, 18, 10], "element": "holy_light", "weight": 1.28,
 			"std_name": "Silberklaue", "std_range": 2.20, "std_cd": 0.54, "std_windup": 0.11, "std_push": 0.26,
 			"spec_name": "Sturmstrahl", "spec_type": "beam", "spec_range": 3.40, "spec_cd": 3.2, "spec_windup": 0.30, "spec_push": 0.72, "spec_angle": 42.0, "spec_dmg_bonus": 0.0,
-			"fname": "ALBION (SILBERWYRM)", "modules": ["dragon_plate", "burst_stream"]
+			"fname": "ALBION (SILBERWYRM)", "modules": ["dragon_plate", "storm_breath"]
 		},
 		"anubis": {
 			"values": [20, 28, 18, 18, 16], "element": "shadow_gold", "weight": 1.08,
 			"std_name": "Standard Strike", "std_range": 2.10, "std_cd": 0.62, "std_windup": 0.13, "std_push": 0.20,
 			"spec_name": "Anubis Wrath", "spec_type": "curse_strike", "spec_range": 2.70, "spec_cd": 3.1, "spec_windup": 0.30, "spec_push": 0.62, "spec_angle": 42.0, "spec_dmg_bonus": 0.0,
-			"fname": "CYBER ANUBIS", "modules": ["anubis_armor", "khopesh"]
+			"fname": "AURUM (GOLDKONSTRUKT)", "modules": ["anubis_armor", "khopesh"]
 		},
 		"phoenix": {
 			"values": [19, 24, 15, 20, 22], "element": "fire", "weight": 0.98,
 			"std_name": "Standard Strike", "std_range": 2.00, "std_cd": 0.55, "std_windup": 0.11, "std_push": 0.20,
 			"spec_name": "Phoenix Flare", "spec_type": "flame_wave", "spec_range": 2.75, "spec_cd": 3.0, "spec_windup": 0.29, "spec_push": 0.62, "spec_angle": 42.0, "spec_dmg_bonus": 0.0,
-			"fname": "PHOENIX EMPRESS", "modules": ["feather_armor", "phoenix_glaive"]
+			"fname": "SCARLET (FEUERJÄGERIN)", "modules": ["feather_armor", "phoenix_glaive"]
 		},
 		"specter": {
 			"values": [16, 25, 17, 22, 20], "element": "void", "weight": 0.98,
 			"std_name": "Standard Strike", "std_range": 2.20, "std_cd": 0.58, "std_windup": 0.11, "std_push": 0.20,
 			"spec_name": "Void Lance", "spec_type": "void_strike", "spec_range": 2.90, "spec_cd": 2.9, "spec_windup": 0.28, "spec_push": 0.62, "spec_angle": 42.0, "spec_dmg_bonus": 0.0,
-			"fname": "VOID SPECTER", "modules": ["crystal_armor", "void_lance"]
+			"fname": "RAVENNA (SCHATTENKLINGE)", "modules": ["crystal_armor", "void_lance"]
 		},
 		"valkyrie": {
 			"values": [17, 22, 16, 23, 22], "element": "holy", "weight": 1.05,
 			"std_name": "Standard Strike", "std_range": 1.85, "std_cd": 0.52, "std_windup": 0.10, "std_push": 0.20,
 			"spec_name": "Radiant Pierce", "spec_type": "holy_pierce", "spec_range": 2.45, "spec_cd": 3.2, "spec_windup": 0.32, "spec_push": 0.62, "spec_angle": 42.0, "spec_dmg_bonus": 0.0,
-			"fname": "VALKYRIE AURA", "modules": ["radiant_armor", "light_rapier"]
+			"fname": "BOLTAR (ARMBRUSTRITTER)", "modules": ["radiant_armor", "light_rapier"]
 		},
 		"dragon": {
 			"values": [23, 26, 21, 15, 15], "element": "fire", "weight": 1.20,
 			"std_name": "Standard Strike", "std_range": 1.95, "std_cd": 0.72, "std_windup": 0.16, "std_push": 0.20,
 			"spec_name": "Wyrm Flame", "spec_type": "fire_breath", "spec_range": 2.85, "spec_cd": 3.5, "spec_windup": 0.38, "spec_push": 0.62, "spec_angle": 42.0, "spec_dmg_bonus": 0.0,
-			"fname": "IGNIS DRAKE", "modules": ["dragon_plate", "greatsword"]
+			"fname": "TEMPLAR (KREUZRITTER)", "modules": ["dragon_plate", "greatsword"]
 		},
 		"golem": {
 			"values": [27, 24, 27, 10, 12], "element": "fire", "weight": 1.32,
 			"std_name": "Standard Strike", "std_range": 1.55, "std_cd": 0.90, "std_windup": 0.22, "std_push": 0.20,
 			"spec_name": "Magma Quake", "spec_type": "ground_quake", "spec_range": 2.25, "spec_cd": 3.1, "spec_windup": 0.35, "spec_push": 0.62, "spec_angle": 52.0, "spec_dmg_bonus": 0.0,
-			"fname": "CINDER BASTION", "modules": ["basalt", "gauntlets"]
+			"fname": "MAGMOR (GLUTOGER)", "modules": ["basalt", "gauntlets"]
 		},
 		"ninja": {
 			"values": [18, 20, 14, 29, 19], "element": "shadow", "weight": 0.92,
@@ -438,7 +440,7 @@ static func interpret(raw: Variant, slot: int = 0) -> Dictionary:
 			element = candidate
 			break
 
-	var colors := {"electric": Color("43e5ff"), "fire": Color("ff733e"), "ice": Color("b4e5ff"), "wind": Color("9dffcd"), "shadow": Color("b19dff"), "holy": Color("ffe26a"), "shadow_gold": Color("c9a227"), "void": Color("9b30ff"), "ki_purple": Color("b347ff"), "ki_gold": Color("ffe838"), "gravity": Color("9900ee"), "rubber": Color("ff2b2b"), "wind_slash": Color("3bfac8"), "wind_rasen": Color("4ae0ff"), "electric_chidori": Color("60d5ff"), "serious_force": Color("ff4040"), "sun_flame": Color("ff6524"), "blood_demon": Color("00e5ff"), "holy_light": Color("70d6ff"), "water": Color("38bdf8"), "metal": Color("cbd5e1"), "dark_magic": Color("c084fc"), "shadow_bone": Color("a78bfa"), "acid": Color("84cc16"), "plasma": Color("5eead4"), "soul_dark": Color("a855f7")}
+	var colors := {"electric": Color("43e5ff"), "fire": Color("ff733e"), "ice": Color("b4e5ff"), "wind": Color("9dffcd"), "shadow": Color("b19dff"), "holy": Color("ffe26a"), "shadow_gold": Color("c9a227"), "void": Color("9b30ff"), "ki_purple": Color("b347ff"), "ki_gold": Color("ffe838"), "gravity": Color("9900ee"), "rubber": Color("ff2b2b"), "wind_slash": Color("3bfac8"), "wind_spiral": Color("4ae0ff"), "electric_arc": Color("60d5ff"), "impact_force": Color("ff4040"), "sun_flame": Color("ff6524"), "blood_oni": Color("00e5ff"), "holy_light": Color("70d6ff"), "water": Color("38bdf8"), "metal": Color("cbd5e1"), "dark_magic": Color("c084fc"), "shadow_bone": Color("a78bfa"), "acid": Color("84cc16"), "plasma": Color("5eead4"), "soul_dark": Color("a855f7")}
 
 	var standard := {
 		"name": cfg.std_name,
@@ -458,7 +460,7 @@ static func interpret(raw: Variant, slot: int = 0) -> Dictionary:
 		"angle": cfg.spec_angle, "hitstun": 0.38
 	}
 
-	return {
+	var profile := {
 		"prompt": text, "slot": slot, "seed": seed_value, "family": fam,
 		"name": cfg.fname, "element": element,
 		"modules": cfg.modules,
@@ -466,6 +468,15 @@ static func interpret(raw: Variant, slot: int = 0) -> Dictionary:
 		"health": 90.0 + stats.vitality * 1.6, "speed": 2.3 + stats.speed * 0.065,
 		"weight": clampf(cfg.weight, 0.85, 1.35)
 	}
+	# The fighter kit (fighter_kits.gd) sets role, weight, run speed and attack names.
+	var kit: Dictionary = FighterKits.for_family(fam)
+	if not kit.is_empty():
+		profile["archetype"] = kit.archetype
+		if kit.has("weight"): profile.weight = float(kit.weight)
+		if kit.has("speed"): profile.speed = float(kit.speed)
+		if kit.has("standard_name"): standard.name = kit.standard_name
+		if kit.has("special_name"): special.name = kit.special_name
+	return profile
 
 static func has_any(text: String, words: Array) -> bool:
 	for word in words:

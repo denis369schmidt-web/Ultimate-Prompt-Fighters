@@ -114,6 +114,45 @@ static func build(id: String) -> Node3D:
 			var wood := _mat(Color(0.95, 0.75, 0.2), 0.2, 0.5, 0.6)
 			_box(root, Vector3(0.09, 0.5, 0.03), Vector3(-0.1, 0.2, 0), wood, Vector3(0, 0, 30))
 			_box(root, Vector3(0.09, 0.5, 0.03), Vector3(0.1, 0.2, 0), wood, Vector3(0, 0, -30))
+		"shadow_katana":
+			_cyl(root, 0.025, 0.025, 0.32, Vector3(0, 0.16, 0), _mat(Color(0.08, 0.06, 0.1), 0.2, 0.6), 8)
+			_box(root, Vector3(0.14, 0.02, 0.14), Vector3(0, 0.33, 0), _mat(Color(0.6, 0.5, 0.9), 0.8, 0.3))
+			_box(root, Vector3(0.035, 1.05, 0.012), Vector3(0.01, 0.86, 0), _mat(Color("a855f7"), 0.2, 0.15, 3.5), Vector3(0, 0, -3))
+		"frost_axe":
+			_cyl(root, 0.03, 0.035, 1.0, Vector3(0, 0.5, 0), _mat(Color(0.35, 0.28, 0.22), 0.0, 0.7), 8)
+			_box(root, Vector3(0.42, 0.34, 0.04), Vector3(0.18, 0.92, 0), _mat(Color("bae6fd"), 0.6, 0.1, 1.5))
+			for k in range(3): _cyl(root, 0.0, 0.03, 0.18, Vector3(0.38, 0.8 + k * 0.12, 0), _mat(Color("e0f2fe"), 0.2, 0.05, 2.0), 5, Vector3(0, 0, -90))
+		"flame_whip":
+			_cyl(root, 0.035, 0.035, 0.3, Vector3(0, 0.15, 0), _mat(Color(0.25, 0.15, 0.1), 0.0, 0.7), 8)
+			for k in range(10):
+				var t: float = k / 9.0
+				_ball(root, 0.05 - t * 0.025, Vector3(sin(t * 3.0) * 0.25, 0.35 + t * 1.3, 0), _mat(Color("f97316").lerp(Color("fde047"), t), 0.0, 0.3, 3.0))
+		"crystal_bow":
+			var arc := TorusMesh.new()
+			arc.inner_radius = 0.5
+			arc.outer_radius = 0.54
+			var bow := _part(root, arc, Vector3(0, 0.6, 0), _mat(Color("67e8f9"), 0.3, 0.1, 2.0), Vector3(90, 0, 0))
+			bow.scale = Vector3(0.5, 1.0, 1.0)
+			_cyl(root, 0.004, 0.004, 1.04, Vector3(-0.02, 0.6, 0), _mat(Color(0.9, 0.95, 1.0), 0.0, 0.3, 1.0), 4)
+		"dragon_lance":
+			_cyl(root, 0.03, 0.03, 1.9, Vector3(0, 0.8, 0), _mat(Color(0.3, 0.1, 0.08), 0.6, 0.4), 8)
+			_cyl(root, 0.0, 0.09, 0.45, Vector3(0, 1.95, 0), _mat(Color("ef4444"), 0.8, 0.2, 1.5), 6)
+			for s in [-1.0, 1.0]: _box(root, Vector3(0.18, 0.06, 0.03), Vector3(s * 0.1, 1.72, 0), _mat(Color(0.8, 0.65, 0.3), 0.9, 0.3), Vector3(0, 0, s * 30))
+		"soul_scythe":
+			_cyl(root, 0.03, 0.03, 1.6, Vector3(0, 0.8, 0), _mat(Color(0.12, 0.1, 0.1), 0.2, 0.6), 8)
+			var blade2 := TorusMesh.new()
+			blade2.inner_radius = 0.42
+			blade2.outer_radius = 0.5
+			var sc := _part(root, blade2, Vector3(0.3, 1.5, 0), _mat(Color("a3e635"), 0.5, 0.2, 2.0), Vector3(90, 0, 0))
+			sc.scale = Vector3(1.0, 1.0, 0.25)
+		"thunder_hammer":
+			_cyl(root, 0.035, 0.04, 0.9, Vector3(0, 0.45, 0), _mat(Color(0.3, 0.22, 0.15), 0.0, 0.7), 8)
+			_box(root, Vector3(0.5, 0.28, 0.28), Vector3(0, 0.98, 0), _mat(Color(0.55, 0.58, 0.62), 0.9, 0.3))
+			_box(root, Vector3(0.52, 0.06, 0.3), Vector3(0, 0.98, 0), _mat(Color("fde047"), 0.2, 0.2, 3.0))
+		"plasma_cannon":
+			_cyl(root, 0.1, 0.12, 0.7, Vector3(0.25, 0.3, 0), _mat(Color(0.2, 0.22, 0.26), 0.9, 0.3), 12, Vector3(0, 0, -90))
+			_ball(root, 0.09, Vector3(0.62, 0.3, 0), _mat(Color("22d3ee"), 0.0, 0.2, 5.0))
+			_box(root, Vector3(0.08, 0.25, 0.08), Vector3(0.05, 0.15, 0), _mat(Color(0.15, 0.15, 0.18), 0.6, 0.5))
 		"flail":
 			var iron := _mat(Color(0.45, 0.45, 0.48), 0.85, 0.4)
 			_cyl(root, 0.035, 0.04, 0.5, Vector3(0, 0.1, 0), _mat(Color(0.35, 0.22, 0.12), 0.0, 0.8))
@@ -210,6 +249,55 @@ static func projectile(kind: String, color: Color) -> Node3D:
 			_cyl(root, 0.25, 0.35, 0.5, Vector3(0, -0.3, 0), _mat(Color(0.25, 0.25, 0.28), 0.8, 0.3), 10)
 			_box(root, Vector3(0.6, 0.18, 0.18), Vector3(0.2, 0.05, 0), _mat(Color(0.2, 0.2, 0.22), 0.8, 0.3))
 			_ball(root, 0.08, Vector3(0.05, 0.2, 0), _mat(color, 0.0, 0.2, 6.0))
+		"kunai":
+			_cyl(root, 0.0, 0.06, 0.32, Vector3(0.12, 0, 0), _mat(Color(0.75, 0.8, 0.85), 0.9, 0.25), 4, Vector3(0, 0, -90))
+			_cyl(root, 0.02, 0.02, 0.2, Vector3(-0.12, 0, 0), _mat(Color(0.1, 0.1, 0.12), 0.2, 0.6), 6, Vector3(0, 0, 90))
+			var ring_k := TorusMesh.new()
+			ring_k.inner_radius = 0.03
+			ring_k.outer_radius = 0.05
+			_part(root, ring_k, Vector3(-0.25, 0, 0), glow_m, Vector3(90, 0, 0))
+		"lava_blob":
+			_ball(root, 0.28, Vector3.ZERO, _mat(Color(0.25, 0.06, 0.02), 0.0, 0.8, 1.0))
+			var glow_b := _ball(root, 0.34, Vector3.ZERO, _mat(color, 0.0, 0.3, 5.0))
+			glow_b.transparency = 0.55
+		"lava_pool":
+			var disc := CylinderMesh.new()
+			disc.top_radius = 1.2
+			disc.bottom_radius = 1.25
+			disc.height = 0.06
+			_part(root, disc, Vector3(0, -0.12, 0), _mat(color, 0.0, 0.25, 4.0))
+			for k in range(5):
+				_ball(root, 0.12, Vector3(cos(k * 1.3) * 0.7, -0.05, sin(k * 1.3) * 0.3), _mat(Color("ffd060"), 0.0, 0.2, 6.0))
+		"cannonball":
+			_ball(root, 0.26, Vector3.ZERO, _mat(Color(0.08, 0.08, 0.09), 0.8, 0.35))
+			var trail := _ball(root, 0.3, Vector3(-0.2, 0, 0), _mat(color, 0.0, 0.3, 3.0))
+			trail.transparency = 0.7
+		"coin":
+			var cm := CylinderMesh.new()
+			cm.top_radius = 0.18
+			cm.bottom_radius = 0.18
+			cm.height = 0.04
+			cm.radial_segments = 24
+			_part(root, cm, Vector3.ZERO, _mat(Color("facc15"), 1.0, 0.25, 0.6), Vector3(90, 0, 0))
+		"holy_pillar":
+			var col_m := CylinderMesh.new()
+			col_m.top_radius = 0.55
+			col_m.bottom_radius = 0.7
+			col_m.height = 6.0
+			var pill := _part(root, col_m, Vector3(0, 2.2, 0), _mat(color.lightened(0.3), 0.0, 0.2, 5.0))
+			pill.transparency = 0.25
+		"singularity":
+			_ball(root, 0.35, Vector3.ZERO, _mat(Color(0.02, 0.0, 0.04), 0.0, 0.9))
+			var halo_s := _ball(root, 0.6, Vector3.ZERO, _mat(color, 0.0, 0.3, 3.5))
+			halo_s.transparency = 0.7
+			var disk := TorusMesh.new()
+			disk.inner_radius = 0.55
+			disk.outer_radius = 0.75
+			_part(root, disk, Vector3.ZERO, _mat(color.lightened(0.3), 0.0, 0.3, 4.0), Vector3(70, 0, 0))
+		"spark_trail":
+			_box(root, Vector3(0.8, 0.05, 0.3), Vector3(0, -0.1, 0), _mat(color, 0.0, 0.2, 5.0))
+			for k in range(3):
+				_box(root, Vector3(0.05, 0.3, 0.05), Vector3(-0.3 + k * 0.3, 0.05, 0), core_m, Vector3(0, 0, 20 * (k - 1)))
 		"pillar", "bone":
 			pass # eruption pillars are spawned along the path by main.gd
 		_:
