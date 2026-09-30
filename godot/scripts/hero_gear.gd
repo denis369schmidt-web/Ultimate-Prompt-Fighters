@@ -493,7 +493,8 @@ func _ribbon(parent: Node3D, length: float, width: float, segs: int, mat: Materi
 
 func _particles(parent: Node3D, color: Color, amount: int, radius: float, dir: Vector3, grav: Vector3, vel: Vector2, life: float, size: float, energy: float = 3.0) -> CPUParticles3D:
 	var p := CPUParticles3D.new()
-	p.amount = amount
+	# Phones: half the particles.
+	p.amount = maxi(4, amount / 2) if load("res://scripts/platform.gd").low_graphics() else amount
 	p.lifetime = life
 	p.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE
 	p.emission_sphere_radius = radius

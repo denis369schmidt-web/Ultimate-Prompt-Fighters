@@ -397,6 +397,7 @@ func _ready() -> void:
     setup_world()
     setup_player_markers()
     setup_ui()
+    setup_touch()
     setup_audio()
     restore_prompts()
     refresh_previews()
@@ -414,6 +415,53 @@ func _ready() -> void:
         await get_tree().create_timer(0.5).timeout
         await capture("godot-selection.png")
         get_tree().quit()
+
+## Touch controls for player 1 on phones, tablets and (optionally) touch laptops.
+const Platform = preload("res://scripts/platform.gd")
+const TouchControlsScript = preload("res://scripts/touch_controls.gd")
+var touch: Control = null
+
+func setup_touch(force: bool = false) -> void:
+    if not (force or Platform.touch_enabled()) or touch != null: return
+    var layer := CanvasLayer.new()
+    layer.name = "TouchLayer"
+    layer.layer = 50
+    add_child(layer)
+    touch = TouchControlsScript.new()
+    touch.name = "TouchControls"
+    layer.add_child(touch)
+    touch.pause_pressed.connect(func():
+        if active and (result_panel == null or not result_panel.visible): paused = not paused)
+    touch.back_pressed.connect(go_back)
+    touch.quit_pressed.connect(func():
+        paused = false
+        show_selection())
+
+func _update_touch_mode() -> void:
+    if touch == null: return
+    var result_open: bool = result_panel != null and result_panel.visible
+    # The keyboard / gamepad help bar would sit under the touch buttons.
+    if battle_hud_bottom != null and active: battle_hud_bottom.visible = false
+    if active and not result_open:
+        touch.mode = "pause" if paused else "fight"
+    elif title_screen != null and title_screen.visible and title_stage == "splash":
+        touch.mode = "off"
+    else:
+        touch.mode = "menu"
+
+## One "back" for every input: Android back button, the touch back button, B / View on a pad.
+func go_back() -> void:
+    if active and (result_panel == null or not result_panel.visible):
+        paused = not paused
+        return
+    if title_screen != null and title_screen.visible and title_stage == "splash" and (title_panel == null or not title_panel.visible):
+        if Platform.is_mobile(): get_tree().quit()
+        return
+    _pad_menu_button(0, JOY_BUTTON_B)
+
+func _notification(what: int) -> void:
+    if what == NOTIFICATION_WM_GO_BACK_REQUEST: go_back()
+    elif what == NOTIFICATION_APPLICATION_PAUSED and active: paused = true
 
 ## Keyboard: P1 left side, P2 right side. Gamepads: device k controls player k+1, with the
 ## genre-standard Xbox layout: left stick / d-pad move (flick up = jump), A attack, B special,
@@ -566,6 +614,22 @@ func setup_world() -> void:
 
     setup_items()
     apply_arena(current_arena)
+    apply_graphics_profile()
+
+## Phones (Platform.low_graphics): one shadow split at a shorter range, lighter glow and fog,
+## 3D rendered at 75 % resolution and upscaled, 60 FPS cap to save battery.
+func apply_graphics_profile() -> void:
+    if not Platform.low_graphics(): return
+    var env: Environment = world_env.environment
+    env.glow_bloom = 0.0
+    env.glow_intensity = 0.4
+    env.fog_aerial_perspective = 0.0
+    env.adjustment_enabled = false
+    sunlight.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
+    sunlight.directional_shadow_max_distance = 22.0
+    sunlight.shadow_blur = 0.6
+    get_viewport().scaling_3d_scale = 0.75
+    Engine.max_fps = 60
 
 ## Items spawned during the match (weapons, power-ups) get their visuals here.
 func ensure_item_nodes() -> void:
@@ -3465,10 +3529,33 @@ func _fill_options(v: VBoxContainer) -> void:
         v.add_child(row_btn)
     var state := label("KI-Stufe %d  ·  %d Stocks  ·  Finisher %s  ·  Modus %s" % [ai_level, stock_count, "an" if finishers_on else "aus", team_mode.to_upper()], 14, Color("cbd5e1"))
     v.add_child(state)
-    var fs := button("VOLLBILD AN / AUS", Color("a78bfa"), func():
-        var w := get_window()
-        w.mode = Window.MODE_WINDOWED if w.mode == Window.MODE_FULLSCREEN else Window.MODE_FULLSCREEN)
-    v.add_child(fs)
+    if not Platform.is_mobile():
+        var fs := button("VOLLBILD AN / AUS", Color("a78bfa"), func():
+            var w := get_window()
+            w.mode = Window.MODE_WINDOWED if w.mode == Window.MODE_FULLSCREEN else Window.MODE_FULLSCREEN)
+        v.add_child(fs)
+        var tt := button("TOUCH-STEUERUNG AUF DEM PC: %s" % ("AN" if Platform.touch_enabled() else "AUS"), Color("22c55e"), func():
+            Platform.set_setting("touch_on_desktop", not bool(Platform.setting("touch_on_desktop", false)))
+            if Platform.touch_enabled(): setup_touch()
+            elif touch != null:
+                touch.mode = "off"
+                touch.get_parent().queue_free()
+                touch = null
+            _open_title_panel("options"))
+        v.add_child(tt)
+    if touch != null:
+        var sz := button("TOUCH-KNÖPFE: GRÖSSE %d %%" % int(round(touch.scale_factor * 100)), Color("22c55e"), func():
+            var steps := [0.8, 0.9, 1.0, 1.15, 1.3]
+            var k: int = (steps.find(snappedf(touch.scale_factor, 0.05)) + 1) % steps.size()
+            touch.apply_settings(steps[k], touch.opacity)
+            _open_title_panel("options"))
+        v.add_child(sz)
+        var op := button("TOUCH-KNÖPFE: DECKKRAFT %d %%" % int(round(touch.opacity * 100)), Color("22c55e"), func():
+            var steps := [0.35, 0.5, 0.6, 0.8, 1.0]
+            var k: int = (steps.find(snappedf(touch.opacity, 0.05)) + 1) % steps.size()
+            touch.apply_settings(touch.scale_factor, steps[k])
+            _open_title_panel("options"))
+        v.add_child(op)
 
 func _fill_credits(v: VBoxContainer) -> void:
     v.add_child(label("PROMPT FIGHTERS ULTIMATE", 26, Color("fde68a")))
@@ -4215,6 +4302,12 @@ func manual_commands() -> Array:
         }
         # Right stick: a flick is a smash attack in that direction (an aerial while airborne).
         var cs := Vector2(Input.get_joy_axis(i, JOY_AXIS_RIGHT_X), Input.get_joy_axis(i, JOY_AXIS_RIGHT_Y))
+        if i == 0 and touch != null:
+            # A swipe on the touch screen is a right-stick flick.
+            var swipe: Vector2 = touch.take_smash()
+            if swipe != Vector2.ZERO:
+                cs = swipe
+                cstick_latch[0] = false
         if cs.length() > 0.65 and not cstick_latch[i]:
             cmd.standard = true
             cmd.smash = true
@@ -4561,6 +4654,7 @@ func _physics_process(delta: float) -> void:
     if smoke: run_smoke_step()
 
 func _process(delta: float) -> void:
+    _update_touch_mode()
     if fps_label and fps_label.visible:
         fps_label.text = "%d FPS" % Engine.get_frames_per_second()
     if smoke and active: fps_samples.append(Engine.get_frames_per_second())
@@ -4772,7 +4866,7 @@ func update_hud() -> void:
             var fam_key: String = f.profile.get("family", "")
             if not portrait_cache.has(fam_key): portrait_cache[fam_key] = get_portrait_for_fighter(f)
             portrait_rects[i].texture = portrait_cache[fam_key]
-    if paused: status.text = "PAUSE  ·  ESC / ☰ / B zum Fortsetzen  ·  ⧉ Kämpferauswahl"
+    if paused: status.text = ("PAUSE  ·  WEITER oder AUSWAHL antippen" if touch != null else "PAUSE  ·  ESC / ☰ / B zum Fortsetzen  ·  ⧉ Kämpferauswahl")
     elif active and sim.countdown > 0: status.text = "BEREIT?"
     elif status_message_time > 0.0: status.text = status_message
     else:
