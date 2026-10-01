@@ -77,6 +77,7 @@ const WEEKLY := {
 
 var save_path := SAVE_PATH
 var xp := 0
+var granted := {}             # store product id -> true (contents given once)
 var fighter_xp := {}          # family -> xp
 var stats := {}               # lifetime totals
 var achievements := {}        # id -> unix time unlocked
@@ -168,6 +169,7 @@ func load_progress() -> void:
 	unlocked = cfg.get_value("shop", "unlocked", {})
 	menu_bg = str(cfg.get_value("shop", "menu_bg", "neon_alley"))
 	skins_owned = cfg.get_value("shop", "skins_owned", {})
+	granted = cfg.get_value("shop", "granted", {})
 	skin = str(cfg.get_value("shop", "skin", ""))
 	weapons_owned = cfg.get_value("shop", "weapons_owned", {})
 	start_weapon = str(cfg.get_value("shop", "start_weapon", ""))
@@ -211,7 +213,7 @@ func save_progress() -> void:
 	cfg.set_value("shop", "coins", coins)
 	cfg.set_value("shop", "unlocked", unlocked)
 	cfg.set_value("shop", "menu_bg", menu_bg)
-	for key in ["skins_owned", "skin", "weapons_owned", "start_weapon", "chests", "login", "path_claimed"]:
+	for key in ["skins_owned", "skin", "weapons_owned", "start_weapon", "chests", "login", "path_claimed", "granted"]:
 		cfg.set_value("shop", key, get(key))
 	cfg.set_value("player", "win_streak", win_streak)
 	for key in ["rank_points", "best_league", "boost_matches", "title", "weekly", "first_win_day", "bounty_day", "wheel_day"]:

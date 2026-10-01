@@ -271,6 +271,7 @@ static func bounty_family(day: int, families: Array) -> String:
 # ── Titles ──
 
 const TITLES := [
+	{"id": "supporter", "name": "Gönner der Arenen", "stat": "supporter", "need": 1},
 	{"id": "rookie", "name": "Frischling", "stat": "matches", "need": 0},
 	{"id": "brawler", "name": "Raufbold", "stat": "wins", "need": 10},
 	{"id": "hero", "name": "Arenaheld", "stat": "wins", "need": 50},

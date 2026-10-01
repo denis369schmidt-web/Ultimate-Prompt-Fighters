@@ -10,7 +10,7 @@ Ziel: Hochwertiger 2,5D-Arenakämpfer mit datengetriebenem Rückstoß (proportio
 - [x] **B. Datengetriebener Rückstoß (50% Rebalanced)**:
   - Exakte Formel implementiert: Missing HP Ratio skaliert Launch exponentiell.
   - Rückstoßkraft um 50% abgemildert für optimale Spielbarkeit und präzise Arena-Kontrolle.
-  - Charaktergewicht dämpft den Rückstoß (Golem 1.32 vs Sonic 0.88).
+  - Charaktergewicht dämpft den Rückstoß (Golem 1.32 vs Zip 0.88).
   - Hitstop-Frames, Hitstun-Dauer und Air-Control / Directional Influence (DI) in der Luft.
   - Normaler Lebenspunkte-Modus (0 HP = K.O.) und 3-Stock-Ring-Out-Modus koexistieren nahtlos.
 - [x] **C. Vollständiges Greif- und Wurfsystem**:
@@ -33,21 +33,21 @@ Ziel: Hochwertiger 2,5D-Arenakämpfer mit datengetriebenem Rückstoß (proportio
   5. **Cyber Anubis** (Schakal-Gott mit Dual-Khopesh)
   6. **Void Specter** (Kristallphantom mit Void-Lanze)
   7. **Phoenix Empress** (Feuervogel-Herrscherin mit Phoenix-Glaive)
-  8. **Son Goku** (Ultra Instinct / Super Saiyan mit Kamehameha)
-  9. **Sub-Zero** (Lin Kuei Cryomancer mit Kori-Klinge & Eisscherben)
-  10. **Pain / Nagato** (Akatsuki Deva Path mit Rinnegan & Shinra Tensei)
-  11. **Monkey D. Ruffy** (Strohhut-Kapitän mit Gum-Gum-Pistole)
-  12. **Sonic the Hedgehog** (Blue Blur mit Power Sneakers & Spin Dash)
-  13. **Akaza / Hakuji** (Upper Rank Three mit Hakai Satsu Compass Needle)
-- [x] **F. Neuer Kämpfer: Akaza (Demon Slayer)**:
+  8. **Kairo** (Ultra Instinct / Super Saiyan mit Solar-Kanone)
+  9. **Glaciem** (Frostassassine mit Eisdolch & Eissplittern)
+  10. **Oryn** (Schwerkraftprophet mit Runenringen & Abstoßungswelle)
+  11. **Tobi** (Federfaust mit Schleuderfaust)
+  12. **Zip** (Blitzkurier mit Düsenstiefeln & Turbo-Sprint)
+  13. **Raiga** (Donnerfaust mit Sternschlag)
+- [x] **F. Neuer Kämpfer: Raiga**:
   - 3D-Modell in Blender 4.5.5 LTS mit Soryu-Tattoos, ärmellosem Haori-Vest, Shimenawa-Kordelgürtel mit Gebetsperlen, Hakama-Hose, blauen Fußperlen und leuchtenden Dämonenaugen.
-  - 12-strahlige, cyan-emittierende Kompassnadel-Bodenmandalas (`Akaza_CompassNeedle`), dynamisch aktiv bei Spezialangriff.
+  - 12-strahlige, cyan-emittierende Stern-Siegel-Bodenmandalas (`Raiga_GroundStar`), dynamisch aktiv bei Spezialangriff.
   - PBR-Texturen: Albedo, Normal, Emission für Haut, Haori, Hakama und Kompass.
-  - UI-Porträts: `portrait_akaza.png` und `thumb_akaza.png`.
-- [x] **G. Neuer Kämpfer: Sonic the Hedgehog**:
+  - UI-Porträts: `portrait_raiga.png` und (Thumbnail entfernt).
+- [x] **G. Neuer Kämpfer: Zip**:
   - 3D-Modell mit 6 Stacheln, goldenen Schuhschnallen, Handschuhen und dynamischer Spin-Dash-Kugel.
   - PBR-Texturen für Fell, Haut, Schuhe und Schnallen.
-- [x] **H. Mortal Kombat Charakterauswahl-Menü (13 Kämpfer)**:
+- [x] **H. Charakterauswahl-Menü (13 Kämpfer)**:
   - 7x2 interaktives Auswahlgitter im klassischen Mortal-Kombat-Design.
   - Goldener Header „CHOOSE YOUR FIGHTER“.
   - Separate Spieler-Tabs (P1 / P2) mit visuellen Markierungs-Badges.

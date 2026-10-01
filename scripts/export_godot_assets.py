@@ -6,7 +6,7 @@ ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "godot" / "assets" / "models"
 OUT.mkdir(parents=True, exist_ok=True)
 
-for source, target in (("PFU_ShadowNinja", "ninja"), ("PFU_LavaGolem", "golem"), ("PFU_MoeValkyrie", "valkyrie"), ("PFU_CyberDragon", "dragon"), ("PFU_CyberAnubis", "anubis"), ("PFU_VoidSpecter", "specter"), ("PFU_PhoenixEmpress", "phoenix"), ("PFU_SonGoku", "goku"), ("PFU_BrokenMoonkeep", "arena")):
+for source, target in (("PFU_ShadowNinja", "ninja"), ("PFU_LavaGolem", "golem"), ("PFU_MoeValkyrie", "valkyrie"), ("PFU_CyberDragon", "dragon"), ("PFU_CyberAnubis", "anubis"), ("PFU_VoidSpecter", "specter"), ("PFU_PhoenixEmpress", "phoenix"), ("PFU_BrokenMoonkeep", "arena")):
     bpy.ops.wm.open_mainfile(filepath=str(ROOT / "art" / "blender" / (source + ".blend")))
     for obj in list(bpy.context.scene.objects):
         if obj.type in {"LIGHT", "CAMERA"}:

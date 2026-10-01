@@ -26,13 +26,13 @@ var result: Dictionary = CharacterRemixer.validate(profile)
 | golem | Magma Core Colossus | 1.35 | 130 | Vitalität/Power |
 | valkyrie | Aether Paladin Plate | 1.05 | 110 | Ausgewogen |
 | dragon | Draconic Scale Carapace | 1.20 | 120 | Power/Vitalität |
-| goku | Martial Arts Gi | 1.00 | 115 | Power/Speed |
-| subzero | Lin Kuei Cryo Tunic | 1.05 | 112 | Ausgewogen |
-| pain | Akatsuki Shroud | 1.00 | 110 | Power/Technik |
-| luffy | Straw Hat Brawler | 0.95 | 115 | Power/Speed |
-| sonic | Blue Blur Quills | 0.85 | 95 | Speed dominant |
-| akaza | Soryu Demon Physique | 1.02 | 118 | Power/Speed |
-| blue_eyes | Platinum Dragon Wings | 1.30 | 125 | Power/Vitalität |
+| kairo | Sturmmönch-Robe | 1.00 | 115 | Power/Speed |
+| glaciem | Frost-Mantel | 1.05 | 112 | Ausgewogen |
+| oryn | Schwerkraft-Robe | 1.00 | 110 | Power/Technik |
+| tobi | Federfaust-Raufbold | 0.95 | 115 | Power/Speed |
+| zip | Blitzkurier-Anzug | 0.85 | 95 | Speed dominant |
+| raiga | Donnerfaust-Körper | 1.02 | 118 | Power/Speed |
+| albion | Silberwyrm-Flügel | 1.30 | 125 | Power/Vitalität |
 
 ### Elemente (5)
 
@@ -49,7 +49,7 @@ var result: Dictionary = CharacterRemixer.validate(profile)
 | ID | Name | Typ | Schaden | Push | Reichweite | Cooldown | Kosten |
 |----|------|-----|---------|------|------------|----------|--------|
 | beam | Energy Beam | beam | 22 | 0.40 | 3.4 | 4.5s | 40 |
-| dash | Supersonic Dash | electric_dash | 18 | 0.48 | 3.2 | 3.8s | 40 |
+| dash | Überschall-Sprint | electric_dash | 18 | 0.48 | 3.2 | 3.8s | 40 |
 | blast | Gravity Blast | gravity_wave | 20 | 0.65 | 3.4 | 4.2s | 40 |
 | slow | Cryo Freeze Surge | ice_slow | 16 | 0.32 | 3.3 | 4.0s | 40 |
 | barrage | Rapid Martial Barrage | compass_needle | 24 | 0.38 | 3.0 | 4.6s | 40 |
@@ -65,7 +65,7 @@ var result: Dictionary = CharacterRemixer.validate(profile)
 
 ## Prompt-Analyse Pipeline
 
-1. **Body-Erkennung**: Schlüsselwörter → Body-Modul (z.B. "drache" → dragon, "goku" → goku)
+1. **Body-Erkennung**: Schlüsselwörter → Body-Modul (z.B. "drache" → dragon, "kairo" → kairo)
 2. **Element-Erkennung**: Schlüsselwörter → Element (z.B. "eis" → ice, "blitz" → lightning)
 3. **Ability-Erkennung**: Schlüsselwörter → Fähigkeit (z.B. "beam" → beam, "dash" → dash)
 4. **Standard-Angriff**: Wird aus Body-Daten berechnet (Reichweite, Windup, Schaden)

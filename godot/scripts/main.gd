@@ -398,6 +398,7 @@ func _ready() -> void:
     setup_player_markers()
     setup_ui()
     setup_touch()
+    setup_store()
     setup_audio()
     restore_prompts()
     refresh_previews()
@@ -420,6 +421,51 @@ func _ready() -> void:
 const Platform = preload("res://scripts/platform.gd")
 const TouchControlsScript = preload("res://scripts/touch_controls.gd")
 var touch: Control = null
+const StoreScript = preload("res://scripts/store.gd")
+const Products = preload("res://scripts/products.gd")
+var store: Node = null
+
+## Real-money store (store.gd): Steam DLC, Google Play purchases, local test mode elsewhere.
+func setup_store() -> void:
+    store = StoreScript.new()
+    store.name = "Store"
+    store.persist = progression.persist
+    add_child(store)
+    store.setup()
+    store.ownership_changed.connect(_on_store_changed)
+    _on_store_changed()
+
+## Gives the contents of every owned product (idempotent) and refreshes an open shop.
+func _on_store_changed() -> void:
+    for p in Products.PRODUCTS:
+        if store.owns(str(p.id)): Products.apply(progression, str(p.id), Backgrounds.LIST, Rewards.WEAPONS)
+    if title_panel != null and title_panel.visible and title_panel_kind == "shop": _open_title_panel("shop")
+
+## Premium tab: real stores always; the local test store only in debug builds, so a free
+## desktop download never hands out paid content.
+func premium_visible() -> bool:
+    return store != null and (store.backend != "local" or OS.is_debug_build())
+
+## Google Play free tier: story beyond the first chapters and most bosses need the Vollversion.
+func full_game_locked() -> bool:
+    return store != null and not store.has_full_game()
+
+const FREE_BOSSES := 3
+
+func boss_needs_full_game(bid: String, rush: bool) -> bool:
+    if not full_game_locked(): return false
+    return rush or Bosses.ORDER.find(bid) >= FREE_BOSSES
+
+func show_full_game_offer() -> void:
+    show_status("💎 VOLLVERSION nötig – einmal kaufen, alles freischalten", 3.0)
+    hide_selection_overlays()
+    show_title("menu")
+    shop_tab = "premium"
+    _open_title_panel("shop")
+
+func hide_selection_overlays() -> void:
+    close_boss_menu()
+    if story != null and story.menu_panel != null: story.menu_panel.hide()
 
 func setup_touch(force: bool = false) -> void:
     if not (force or Platform.touch_enabled()) or touch != null: return
@@ -3097,19 +3143,63 @@ func _fill_shop(v: VBoxContainer) -> void:
     var tabs := HBoxContainer.new()
     tabs.add_theme_constant_override("separation", 8)
     v.add_child(tabs)
-    for t in [["backgrounds", "🖼 HINTERGRÜNDE & ARENEN"], ["weapons", "⚔ WAFFEN"], ["skins", "✨ SKINS"], ["chest", "🎁 GLÜCKSTRUHE"]]:
+    var tab_list: Array = [["backgrounds", "🖼 HINTERGRÜNDE & ARENEN"], ["weapons", "⚔ WAFFEN"], ["skins", "✨ SKINS"], ["chest", "🎁 GLÜCKSTRUHE"]]
+    if premium_visible(): tab_list.append(["premium", "💎 PREMIUM"])
+    for t in tab_list:
         var tab_id: String = t[0]
         var tb := button(("▶ " if shop_tab == tab_id else "") + str(t[1]), Color("fbbf24") if shop_tab == tab_id else Color("64748b"), func():
             shop_tab = tab_id
             _open_title_panel("shop"))
-        tb.custom_minimum_size = Vector2(250, 36)
+        tb.custom_minimum_size = Vector2(250 if tab_list.size() <= 4 else 205, 36)
         tb.add_theme_font_size_override("font_size", 13)
         tabs.add_child(tb)
     match shop_tab:
         "weapons": _fill_shop_items(v, "weapons")
         "skins": _fill_shop_items(v, "skins")
         "chest": _fill_chest(v)
+        "premium":
+            if premium_visible(): _fill_shop_premium(v)
+            else: _fill_shop_backgrounds(v)
         _: _fill_shop_backgrounds(v)
+
+## Real-money products: fixed price, exact contents, nothing random, everything also earnable.
+func _fill_shop_premium(v: VBoxContainer) -> void:
+    var note := "Feste Preise, genauer Inhalt, keine Zufallskäufe. Alles hier kannst du auch mit Münzen erspielen."
+    if store.backend == "local": note = "🧪 TESTMODUS – es wird nichts berechnet. Echte Käufe laufen später über Steam bzw. Google Play."
+    v.add_child(label(note, 12, Color("cbd5e1") if store.backend != "local" else Color("fde047")))
+    var scroll := ScrollContainer.new()
+    scroll.custom_minimum_size = Vector2(1060, 400)
+    v.add_child(scroll)
+    var list := VBoxContainer.new()
+    list.add_theme_constant_override("separation", 8)
+    scroll.add_child(list)
+    for p in store.products():
+        var row := HBoxContainer.new()
+        row.add_theme_constant_override("separation", 14)
+        list.add_child(row)
+        var info := VBoxContainer.new()
+        info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+        row.add_child(info)
+        info.add_child(label("💎 " + str(p.name), 16, Color("fde68a")))
+        var d := label(str(p.desc), 12, Color("e2e8f0"))
+        d.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+        d.custom_minimum_size = Vector2(760, 0)
+        info.add_child(d)
+        var pid: String = str(p.id)
+        var owned: bool = store.owns(pid)
+        var b := button("✓ GEKAUFT" if owned else store.price_text(pid), Color("22c55e") if owned else Color("f59e0b"), func(): _buy_product(pid))
+        b.custom_minimum_size = Vector2(180, 44)
+        b.disabled = owned
+        row.add_child(b)
+    var restore := button("KÄUFE WIEDERHERSTELLEN", Color("64748b"), func():
+        store.restore()
+        show_status("Käufe werden geprüft …", 2.0))
+    v.add_child(restore)
+
+func _buy_product(id: String) -> void:
+    if store.owns(id): return
+    store.buy(id)
+    sound("start")
 
 func _fill_shop_backgrounds(v: VBoxContainer) -> void:
     v.add_child(label("Jeder Hintergrund ist ein eigenes Startmenü – und schaltet seine spielbare Arena frei. Münzen gibt es für jeden Kampf, Bosse und Story-Kapitel.", 12, Color("cbd5e1")))
@@ -3655,6 +3745,9 @@ func _highlight_boss_menu() -> void:
 
 func _pick_boss(bid: String, rush: bool) -> void:
     close_boss_menu()
+    if boss_needs_full_game(bid, rush):
+        show_full_game_offer()
+        return
     start_boss(bid, rush)
 
 func start_boss(bid: String, rush: bool) -> void:

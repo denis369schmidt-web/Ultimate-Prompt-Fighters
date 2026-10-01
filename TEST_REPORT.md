@@ -55,12 +55,12 @@ TESTING ALL 13 CHARACTERS (PROMPT -> SIM -> VIEW)
 [anubis] family=anubis name='CYBER ANUBIS' valid=true -> SIM & VIEW OK
 [specter] family=specter name='VOID SPECTER' valid=true -> SIM & VIEW OK
 [phoenix] family=phoenix name='PHOENIX EMPRESS' valid=true -> SIM & VIEW OK
-[goku] family=goku name='SON GOKU (ULTRA)' valid=true -> SIM & VIEW OK
-[subzero] family=subzero name='SUB-ZERO' valid=true -> SIM & VIEW OK
-[pain] family=pain name='PAIN' valid=true -> SIM & VIEW OK
-[luffy] family=luffy name='MONKEY D. RUFFY' valid=true -> SIM & VIEW OK
-[sonic] family=sonic name='SONIC THE HEDGEHOG' valid=true -> SIM & VIEW OK
-[akaza] family=akaza name='AKAZA (UPPER RANK 3)' valid=true -> SIM & VIEW OK
+[kairo] family=kairo name='KAIRO (STURMMÖNCH)' valid=true -> SIM & VIEW OK
+[glaciem] family=glaciem name='GLACIEM' valid=true -> SIM & VIEW OK
+[oryn] family=oryn name='ORYN' valid=true -> SIM & VIEW OK
+[tobi] family=tobi name='TOBI (FEDERFAUST)' valid=true -> SIM & VIEW OK
+[zip] family=zip name='ZIP (BLITZKURIER)' valid=true -> SIM & VIEW OK
+[raiga] family=raiga name='RAIGA (DONNERFAUST)' valid=true -> SIM & VIEW OK
 ==================================================
 ALL 13 CHARACTERS ARE FULLY PLAYABLE!
 ==================================================
@@ -69,7 +69,7 @@ ALL 13 CHARACTERS ARE FULLY PLAYABLE!
 ---
 
 ## 2. Rendering & Showcase Verifikation
-- `screenshot_akaza_showcase.png`: Akaza Compass Needle Bodenmandala gerendert.
-- `screenshot_akaza_vs_goku.png`: Kampfpose Akaza vs Goku gerendert.
+- `Raiga-Screenshot`: Raiga Sternschlag Bodenmandala gerendert.
+- `Kampf-Screenshot`: Kampfpose Raiga vs Kairo gerendert.
 - `screenshot_all_13_characters_lineup.png`: Panorama aller 13 Charaktere gerendert.
-- `screenshot_mortal_kombat_13_select.png`: Mortal Kombat Auswahlmenü (7x2 Raster) gerendert.
+- `Auswahl-Screenshot (entfernt)`: Auswahlmenü (7x2 Raster) gerendert.

@@ -34,12 +34,10 @@
 
 ### 3.1 Rechtlich (blockiert jeden Store-Release) — höchste Priorität
 
-- **Geschützte Figuren von Rechteinhabern im Roster:** Goku, Vegeta, Frieza (Dragon Ball), Naruto, Sasuke, Pain (Naruto), Luffy, Zoro (One Piece), Tanjiro, Akaza (Demon Slayer), Saitama (One Punch Man), Sonic (SEGA), Glurak/Charizard (Pokémon), Blue-Eyes White Dragon (Yu-Gi-Oh!), Sub-Zero (Mortal Kombat).
-- Betroffen sind nicht nur die Namen, sondern auch die **Attackennamen** (Kamehameha, Rasengan, Chidori, Gum-Gum, Final Flash …), **Modelle, Texturen, Porträts** und die Prompt-Schlüsselwörter.
-- **UI-Texte und Kommentare** verweisen auf „Super Smash Bros" und „Mortal Kombat" (z. B. „MORTAL KOMBAT GRID", „SMASH RING-OUT"). In einem Produkt nicht zulässig.
+- ✅ **Erledigt (2026-09-30):** Alle Figuren, Attackennamen, Modelle, Texturen, Porträts, Prompt-Schlüsselwörter und UI-Texte, die von fremden Marken abgeleitet waren, sind entfernt und durch 16 eigene Helden mit im Code erzeugtem Aussehen ersetzt (`scripts/hero_gear.gd`, `CHARACTER_MATRIX.md`). Fremddateien liegen außerhalb des Projekts in `_quarantine_ip/` (nicht im Repo). `tests/test_roster.gd` verhindert, dass geschützte Begriffe zurückkommen.
 - **Tripo-Modelle:** Die Lizenz hängt vom Tripo-Tarif ab, mit dem sie erzeugt wurden. Kostenlose Pläne erlauben teils keine oder nur eingeschränkte kommerzielle Nutzung. **Muss vor Release geklärt werden.**
 - Mixamo-Modelle: Einbau in ein Spiel ist erlaubt; die rohen Dateien dürfen aber nicht separat weitergegeben werden. Unkritisch.
-- **Hinweis zum Umbenennen:** Klangähnliche Namen („Gokuu") reichen nicht. Marken- und Urheberrecht schützen auch Aussehen und Wiedererkennbarkeit. Nötig sind eigenständige Namen **und** eigenständige Designs (Frisur, Farben, Outfit, Signature-Moves). Vorschlag siehe Abschnitt 7.
+- Eigenständige Namen **und** eigenständige Designs (Farben, Ausrüstung, Signature-Moves) sind umgesetzt.
 
 ### 3.2 Tests (kein Sicherheitsnetz)
 
@@ -172,27 +170,9 @@ Die Zielstruktur (`core/`, `fighters/`, `data/`, `ui/`, `fx/`) ist sinnvoll. Ein
 ### „Flux-Dash" – fortgeschrittene Bewegungstechnik
 Ein Air Dodge schräg in den Boden überträgt den Schwung in einen Slide (wavedash-artig). Frame-genau timbar, mit sichtbarer Spur. Hohes Skill Ceiling, für Einsteiger optional.
 
-## 8. Vorschlag zur Umbenennung (eigenständig, nicht klangähnlich)
+## 8. Umbenennung – umgesetzt
 
-| Heute | Neuer Name | Signature-Move neu |
-|---|---|---|
-| Son Goku | **KAIRO** – Sturmmönch | Solar-Kanone |
-| Vegeta | **VARAKH** – Sternenprinz | Novafeuer |
-| Frieza | **XYLAR** – Leerenkaiser | Nadelstrahl |
-| Naruto | **REN** – Wirbelfuchs | Spiralkern |
-| Sasuke | **KAGE** – Donnerklinge | Tausend Funken |
-| Pain | **ORYN** – Schwerkraftprophet | Abstoßungswelle |
-| Luffy | **TOBI** – Gummikapitän | Schleuderfaust |
-| Zoro | **JUBEI** – Dreiklingen-Wanderer | Tigerschnitt |
-| Tanjiro | **HIKARU** – Sonnentänzer | Morgenrotschnitt |
-| Akaza | **RAIGA** – Kompassdämon | Frostkompass |
-| Saitama | **BARTHOLOMEW „BART"** – Einschlag-Held | Ernstfall-Schlag |
-| Sonic | **ZIP** – Blitzigel | Turbo-Rolle |
-| Glurak / Charizard | **PYRAX** – Glutwyvern | Feuersturm |
-| Blue-Eyes White Dragon | **ALBION** – Frostwyrm | Weißer Sturmstrahl |
-| Sub-Zero | **GLACIEM** – Frostassassine | Eissplitter |
-
-Bei allen Figuren müssen auch **Farben, Frisur und Outfit** so geändert werden, dass sie nicht mehr an das Original erinnern. Das mache ich nach deinem OK in den Material-Einstellungen, bei Bedarf auch in Blender.
+Die 16 eigenen Helden (Kairo, Varakh, Xylar, Glaciem, Oryn, Tobi, Jubei, Ren, Amethya, Bruno, Hikaru, Zip, Raiga, Albion, Pyrax, Lepora) mit Titel, Signatur-Mechanik und generiertem Aussehen stehen in `CHARACTER_MATRIX.md`.
 
 ## 9. Empfohlene Reihenfolge der ersten Schritte (jeweils einzeln, mit Test)
 

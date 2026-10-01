@@ -30,26 +30,26 @@ Rig „–“ = Modell ohne Skelett (keine Posen/Animation möglich). Tex = Mate
 | 2 | golem | MAGMOR | fire | 1.32 | 2.95 | 133 | 27/23/27/10/13 | Standard Strike / Magma Quake | eruption | Einäschern | pumpkin_abomination | Mixamo 66 | 1/1 | Schwergewicht | Kürbismonster statt Lavagolem; Name generisch; Eruption ×5 |
 | 3 | valkyrie | BOLTAR | holy | 1.05 | 3.73 | 115 | 16/24/16/22/22 | Standard Strike / Radiant Pierce | projectile | Eissarg | paladin_armed | Mixamo 69 | 4/4 | Allrounder (Speer) | Holy→Eissarg passt nicht; Name generisch |
 | 4 | dragon | TEMPLAR | fire | 1.20 | 3.54 | 125 | 22/24/22/19/13 | Standard Strike / Wyrm Flame | beam | Einäschern | castle_guard | Mixamo 43 | 1/1 | Schwertkämpfer | Name generisch; Rig ohne Finger; Beam ×5 |
-| 5 | goku | KAIRO | wind | 1.05 | 3.40 | 123 | 21/26/13/17/23 | Standard Strike / Solar-Kanone | beam | Himmelszorn | gladiator_heraklios | Mixamo 65 | 2/2 | Allrounder | Beam ×5 |
-| 6 | vegeta | VARAKH | ki_gold | 1.06 | 3.73 | 120 | 19/27/16/22/16 | Prinzenschlag / Nova-Strahl | projectile | Einäschern | exo_red | Mixamo 112 | 8/8 | Druck + Zoner | Ki→Einäschern fragwürdig |
-| 7 | frieza | XYLAR | ki_purple | 1.02 | 3.73 | 125 | 22/26/16/22/14 | Schweifpeitsche / Nadelstrahl | projectile | Leerensog | demon_warlord | Mixamo 79 | 8/8 | Zoner | – |
-| 8 | subzero | GLACIEM | ice | 1.05 | 3.92 | 114 | 15/28/17/25/15 | Standard Strike / Eissplitter | projectile | Eissarg | exo_gray | Mixamo 112 | 8/8 | Kontrolle (Einfrieren) | Name generisch |
-| 9 | pain | ORYN | gravity | 1.05 | 3.60 | 122 | 20/28/17/20/15 | Standard Strike / Abstoßungswelle | whirl | Leerensog | paladin_nord | Mixamo 67 | 2/2 | Kontrolle (Abstoßen) | Name generisch; Whirl ×4 |
-| 10 | luffy | TOBI | rubber | 0.95 | 4.05 | 125 | 22/25/12/27/14 | Standard Strike / Schleuderfaust | barrage | Kopfjäger | brute_titan | Mixamo 72 | 9/10 | Reichweite | Koloss-Körper für flinken Gummikämpfer |
-| 11 | zoro | JUBEI | wind_slash | 1.12 | 3.40 | 126 | 23/28/18/17/14 | Dreiklingenhieb / Tigerschnitt | dash | Himmelszorn | elven_archer | Mixamo 70 | 6/6 | Schwertkämpfer | Bogenschützen-Körper; Dash ×5 |
-| 12 | naruto | REN | wind_rasen | 0.98 | 3.86 | 126 | 23/25/16/24/12 | Wirbelkombo / Spiralkern | clone | Himmelszorn | kachujin_dragon | Mixamo 75 | 2/2 | Trickser (Klone) | – |
-| 13 | sasuke | AMETHYA | electric_chidori | 0.98 | 4.25 | 117 | 17/24/14/30/15 | Donnerschnitt / Tausend Funken | dash | Himmelszorn | assassin_night | Mixamo 68 | 1/1 | Rushdown | Dash ×5 |
-| 14 | saitama | BRUNO | serious_force | 1.05 | 3.40 | 123 | 21/34/18/17/10 | Normal Punch / Ernstfall-Schlag | power | Kopfjäger | martial_yaku | Mixamo 65 | 2/2 | Punisher (langsam, tödlich) | – |
-| 15 | tanjiro | HIKARU | sun_flame | 1.02 | 3.67 | 120 | 19/29/14/21/17 | Morgenklinge / Morgenrotschnitt | whirl | Einäschern | monk_ganfaul | Mixamo 99 | 1/1 | Schwertkämpfer (Combo) | Whirl ×4 |
-| 16 | sonic | ZIP | wind | 0.88 | 4.64 | 120 | 19/20/14/36/11 | Standard Strike / Turbo-Rolle | dash | Himmelszorn | crypto_cyber | Mixamo 65 | 1/1 | Rushdown (Tempo) | Name generisch; Dash ×5 |
-| 17 | akaza | RAIGA | blood_demon | 1.02 | 3.73 | 130 | 25/28/13/22/12 | Kompassfaust / Kompassnova | counter | Einäschern | maw_alien | Mixamo 64 | 1/1 | Konter | Counter = Cardinal |
-| 18 | blue_eyes | ALBION | holy_light | 1.28 | 3.47 | 126 | 23/29/17/18/13 | Silberklaue / Sturmstrahl | beam | Eissarg | maria_prop | Mixamo 65 | 2/2 | Schwergewicht-Zoner | Drache auf Menschenkörper; Holy→Eissarg |
-| 19 | charizard | GRAVOK | fire | 1.15 | 3.54 | 120 | 19/31/17/19/14 | Glutklaue / Glutsturm | projectile | Einäschern | parasite_beast | Mixamo 69 | 2/2 | Luftkämpfer (schwer) | Wyvern ohne Flügel |
+| 5 | kairo | KAIRO | wind | 1.05 | 3.40 | 123 | 21/26/13/17/23 | Standard Strike / Solar-Kanone | beam | Himmelszorn | gladiator_heraklios | Mixamo 65 | 2/2 | Allrounder | Beam ×5 |
+| 6 | varakh | VARAKH | ki_gold | 1.06 | 3.73 | 120 | 19/27/16/22/16 | Prinzenschlag / Nova-Strahl | projectile | Einäschern | exo_red | Mixamo 112 | 8/8 | Druck + Zoner | Ki→Einäschern fragwürdig |
+| 7 | xylar | XYLAR | ki_purple | 1.02 | 3.73 | 125 | 22/26/16/22/14 | Leerenpeitsche / Nadelstrahl | projectile | Leerensog | demon_warlord | Mixamo 79 | 8/8 | Zoner | – |
+| 8 | glaciem | GLACIEM | ice | 1.05 | 3.92 | 114 | 15/28/17/25/15 | Standard Strike / Eissplitter | projectile | Eissarg | exo_gray | Mixamo 112 | 8/8 | Kontrolle (Einfrieren) | Name generisch |
+| 9 | oryn | ORYN | gravity | 1.05 | 3.60 | 122 | 20/28/17/20/15 | Standard Strike / Abstoßungswelle | whirl | Leerensog | paladin_nord | Mixamo 67 | 2/2 | Kontrolle (Abstoßen) | Name generisch; Whirl ×4 |
+| 10 | tobi | TOBI | rubber | 0.95 | 4.05 | 125 | 22/25/12/27/14 | Standard Strike / Schleuderfaust | barrage | Kopfjäger | brute_titan | Mixamo 72 | 9/10 | Reichweite | Koloss-Körper für flinken Gummikämpfer |
+| 11 | jubei | JUBEI | wind_slash | 1.12 | 3.40 | 126 | 23/28/18/17/14 | Windklingenhieb / Sturmschnitt | dash | Himmelszorn | elven_archer | Mixamo 70 | 6/6 | Schwertkämpfer | Bogenschützen-Körper; Dash ×5 |
+| 12 | ren | REN | wind_spiral | 0.98 | 3.86 | 126 | 23/25/16/24/12 | Wirbelkombo / Blütenwirbel | clone | Himmelszorn | kachujin_dragon | Mixamo 75 | 2/2 | Trickser (Klone) | – |
+| 13 | amethya | AMETHYA | electric_arc | 0.98 | 4.25 | 117 | 17/24/14/30/15 | Donnerschnitt / Amethystblitz | dash | Himmelszorn | assassin_night | Mixamo 68 | 1/1 | Rushdown | Dash ×5 |
+| 14 | bruno | BRUNO | impact_force | 1.05 | 3.40 | 123 | 21/34/18/17/10 | Meteorhaken / Meteorfaust | power | Kopfjäger | martial_yaku | Mixamo 65 | 2/2 | Punisher (langsam, tödlich) | – |
+| 15 | hikaru | HIKARU | sun_flame | 1.02 | 3.67 | 120 | 19/29/14/21/17 | Morgenklinge / Morgenrotschnitt | whirl | Einäschern | monk_ganfaul | Mixamo 99 | 1/1 | Schwertkämpfer (Combo) | Whirl ×4 |
+| 16 | zip | ZIP | wind | 0.88 | 4.64 | 120 | 19/20/14/36/11 | Standard Strike / Turbo-Sprint | dash | Himmelszorn | crypto_cyber | Mixamo 65 | 1/1 | Rushdown (Tempo) | Name generisch; Dash ×5 |
+| 17 | raiga | RAIGA | blood_oni | 1.02 | 3.73 | 130 | 25/28/13/22/12 | Donnerhieb / Sternschlag | counter | Einäschern | maw_alien | Mixamo 64 | 1/1 | Konter | Counter = Cardinal |
+| 18 | albion | ALBION | holy_light | 1.28 | 3.47 | 126 | 23/29/17/18/13 | Silberklaue / Sturmstrahl | beam | Eissarg | maria_prop | Mixamo 65 | 2/2 | Schwergewicht-Zoner | Drache auf Menschenkörper; Holy→Eissarg |
+| 19 | pyrax | PYRAX | fire | 1.15 | 3.54 | 120 | 19/31/17/19/14 | Glutklaue / Glutsturm | projectile | Einäschern | parasite_beast | Mixamo 69 | 2/2 | Luftkämpfer (schwer) | Wyvern ohne Flügel |
 | 20 | anubis | AURUM | shadow_gold | 1.08 | 3.60 | 118 | 18/29/18/20/15 | Standard Strike / Anubis Wrath | projectile | Einäschern | cyber_xbot | Mixamo 65 | **0/2** | Grappler (Haken) | **untexturierter X-Bot**; Name generisch |
 | 21 | specter | RAVENNA | void | 0.98 | 3.73 | 114 | 15/24/19/22/20 | Standard Strike / Void Lance | teleport | Leerensog | arissa_fighter | Mixamo 73 | 4/4 | Trickser | Name generisch; Teleport = Ninja |
 | 22 | phoenix | SCARLET | fire | 0.98 | 3.54 | 118 | 18/25/15/19/23 | Standard Strike / Phoenix Flare | projectile | Einäschern | eve_warrior | Mixamo 65 | 1/1 | Luftkämpfer | Name generisch |
 | 23 | golden_golem | BRUNHILD | metal_gold | 1.35 | 3.01 | 131 | 26/27/21/11/15 | Midas Strike / Midas Quake | eruption | Einäschern | golden_golem (Tripo) | **–** | 1/1 | Schwergewicht | **kein Skelett**; Eruption ×5 |
-| 24 | tripo_fran_statue | LEPORA | wind_arrow | 0.95 | 3.99 | 117 | 17/24/14/26/19 | Viera Kick / Mist Arrow | projectile | Himmelszorn | Tripo | **–** | 1/1 | Zoner (Bogen) | **kein Skelett** |
+| 24 | lepora | LEPORA | wind_arrow | 0.95 | 3.99 | 117 | 17/24/14/26/19 | Mondtritt / Mondpfeil | projectile | Himmelszorn | Tripo | **–** | 1/1 | Zoner (Bogen) | **kein Skelett** |
 | 25 | tripo_fantasy_female | THORN WITCH | nature_thorn | 0.98 | 3.73 | 123 | 21/24/18/22/15 | Bramble Whip / Thorn Burst | mine | Kopfjäger | Tripo | **–** | 1/1 | Fallenstellerin | **kein Skelett**; Mine = Grimbolt |
 | 26 | tripo_nyx_harvester | NYX HARVESTER | soul_dark | 1.10 | 3.60 | 123 | 21/29/18/20/12 | Reaper Slash / Soul Reaping | projectile | Leerensog | Tripo | **–** | 1/1 | Zoner (Bumerang-Sense) | **kein Skelett** |
 | 27 | tripo_cat_girl | SHIRA | claw_strike | 0.92 | 4.05 | 123 | 21/26/15/27/11 | Feral Scratch / Cat Rush Strike | barrage | Himmelszorn | Tripo | **–** | 1/1 | Rushdown | **kein Skelett**; Barrage = Tobi |
@@ -67,7 +67,7 @@ Rig „–“ = Modell ohne Skelett (keine Posen/Animation möglich). Tex = Mate
 | 39 | swat_specops | SWAT AGENT | electric | 1.04 | 3.54 | 125 | 22/22/19/19/18 | Taktischer Schlag / Schock-Granate | projectile | Himmelszorn | swat_specops | Mixamo 69 | 3/3 | Zoner (Feuerstöße) | „Schock-Granate“ feuert Kugeln |
 | 40 | samurai_dreyar | KOMMANDANT | ice | 1.05 | 3.60 | 123 | 21/29/18/20/12 | Klingenwirbel / Drachenschneide | dash | Eissarg | samurai_dreyar | Mixamo 67 | 1/1 | Punisher (Iaido) | Wind-Samurai → Eis-Finisher; Dash ×5 |
 | 41 | pirate_captain | SERAPHINE | wind | 1.08 | 3.54 | 122 | 20/28/18/19/15 | Entermesser-Hieb / Breitseiten-Schuss | projectile | Himmelszorn | pirate_captain | Mixamo 76 | 1/1 | Mix (Nahschrot) | – |
-| 42 | vampire_lord | VLAD | blood_demon | 1.02 | 3.60 | 120 | 19/30/13/20/18 | Blutkrallen / Karmesin-Nebel | projectile | Einäschern | vampire_lord | Mixamo 99 | 2/2 | Trickser (Lebensraub) | Blut→Einäschern fragwürdig |
+| 42 | vampire_lord | VLAD | blood_oni | 1.02 | 3.60 | 120 | 19/30/13/20/18 | Blutkrallen / Karmesin-Nebel | projectile | Einäschern | vampire_lord | Mixamo 99 | 2/2 | Trickser (Lebensraub) | Blut→Einäschern fragwürdig |
 | 43 | wizard_sorcerer | PYRUS | fire | 0.92 | 3.47 | 114 | 15/30/12/18/25 | Flammenfunke / Meteor-Schauer | meteor | Einäschern | wizard_sorcerer | eigen 67 | 10/10 | Zoner (Flächen) | – |
 | 44 | warrok_brute | WARROK | fire | 1.35 | 2.82 | 138 | 30/28/25/8/9 | Magmaschlag / Vulkan-Eruption | eruption | Einäschern | warrok_brute | Mixamo 81 | 1/1 | Schwergewicht | Eruption ×5 |
 | 45 | nekra | NEKRA | soul_dark | 0.90 | 3.79 | 120 | 19/26/10/23/22 | Knochenpeitsche / Knochengarten | eruption | Leerensog | zombie_girl | Mixamo 63 | 7/7 | Zonerin (Boden) | Eruption ×5 |

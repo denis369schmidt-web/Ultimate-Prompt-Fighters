@@ -356,6 +356,7 @@ func _refresh_menu() -> void:
 		var unlocked: bool = is_unlocked(k)
 		var done: bool = is_done(k)
 		var mark := "✓" if done else ("▶" if unlocked else "🔒")
+		if unlocked and not done and needs_full_game(k): mark = "💎"
 		var idx := k
 		var label_text: String = "%s  KAPITEL %d  ·  %s" % [mark, k + 1, ch.title.to_upper() if unlocked else "???"]
 		if divina: label_text = "%s  %s" % [mark, ch.title.to_upper() if unlocked else "???"]
@@ -430,8 +431,19 @@ func save_progress() -> void:
 
 # ─────────────────────────────────────────────────────────────── chapter flow ──
 
+## Chapters playable without the Vollversion (Google Play free tier).
+const FREE_CHAPTERS := ["d0", "h1", "p1"]
+
+func needs_full_game(k: int) -> bool:
+	if campaign != "divina" or not main.has_method("full_game_locked") or not main.full_game_locked(): return false
+	return not str(chapters()[k].get("id", "")) in FREE_CHAPTERS
+
 func start_chapter(index: int) -> void:
 	if index < 0 or index >= chapters().size(): return
+	if needs_full_game(index):
+		close_menu()
+		main.show_full_game_offer()
+		return
 	close_menu()
 	session += 1
 	running = true
