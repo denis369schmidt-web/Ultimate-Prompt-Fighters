@@ -5,7 +5,13 @@ extends Node
 
 const StoryData = preload("res://scripts/story_data.gd")
 const StoryDivina = preload("res://scripts/story_divina.gd")
+const StorySaga = preload("res://scripts/story_saga.gd")
+const VOICE_DIR := "res://assets/audio/voice/story/"
+## Music mood per step "music" (audio_director.gd TRACKS).
+const MOODS := {"calm": "story_calm", "sad": "story_sad", "hope": "story_hope", "tense": "story_tense",
+	"fight": "fight", "boss": "boss", "boss_final": "boss_final"}
 const Bosses = preload("res://scripts/bosses.gd")
+const StoryLegends = preload("res://scripts/story_legends.gd")
 const Prompt = preload("res://scripts/prompt_interpreter.gd")
 
 const SAVE_PATH := "user://story.cfg"
@@ -33,7 +39,16 @@ var chapter_index := -1
 var completed := 0                # number of finished chapters (unlocks the next one)
 ## Campaign: "zeile" (Die letzte Zeile, linear) or "divina" (Die göttliche Prüfung: earth, hell,
 ## heaven – every realm's first chapter is open, the rest unlock one by one).
-var campaign := "zeile"
+var campaign := "saga"
+## Legends: the fighter whose legend is open ("" = the list of all fighters).
+var legend_family := ""
+var _legend_cache := {}
+var _saga_cache: Array = []
+var choice_panel: PanelContainer
+var choice_label: Label
+var choice_buttons: Array = []
+var choice_index := 0
+var choice_result := -1
 var done_ids := {}                # finished chapter ids of the divina campaign
 var menu_title: Label
 var menu_sub: Label
@@ -297,8 +312,10 @@ func _build_menu(root: Control) -> void:
 	var tabs := HBoxContainer.new()
 	tabs.add_theme_constant_override("separation", 8)
 	v.add_child(tabs)
+	tabs.add_child(_menu_button("🌌 DER RISS ZWISCHEN DEN WELTEN", Color("c084fc"), func(): set_campaign("saga")))
 	tabs.add_child(_menu_button("📖 DIE LETZTE ZEILE", Color("f7c844"), func(): set_campaign("zeile")))
 	tabs.add_child(_menu_button("🔥✨ DIE GÖTTLICHE PRÜFUNG", Color("ff5a1f"), func(): set_campaign("divina")))
+	tabs.add_child(_menu_button("📜 LEGENDEN", Color("fbbf24"), func(): set_campaign("legend")))
 	menu_title = _lbl("", 28, Color("f7c844"))
 	v.add_child(menu_title)
 	menu_sub = _lbl("", 13, Color("bfcee1"))
@@ -325,6 +342,44 @@ func _build_menu(root: Control) -> void:
 	row.add_child(cont)
 	var back := _menu_button("ZURÜCK", Color("ef4444"), close_menu)
 	row.add_child(back)
+	_build_choice(root)
+
+## Decision panel for "choice" steps: two options, keyboard (←/→, 1/2, Enter), pad (D-pad, A) or mouse.
+func _build_choice(root: Control) -> void:
+	choice_panel = PanelContainer.new()
+	choice_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+	choice_panel.position = Vector2(240, 470)
+	choice_panel.custom_minimum_size = Vector2(800, 150)
+	choice_panel.add_theme_stylebox_override("panel", _style(Color(0.03, 0.02, 0.07, 0.95), Color("c084fc"), 14))
+	choice_panel.hide()
+	root.add_child(choice_panel)
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 12)
+	choice_panel.add_child(v)
+	choice_label = _lbl("", 20, Color("f5e9ff"))
+	choice_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	choice_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	v.add_child(choice_label)
+	var row := HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 24)
+	v.add_child(row)
+	for k in range(2):
+		var idx := k
+		var b := _menu_button("", Color("c084fc"), func(): _choose(idx))
+		b.custom_minimum_size = Vector2(360, 54)
+		b.add_theme_font_size_override("font_size", 18)
+		row.add_child(b)
+		choice_buttons.append(b)
+	v.add_child(_lbl("← → wählen  ·  ENTER / A bestätigen", 12, Color("94a3b8")))
+
+func _choose(idx: int) -> void:
+	if choice_panel.visible: choice_result = idx
+
+func _highlight_choice() -> void:
+	for k in range(choice_buttons.size()):
+		var b: Button = choice_buttons[k]
+		b.add_theme_stylebox_override("normal", _style(Color("2c1f47") if k == choice_index else Color("14202e"), Color("f0abfc") if k == choice_index else Color("6b4c8a"), 8))
 
 func _menu_button(text: String, color: Color, cb: Callable) -> Button:
 	var b := Button.new()
@@ -342,9 +397,16 @@ func _menu_button(text: String, color: Color, cb: Callable) -> Button:
 func _refresh_menu() -> void:
 	for c in menu_list.get_children(): c.queue_free()
 	var divina: bool = campaign == "divina"
-	menu_title.text = "PROMPT FIGHTER – " + (StoryDivina.TITLE if divina else StoryData.TITLE)
-	menu_sub.text = StoryDivina.SUBTITLE if divina else "Eine Welt aus Worten wird gelöscht. Nur der letzte Promptgeborene kann die letzte Zeile schützen."
+	var saga: bool = campaign == "saga"
+	menu_title.text = "PROMPT FIGHTER – " + (StoryDivina.TITLE if divina else (StorySaga.TITLE if saga else StoryData.TITLE))
+	menu_sub.text = StoryDivina.SUBTITLE if divina else (StorySaga.SUBTITLE if saga else "Eine Welt aus Worten wird gelöscht. Nur der letzte Promptgeborene kann die letzte Zeile schützen.")
 	menu_realm_row.visible = divina
+	if campaign == "legend":
+		_refresh_legend_menu()
+		return
+	if saga:
+		_refresh_saga_menu()
+		return
 	var realm_names := {"earth": "🌲 PROLOG · ERDE", "hell": "🔥 INFERNO · DAS HÖLLENREICH", "heaven": "✨ PARADISO · DAS HIMMELREICH"}
 	var last_realm := ""
 	var list: Array = chapters()
@@ -366,22 +428,120 @@ func _refresh_menu() -> void:
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		menu_list.add_child(b)
 
+## Legends: first every fighter with progress, then the four chapters of the chosen one.
+func _refresh_legend_menu() -> void:
+	menu_title.text = "📜 LEGENDEN"
+	if legend_family == "":
+		menu_sub.text = "Jeder Kämpfer hat seine eigene Geschichte. Kapitel öffnen sich mit seinen Meisterschafts-Sternen – spiel ihn, um mehr zu erfahren. Am Ende wartet sein Relikt."
+		for preset in main.mk_presets:
+			var fam: String = str(preset.id)
+			if not StoryLegends.has_legend(fam): continue
+			var done := 0
+			for k in range(4):
+				if done_ids.has("%s_%d" % [fam, k + 1]): done += 1
+			var stars: int = main.progression.stars_of(fam) if main.get("progression") != null else 0
+			var relic: bool = main.get("progression") != null and main.progression.legend_relics.has(fam)
+			var b := _menu_button("%s  %s  ·  %d/4 Kapitel  ·  %s" % ["👑" if relic else ("▶" if done < 4 else "✓"), str(preset.name), done, "★".repeat(stars) + "☆".repeat(maxi(0, 3 - stars))],
+				Color("fbbf24") if relic else Color("f7c844"), func(): open_legend(fam))
+			b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+			menu_list.add_child(b)
+		return
+	var inf: Dictionary = StoryLegends.info(legend_family)
+	menu_title.text = "📜 " + StoryLegends.cast_name(legend_family) + " – " + str(inf.epithet).to_upper()
+	menu_sub.text = "%s   ·   Sterne: %s   ·   Relikt: %s" % [str(inf.summary), "★".repeat(legend_stars()), str(inf.get("relic", ""))]
+	var list: Array = chapters()
+	for k in range(list.size()):
+		var ch: Dictionary = list[k]
+		var unlocked: bool = is_unlocked(k)
+		var mark := "✓" if is_done(k) else ("▶" if unlocked else "🔒")
+		var need: int = int(ch.get("stars", 0))
+		var lock_txt := "" if unlocked else ("  ·  braucht ★%d (%s spielen)" % [need, StoryLegends.cast_name(legend_family)] if legend_stars() < need else "  ·  erst Kapitel %d" % k)
+		var idx := k
+		var b := _menu_button("%s  KAPITEL %s  ·  %s%s" % [mark, ["I", "II", "III", "IV"][k], str(ch.title).to_upper(), lock_txt], Color("fbbf24") if unlocked else Color("334155"),
+			func(): start_chapter(idx))
+		b.disabled = not unlocked
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		menu_list.add_child(b)
+	menu_list.add_child(_menu_button("◀ ALLE LEGENDEN", Color("94a3b8"), func():
+		legend_family = ""
+		_refresh_menu()))
+
+## Saga menu: grouped by act; act II lists every world, open in any order.
+func _refresh_saga_menu() -> void:
+	var act_names := {"prolog": "PROLOG", "act1": "AKT I · DIE SPUR DER SPLITTER", "act2": "AKT II · DIE VERLORENEN WELTEN (freie Reihenfolge)",
+		"act3": "AKT III · DIE LETZTE FEDER", "epilog": "EPILOG"}
+	var last_act := ""
+	var list: Array = chapters()
+	var bonds := 0
+	for b in StorySaga.BONDS: if flags.get(b, false): bonds += 1
+	menu_sub.text = StorySaga.SUBTITLE + "   ·   Verbündete: %d / %d" % [bonds, StorySaga.BONDS.size()]
+	for k in range(list.size()):
+		var ch: Dictionary = list[k]
+		if str(ch.act) != last_act:
+			last_act = str(ch.act)
+			menu_list.add_child(_lbl(act_names.get(last_act, last_act), 14, Color("c084fc")))
+		var unlocked: bool = is_unlocked(k)
+		var mark := "✓" if is_done(k) else ("▶" if unlocked else "🔒")
+		var idx := k
+		var b := _menu_button("%s  %s" % [mark, str(ch.title).to_upper() if unlocked else "???"], Color("c084fc") if unlocked else Color("334155"),
+			func(): start_chapter(idx))
+		b.disabled = not unlocked
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		menu_list.add_child(b)
+
 ## Chapters and cast of the current campaign.
 func chapters() -> Array:
+	if campaign == "legend":
+		if legend_family == "": return []
+		if not _legend_cache.has(legend_family): _legend_cache[legend_family] = StoryLegends.chapters(legend_family)
+		return _legend_cache[legend_family]
+	if campaign == "saga":
+		if _saga_cache.is_empty(): _saga_cache = StorySaga.chapters()
+		return _saga_cache
 	return StoryDivina.all() if campaign == "divina" else StoryData.CHAPTERS
 
 func cast_table() -> Dictionary:
+	if campaign == "legend" and legend_family != "": return StoryLegends.cast(legend_family, main.mk_presets)
+	if campaign == "saga": return StorySaga.CAST
 	return StoryDivina.CAST if campaign == "divina" else StoryData.CAST
 
+## Profile of a cast member of the current campaign (its own cast first).
+func _profile(id: String, slot: int, heroes: int = 1) -> Dictionary:
+	var c: Dictionary = cast_table().get(id, {})
+	if c.is_empty(): return cast_profile(id, slot, heroes)
+	if c.has("boss"): return Bosses.profile(str(c.boss), heroes)
+	var p: Dictionary = Prompt.interpret(c.prompt, slot)
+	p.name = c.name
+	return p
+
+## Mastery stars of the open legend's fighter.
+func legend_stars() -> int:
+	if main.get("progression") == null: return 0
+	return main.progression.stars_of(legend_family)
+
+func open_legend(fam: String) -> void:
+	campaign = "legend"
+	legend_family = fam
+	if menu_panel != null and menu_panel.visible: _refresh_menu()
+
 func set_campaign(id: String) -> void:
+	if id == "legend": legend_family = ""
 	campaign = id
 	if menu_panel != null and menu_panel.visible: _refresh_menu()
 
 func is_done(k: int) -> bool:
-	if campaign == "divina": return done_ids.has(str(chapters()[k].id))
+	if campaign == "divina" or campaign == "saga" or campaign == "legend": return done_ids.has(str(chapters()[k].id))
 	return k < completed
 
 func is_unlocked(k: int) -> bool:
+	if campaign == "legend":
+		var need: int = int(chapters()[k].get("stars", 0))
+		return legend_stars() >= need and (k == 0 or is_done(k - 1))
+	if campaign == "saga":
+		var ch: Dictionary = chapters()[k]
+		for req in ch.get("requires", []):
+			if not done_ids.has(str(req)): return false
+		return true
 	if campaign != "divina": return k <= completed
 	var list: Array = chapters()
 	return bool(list[k].get("start", false)) or is_done(k) or (k > 0 and is_done(k - 1))
@@ -458,13 +618,16 @@ func _alive(my_session: int) -> bool:
 
 func _run_chapter(index: int, my_session: int) -> void:
 	var steps: Array = chapters()[index].steps
+	main.music({"saga": "story_calm", "divina": "story_tense"}.get(campaign, "story_calm"))
 	await fade(1.0, 0.25)
 	_set_letterbox(true, 0.01)
 	for step in steps:
 		if not _alive(my_session): return
 		await run_step(step, my_session)
 	if not _alive(my_session): return
-	if campaign == "divina": done_ids[str(chapters()[index].id)] = true
+	if campaign == "divina" or campaign == "saga" or campaign == "legend": done_ids[str(chapters()[index].id)] = true
+	if campaign == "legend" and str(chapters()[index].id).ends_with("_4") and main.get("progression") != null:
+		main.progression.grant_legend(legend_family, StoryLegends.RELIC_COINS)
 	else: completed = maxi(completed, index + 1)
 	if main.get("progression") != null: main.progression.story_chapter_done(60) # a finished chapter pays coins
 	save_progress()
@@ -491,6 +654,7 @@ func _end_story_session() -> void:
 
 func _hide_overlays() -> void:
 	dialog_panel.hide()
+	if choice_panel != null: choice_panel.hide()
 	qte_ring.hide()
 	qte_label.hide()
 	qte_count_label.hide()
@@ -518,7 +682,56 @@ func run_step(step: Dictionary, my_session: int) -> void:
 		"qte": await _qte_step(step, my_session)
 		"fight": await _fight(step, my_session)
 		"credits": await _credits(my_session)
+		"music": main.music(MOODS.get(str(step.get("mood", "calm")), "story_calm"))
+		"set": flags[str(step.flag)] = true
+		"choice": await _choice(step, my_session)
+		"branch":
+			for sub_step in (step.get("steps", []) if flags.get(str(step.flag), false) else step.get("else", [])):
+				if not _alive(my_session): return
+				await run_step(sub_step, my_session)
+		"bonds":
+			for sub_step in (step.get("steps", []) if bond_count() >= int(step.get("min", 1)) else step.get("else", [])):
+				if not _alive(my_session): return
+				await run_step(sub_step, my_session)
 		_: push_warning("Unknown story step: %s" % str(step))
+
+## Healed fighters who joined Volt in the saga.
+func bond_count() -> int:
+	var n := 0
+	for b in StorySaga.BONDS: if flags.get(b, false): n += 1
+	return n
+
+## Decision: shows two options, remembers the chosen flag and plays that option's steps.
+func _choice(step: Dictionary, my_session: int) -> void:
+	var options: Array = step.options
+	var pick := 0
+	if not auto_advance and not skipping:
+		choice_label.text = str(step.get("text", ""))
+		for k in range(choice_buttons.size()):
+			(choice_buttons[k] as Button).text = str(options[k].label) if k < options.size() else ""
+		choice_index = 0
+		choice_result = -1
+		_highlight_choice()
+		choice_panel.show()
+		while choice_result < 0 and _alive(my_session):
+			await get_tree().process_frame
+		choice_panel.hide()
+		pick = clampi(choice_result, 0, options.size() - 1)
+		main.sound("start")
+	var opt: Dictionary = options[pick]
+	flags[str(opt.flag)] = true
+	for sub_step in opt.get("steps", []):
+		if not _alive(my_session): return
+		await run_step(sub_step, my_session)
+
+## Voiced line for a speaker and text (generated by tools/voice_lines.py), "" when missing.
+static func voice_path(who: String, text: String) -> String:
+	return VOICE_DIR + ("%s|%s" % [who, text]).md5_text().left(16) + ".ogg"
+
+func _speak(who: String, text: String) -> void:
+	if main.get("audio_director") == null or main.audio_director == null: return
+	var path := voice_path(who, text)
+	if ResourceLoader.exists(path): main.audio_director.speak(path)
 
 # ─────────────────────────────────────────────────────────────── helpers ──
 
@@ -528,7 +741,7 @@ func chapter_title() -> String:
 	return "KAPITEL %d: %s" % [chapter_index + 1, str(chapters()[chapter_index].title).to_upper()]
 
 static func cast_profile(id: String, slot: int, heroes: int = 1) -> Dictionary:
-	var c: Dictionary = StoryData.CAST.get(id, StoryDivina.CAST.get(id, {}))
+	var c: Dictionary = StoryData.CAST.get(id, StoryDivina.CAST.get(id, StorySaga.CAST.get(id, {})))
 	if c.has("boss"): return Bosses.profile(str(c.boss), heroes)
 	var p: Dictionary = Prompt.interpret(c.prompt, slot)
 	p.name = c.name
@@ -570,7 +783,7 @@ func _stage(step: Dictionary) -> void:
 	for k in range(step.cast.size()):
 		var entry: Dictionary = step.cast[k]
 		stage_ids.append(entry.id)
-		p_list.append(cast_profile(entry.id, k))
+		p_list.append(_profile(entry.id, k))
 	main.prepare_cutscene_stage(p_list, chapters()[chapter_index].arena)
 	for k in range(step.cast.size()):
 		var f: Dictionary = _fighter(k)
@@ -596,6 +809,7 @@ func _title(step: Dictionary, my_session: int) -> void:
 
 func _narrate(text: String, my_session: int) -> void:
 	narrate_label.text = text
+	_speak("erzaehler", text)
 	var tw := create_tween()
 	tw.tween_property(narrate_label, "modulate:a", 1.0, 0.4)
 	await _wait_advance(my_session)
@@ -618,6 +832,7 @@ func _say(step: Dictionary, my_session: int) -> void:
 	dialog_text.text = step.text
 	dialog_text.visible_characters = 0
 	dialog_panel.show()
+	_speak(str(step.who), str(step.text))
 	if not auto_advance and not skipping:
 		typing = true
 		var total: int = step.text.length()
@@ -629,6 +844,7 @@ func _say(step: Dictionary, my_session: int) -> void:
 		typing = false
 	dialog_text.visible_characters = -1
 	await _wait_advance(my_session)
+	if main.get("audio_director") != null and main.audio_director != null: main.audio_director.stop_voice()
 	dialog_panel.hide()
 
 ## Camera shots are computed from the current stage positions.
@@ -899,7 +1115,7 @@ func _start_fight(step: Dictionary) -> void:
 	for id in step.cast:
 		if not cast_table().get(id, {}).has("boss"): heroes += 1
 	for k in range(step.cast.size()):
-		p_list.append(cast_profile(step.cast[k], k, heroes))
+		p_list.append(_profile(step.cast[k], k, heroes))
 	_hide_overlays()
 	_set_letterbox(false, 0.25)
 	fade(0.0, 0.2)
@@ -917,6 +1133,12 @@ func _start_fight(step: Dictionary) -> void:
 		if k < sim.fighters.size():
 			sim.fighters[k].power_mult = float(mods[key].get("power", 1.0))
 			sim.fighters[k].kb_taken_mult = float(mods[key].get("kb", 1.0))
+	# Extra fight options (legends): time limit, starting damage per slot, AI level for this fight.
+	if step.has("time"): sim.time_left = float(step.time)
+	var dmg_start: Dictionary = step.get("damage", {})
+	for key in dmg_start:
+		if int(key) < sim.fighters.size(): sim.fighters[int(key)].damage_percent = float(dmg_start[key])
+	if step.has("ai"): sim.ai_level = int(step.ai)
 	# A won QTE softens the enemies up, a lost one costs the player some percent.
 	var flag: String = str(step.get("qte", ""))
 	if flags.has(flag):
@@ -957,7 +1179,9 @@ func _show_result(title: String, hint: String, time: float, my_session: int) -> 
 func _credits(my_session: int) -> void:
 	_hide_overlays()
 	await fade(1.0, 1.0)
-	if campaign == "divina":
+	if campaign == "saga":
+		credits_label.text = "\n".join(StorySaga.CREDITS)
+	elif campaign == "divina":
 		credits_label.text = "\n".join(StoryDivina.CREDITS)
 	else: credits_label.text = "\n".join([
 		"PROMPT FIGHTER", StoryData.TITLE, "", "",
@@ -994,6 +1218,18 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled() # the selection screen below must not react
 		return
 	if not running: return
+	if choice_panel != null and choice_panel.visible:
+		var dir := 0
+		if event.is_action_pressed("ui_left") or (event is InputEventKey and event.pressed and event.keycode == KEY_1): dir = -1
+		elif event.is_action_pressed("ui_right") or (event is InputEventKey and event.pressed and event.keycode == KEY_2): dir = 1
+		if dir != 0:
+			choice_index = 0 if dir < 0 else 1
+			_highlight_choice()
+			if event is InputEventKey and event.keycode in [KEY_1, KEY_2]: choice_result = choice_index
+		elif event.is_action_pressed("ui_accept") or (event is InputEventJoypadButton and event.pressed and event.button_index == JOY_BUTTON_A):
+			choice_result = choice_index
+		get_viewport().set_input_as_handled()
+		return
 	if event is InputEventJoypadButton and event.pressed:
 		# Controller: A continues / retries, B or Menu skips / gives up, View leaves a paused fight.
 		var jb: int = event.button_index

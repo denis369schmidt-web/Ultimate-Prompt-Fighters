@@ -326,6 +326,12 @@ func start(a, b = null, control: String = "manual", lives_count: int = 3) -> voi
 			"volley": 0,                # ki volley shots left
 			"volley_t": 0.0,
 			"trail_last_x": 0.0,        # last spark of a trail dash
+			"chain_stage": 0,           # tri slash: cuts done in the running chain
+			"chain_timer": 0.0,         # tri slash: time left to continue the chain
+			"turbo": 0.0,               # turbo boots time left
+			"turbo_hit_t": 0.0,         # turbo body hit cooldown
+			"eagle": 0.0,               # double-headed eagle flight time left (Arbër)
+			"eagle_strike_t": 0.0,      # time to the eagle's next dive
 			"is_boss": false,           # angel boss (bosses.gd): own update, health bar, no knockback
 			"body_w": 0.0,              # hurtbox half width beyond the center point (bosses)
 			"body_h": 1.8,              # hurtbox height
@@ -848,6 +854,23 @@ func _update_projectiles(dt: float, contacts: Array) -> void:
 			pr.vy = 0.0
 			pr.echo_hits = []
 			events.append({"type": "clone_ready", "actor": pr.owner, "id": pr.id, "x": pr.x})
+		if bool(d.get("seal", false)):
+			# Star seal: its owner standing inside is enraged.
+			var so: Dictionary = fighters[pr.owner]
+			if absf(so.x - pr.x) <= float(d.get("size", 1.7)) and absf(so.y - pr.y) < 1.5 and so.state != "Defeated":
+				so.rage_timer = maxf(so.rage_timer, 0.15)
+		if absf(pr.vx) + absf(pr.vy) > 0.5 and not pr.get("stuck", false) and not bool(d.get("echo", false)):
+			# Fire walls stop enemy shots.
+			var blocked := false
+			for w in projectiles:
+				if not bool(w.spec.get("wall", false)) or w.owner == pr.owner or is_ally(w.owner, pr.owner) or w.life <= 0.0: continue
+				if absf(w.x - pr.x) < 0.7 and absf(w.y - pr.y) < 1.4:
+					blocked = true
+					events.append({"type": "wall_block", "actor": w.owner, "x": pr.x, "y": pr.y})
+					break
+			if blocked:
+				events.append({"type": "projectile_end", "id": pr.id})
+				continue
 		if float(d.get("gravity_pull", 0.0)) > 0.0:
 			# Singularity: drags opponents towards its core.
 			for ti in range(fighters.size()):
@@ -987,9 +1010,20 @@ func signature_ability(i: int, a: Dictionary, sig: Dictionary) -> Dictionary:
 	if sig.has("windup"): b["windup"] = float(sig.windup)
 	b.erase("type") # the signature replaces the old all-around type
 	match str(sig.mech):
-		"projectile", "meteor", "mine", "turret", "clone", "eruption", "rage", "mark", "javelin", "magma", "board", "cannon", "nova", "shadow_clone", "singularity":
+		"projectile", "meteor", "mine", "turret", "clone", "eruption", "rage", "mark", "javelin", "magma", "board", "cannon", "nova", "shadow_clone", "singularity", \
+				"star_seal", "ice_decoy", "turbo", "flame_wall", "eagle":
 			b["no_hit"] = true
 			b["active"] = 0.1
+		"tri_slash":
+			b.merge(tri_slash_cut(a, sig, 1), true)
+		"sun_wheel":
+			var wr: float = float(sig.get("radius", 1.5))
+			b.merge({"x_min": -wr, "range": wr, "y_min": -0.4, "y_max": 2.2, "all_around": true, "active": float(sig.get("time", 0.55)),
+				"rehit": 0.11, "angle": 55.0, "motion_vx": float(sig.get("speed", 7.5)), "motion_vy": float(sig.get("rise", 6.5)), "recovery": 0.24}, true)
+			b["damage"] = dmg * 0.3
+		"sling_fist":
+			b.merge({"x_min": 0.3, "range": float(sig.get("length", 2.6)), "y_min": 0.7, "y_max": 1.7, "angle": 36.0, "active": 0.14,
+				"recovery": 0.42, "charge": true}, true)
 		"iai":
 			b["no_hit"] = true
 			b["active"] = float(sig.get("time", 0.9))
@@ -1043,6 +1077,14 @@ func signature_ability(i: int, a: Dictionary, sig: Dictionary) -> Dictionary:
 			b.merge({"x_min": -0.3, "range": 1.9, "y_min": -0.2, "y_max": 2.0, "active": 0.12, "recovery": 0.6, "angle": 38.0,
 				"push": float(a.push) * 1.6, "unblockable": true, "ko_at": float(sig.get("ko_at", 120.0)), "kb_scale": float(sig.get("kb_scale", 70.0))}, true)
 	return b
+
+## One cut of the tri slash chain (stage 1-3): two low dashes keep the opponent close,
+## the third cut launches upward.
+static func tri_slash_cut(a: Dictionary, sig: Dictionary, stage: int) -> Dictionary:
+	var last: bool = stage >= 3
+	return {"x_min": -0.3, "range": 1.6, "y_min": -0.2, "y_max": 2.0, "active": 0.18, "recovery": 0.34 if last else 0.14,
+		"motion_vx": float(sig.get("speed", 11.0)) * (0.55 if last else 1.0), "angle": 82.0 if last else 20.0,
+		"push": float(a.get("push", 0.6)) * (1.5 if last else 0.35), "hitstun": 0.4 if last else 0.5}
 
 ## Runs a signature at the start of its active frames.
 func _sig_activate(i: int, ab: Dictionary) -> void:
@@ -1151,6 +1193,44 @@ func _sig_activate(i: int, ab: Dictionary) -> void:
 			spawn_projectile_spec(i, spec, dmg, f.x + fx * 0.5, f.y + 0.9, fx * float(sig.get("speed", 10.0)), 0.0)
 		"trail_dash":
 			f.trail_last_x = f.x
+		"tri_slash", "tri_slash_2", "tri_slash_3":
+			var stage: int = {"tri_slash": 1, "tri_slash_2": 2, "tri_slash_3": 3}[str(sig.mech)]
+			f.chain_stage = stage if stage < 3 else 0
+			f.chain_timer = (float(sig.get("window", 0.9)) + float(ab.get("active", 0.18)) + float(ab.get("recovery", 0.14))) if stage < 3 else 0.0
+			if stage == 3:
+				f.vy = 9.0
+				f.is_grounded = false
+		"star_seal":
+			for pr in projectiles:
+				if pr.owner == i and bool(pr.spec.get("seal", false)): pr.life = 0.0 # one seal at a time
+			spec.merge({"life": float(sig.get("life", 5.0)), "pierce": true, "push": 0.15, "angle": 80.0, "seal": true}, true)
+			spawn_projectile_spec(i, spec, dmg, f.x, f.y + 0.1, 0.0, 0.0)
+		"ice_decoy":
+			for pr in projectiles:
+				if pr.owner == i and str(pr.spec.get("shape", "")) == "ice_decoy": pr.life = 0.0
+			spec.merge({"push": 0.2, "angle": 60.0}, true)
+			spawn_projectile_spec(i, spec, dmg, f.x, f.y + 0.9, 0.0, 0.0)
+			events.append({"type": "decoy", "actor": i, "from_x": f.x, "from_y": f.y})
+			f.x -= fx * float(sig.get("blink", 2.6))
+			if f.is_grounded and absf(f.y) < 0.01: f.x = clampf(f.x, STAGE_LEFT, STAGE_RIGHT)
+			f.intangible = maxf(f.intangible, 0.3)
+		"turbo":
+			f.turbo = float(sig.get("time", 4.0))
+			f.turbo_hit_t = 0.0
+		"eagle":
+			f.eagle = float(sig.get("time", 6.5))
+			f.eagle_strike_t = 0.45
+			f.vy = maxf(f.vy, 7.5)
+			if f.is_grounded:
+				f.is_grounded = false
+				f.y += 0.05
+			f.air_jumps = int(f.phys.air_jumps)
+			events.append({"type": "eagle_summon", "actor": i})
+		"flame_wall":
+			for pr in projectiles:
+				if pr.owner == i and bool(pr.spec.get("wall", false)): pr.life = 0.0
+			spec.merge({"life": float(sig.get("life", 3.0)), "pierce": true, "push": 0.55, "angle": 65.0, "wall": true}, true)
+			spawn_projectile_spec(i, spec, dmg, f.x + fx * 1.5, f.y + 0.9, 0.0, 0.0)
 		"singularity":
 			spec.merge({"shape": "singularity", "life": float(sig.get("fuse", 1.6)), "fuse": 0.01, "size": 0.4, "nohit": true,
 				"push": 0.95, "angle": 50.0}, true)
@@ -1181,6 +1261,15 @@ func _sig_followup(i: int) -> Dictionary:
 	var sp: Dictionary = f.profile.special
 	var col: Color = sig.get("color", Color.WHITE)
 	match str(sig.get("mech", "")):
+		"tri_slash":
+			if f.chain_stage in [1, 2] and f.chain_timer > 0.0:
+				var stage: int = int(f.chain_stage) + 1
+				var cut := {"name": "Zweiter Schnitt" if stage == 2 else "Drei-Welten-Schnitt",
+					"damage": float(sp.damage) * float(sig.get("dmg", 1.0)) * (1.0 if stage == 2 else 1.5),
+					"windup": 0.05, "push": float(sp.push), "cooldown": float(sp.cooldown), "special": true,
+					"sig": sig.merged({"mech": "tri_slash_%d" % stage}, true)}
+				cut.merge(tri_slash_cut(sp, sig, stage), true)
+				return cut
 		"mark":
 			if _marked_target(i) >= 0:
 				return {"name": "Raijin-Blitzschlag", "damage": float(sp.damage) * 1.25, "windup": 0.06, "active": 0.14, "recovery": 0.26,
@@ -2000,6 +2089,7 @@ static func read_input(f: Dictionary, cmd: Dictionary) -> Dictionary:
 		"special_held": bool(cmd.get("special_held", false)),
 		"standard_held": bool(cmd.get("standard_held", false)), "smash": bool(cmd.get("smash", false)),
 		"jump_held": bool(cmd.get("jump_held", true)), "drop": bool(cmd.get("drop", false)),
+		"jump_hold_real": bool(cmd.get("jump_held", false)),
 		"shield_pressed": shield and not bool(prev.get("shield", false)),
 		"down_pressed": down and not bool(prev.get("down", false)),
 		"side_pressed": side,
@@ -2403,6 +2493,15 @@ func tick(commands: Array, dt: float = STEP) -> void:
 		if f.rage_timer > 0: f.rage_timer = maxf(0.0, f.rage_timer - dt)
 		if f.armor_timer > 0: f.armor_timer = maxf(0.0, f.armor_timer - dt)
 		if f.bulwark > 0: f.bulwark = maxf(0.0, f.bulwark - dt)
+		if f.turbo > 0: f.turbo = maxf(0.0, f.turbo - dt)
+		if f.turbo_hit_t > 0: f.turbo_hit_t = maxf(0.0, f.turbo_hit_t - dt)
+		if f.eagle > 0:
+			f.eagle = maxf(0.0, f.eagle - dt)
+			f.eagle_strike_t = maxf(0.0, f.eagle_strike_t - dt)
+			if f.eagle <= 0.0: events.append({"type": "eagle_leave", "actor": i})
+		if f.chain_timer > 0:
+			f.chain_timer = maxf(0.0, f.chain_timer - dt)
+			if f.chain_timer <= 0.0: f.chain_stage = 0
 		if f.mark_timer > 0:
 			f.mark_timer = maxf(0.0, f.mark_timer - dt)
 			if f.mark_timer <= 0.0: f.marked_by = -1
@@ -2500,6 +2599,8 @@ func tick(commands: Array, dt: float = STEP) -> void:
 		if f.slow_timer > 0.0: speed_scale *= 0.50
 		if f.speed_timer > 0.0: speed_scale *= 2.20
 		if f.rage_timer > 0.0: speed_scale *= 1.25
+		if f.turbo > 0.0: speed_scale *= float(Signatures.for_family(str(f.profile.get("family", ""))).get("boost", 1.6))
+		if f.eagle > 0.0 and not f.is_grounded: speed_scale *= float(Signatures.for_family(str(f.profile.get("family", ""))).get("boost", 1.3))
 		if f.carried_item >= 0: speed_scale *= 0.85
 		if f.freeze_timer > 0.0: speed_scale = 0.0
 
@@ -2670,10 +2771,19 @@ func tick(commands: Array, dt: float = STEP) -> void:
 			f.vy = minf(f.vy, -float(f.phys.fast_fall))
 			events.append({"type": "fast_fall", "actor": i})
 
+		# Eagle flight: jump / up rises, down sinks, otherwise it glides.
+		if f.eagle > 0.0 and not f.is_grounded and f.state != "Grabbed" and f.state != "HitStun":
+			if inp.jump: f.vy = maxf(f.vy, 4.5)
+			elif inp.jump_hold_real or inp.up: f.vy = minf(f.vy + 30.0 * dt, 6.0)
+			elif inp.down: f.vy = maxf(f.vy - 30.0 * dt, -7.0)
+			else: f.vy = move_toward(f.vy, 0.0, 16.0 * dt)
+			if f.y > 5.0: f.vy = minf(f.vy, 0.0)
+			f.air_jumps = int(f.phys.air_jumps)
+
 		# Vertical physics & Landing
 		var prev_y: float = f.y
 		if not f.is_grounded and f.state != "Grabbed":
-			f.vy -= float(f.phys.gravity) * dt
+			f.vy -= float(f.phys.gravity) * dt * (float(Signatures.for_family(str(f.profile.get("family", ""))).get("lift", 0.12)) if f.eagle > 0.0 else 1.0)
 			var next_y: float = f.y + f.vy * dt
 			var landed := false
 
@@ -2774,6 +2884,9 @@ func tick(commands: Array, dt: float = STEP) -> void:
 				f.slam = false
 				f.bulwark = 0.0
 				f.iai = 0.0
+				f.turbo = 0.0
+				f.eagle = 0.0
+				f.chain_stage = 0
 				f.marked_by = -1
 				f.stun = 0.0
 				f.state = "Ready"
@@ -2797,6 +2910,44 @@ func tick(commands: Array, dt: float = STEP) -> void:
 	queued_contacts.clear()
 	for i in range(fighters.size()):
 		var f: Dictionary = fighters[i]
+		if f.turbo <= 0.0 or f.turbo_hit_t > 0.0 or f.state == "Defeated": continue
+		var tsig: Dictionary = Signatures.for_family(str(f.profile.get("family", "")))
+		if not f.is_grounded or absf(float(f.walk_v)) < float(tsig.get("min_speed", 4.5)): continue
+		# Turbo boots: running into an opponent at full speed knocks it away.
+		for ti in range(fighters.size()):
+			if ti == i or is_ally(i, ti): continue
+			var rt: Dictionary = fighters[ti]
+			if rt.state in ["Defeated", "Dazed"] or rt.is_boss: continue
+			if absf(rt.x - f.x) < 0.95 and absf(rt.y - f.y) < 1.4:
+				var ram := {"name": "Turbo-Rammstoß", "damage": float(f.profile.special.damage) * float(tsig.get("dmg", 0.45)) * float(f.get("power_mult", 1.0)),
+					"push": 0.7, "angle": 40.0, "hitstun": 0.3, "range": 1.0}
+				contacts.append({"from": i, "to": ti, "attack": {"ability": ram, "special": true}, "push_dir": signf(float(f.walk_v))})
+				events.append({"type": "turbo_ram", "actor": i, "target": ti})
+				f.turbo_hit_t = float(tsig.get("rehit", 0.6))
+				break
+	# The double-headed eagle dives at the nearest opponent in reach.
+	for i in range(fighters.size()):
+		var f: Dictionary = fighters[i]
+		if f.eagle <= 0.0 or f.eagle_strike_t > 0.0 or f.state == "Defeated": continue
+		var esig: Dictionary = Signatures.for_family(str(f.profile.get("family", "")))
+		var best := -1
+		var best_d := float(esig.get("reach", 3.4))
+		for ti in range(fighters.size()):
+			if ti == i or is_ally(i, ti): continue
+			var et: Dictionary = fighters[ti]
+			if et.state in ["Defeated"] or et.invulnerable > 0.0: continue
+			var dd: float = Vector2(et.x - f.x, (et.y - f.y) * 0.7).length()
+			if dd < best_d:
+				best_d = dd
+				best = ti
+		if best < 0: continue
+		var claw := {"name": "Adlerklauen", "damage": float(f.profile.special.damage) * float(esig.get("dmg", 0.55)) * float(f.get("power_mult", 1.0)),
+			"push": 0.62, "angle": 55.0, "hitstun": 0.32, "range": 1.0}
+		contacts.append({"from": i, "to": best, "attack": {"ability": claw, "special": true}, "push_dir": signf(fighters[best].x - f.x) if absf(fighters[best].x - f.x) > 0.01 else float(f.facing)})
+		events.append({"type": "eagle_strike", "actor": i, "target": best, "x": fighters[best].x, "y": fighters[best].y})
+		f.eagle_strike_t = float(esig.get("rehit", 1.0))
+	for i in range(fighters.size()):
+		var f: Dictionary = fighters[i]
 		if f.pending.is_empty(): continue
 		f.pending.remaining -= dt
 		if f.pending.stage == "windup" and bool(f.pending.ability.get("charge", false)) and f.special_held \
@@ -2818,6 +2969,9 @@ func tick(commands: Array, dt: float = STEP) -> void:
 				ab.damage = float(ab.damage) * (0.7 + 0.9 * ch)
 				ab.push = float(ab.push) * (0.8 + 0.8 * ch)
 				ab["charge_level"] = ch
+				if str(ab.sig.get("mech", "")) == "sling_fist":
+					# Only the fist at the end of the stretched arm hits.
+					ab.x_min = maxf(0.3, float(ab.range) - float(ab.sig.get("tip", 1.5)))
 			for pr in projectiles:
 				if pr.owner == i and pr.get("echoing", false):
 					pr.echo_hits = []

@@ -20,6 +20,7 @@ const STYLES := {
 	"stoic": {"tempo": 9.0, "sturdy": 0.7, "quotes": ["Hm.", "Ok.", "Ich hab Hunger."]},
 	"beast": {"tempo": 12.5, "sturdy": 0.55, "quotes": ["GRRRR!", "*schnaub*", "KRRAAH!"]},
 	"undead": {"tempo": 6.0, "sturdy": 0.5, "quotes": ["Knochen… knacken…", "Du gehörst mir…", "Hhhhh…"]},
+	"artisan": {"tempo": 11.0, "sturdy": 0.6, "quotes": ["Hajde!", "Punë e mirë!", "Shqiponja fluturon!", "Noch ein Loch gefällig?", "Besa ist Besa."]},
 }
 
 const FAMILY_STYLE := {
@@ -27,13 +28,13 @@ const FAMILY_STYLE := {
 	"xylar": "floaty", "glaciem": "ninja", "oryn": "mage", "tobi": "trickster", "jubei": "swordsman", "ren": "trickster",
 	"amethya": "swordsman", "bruno": "stoic", "hikaru": "swordsman", "zip": "trickster", "raiga": "boxer",
 	"albion": "beast", "pyrax": "beast", "anubis": "knight", "specter": "floaty", "phoenix": "elegant",
-	"golden_golem": "brute", "lepora": "elegant", "tripo_fantasy_female": "mage", "tripo_nyx_harvester": "floaty",
-	"tripo_cat_girl": "trickster", "tripo_dragon_blue": "beast", "tripo_white_sci": "knight", "tripo_skeleton_dog": "beast",
-	"tripo_wooden_forest": "brute", "tripo_nine_tailed": "floaty", "tripo_quadruped_tree": "beast", "steel_knight": "knight",
+	"brunhild": "brute", "lepora": "elegant", "thorn_witch": "mage", "nyx": "floaty",
+	"shira": "trickster", "frostwyrm": "beast", "cyborg_mech": "knight", "reaper_hound": "beast",
+	"treant": "brute", "celestial_fox": "floaty", "mossback": "beast", "steel_knight": "knight",
 	"vanguard_soldier": "knight", "sorceress_medea": "mage", "skeleton_reaper": "undead", "mutant_titan": "brute",
 	"swat_specops": "boxer", "samurai_dreyar": "swordsman", "pirate_captain": "cocky", "vampire_lord": "floaty",
 	"wizard_sorcerer": "mage", "warrok_brute": "brute", "nekra": "undead", "grimbolt": "trickster", "echo": "trickster",
-	"kettenwart": "brute", "don_valente": "cocky",
+	"kettenwart": "brute", "don_valente": "cocky", "arber": "artisan",
 }
 
 static func style_of(family: String) -> String:

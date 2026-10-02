@@ -72,25 +72,31 @@ func test_main() -> void:
 	check(app.title_index == 1, "the d-pad moves through the main menu")
 	app._pad_menu_button(0, JOY_BUTTON_DPAD_DOWN)
 	app._pad_menu_button(0, JOY_BUTTON_DPAD_DOWN)
+	app._pad_menu_button(0, JOY_BUTTON_DPAD_DOWN) # ABENTEUER sits between STORY and VERSUS
 	app._pad_menu_button(0, JOY_BUTTON_A)
 	check(app.title_panel_kind == "options", "A on OPTIONS opens the options")
 	var ai_before: int = app.ai_level
-	app._pad_menu_button(0, JOY_BUTTON_DPAD_DOWN)
+	# The mutator buttons come first; walk down to KI-STUFE.
+	await process_frame
+	await process_frame
+	for i in 16:
+		app._pad_menu_button(0, JOY_BUTTON_DPAD_DOWN)
+		if app.nav_focus != null and app.nav_focus.text == "KI-STUFE": break
 	app._pad_menu_button(0, JOY_BUTTON_A)
 	check(app.ai_level != ai_before, "options are changed with the controller (AI level %d → %d)" % [ai_before, app.ai_level])
 	app._pad_menu_button(0, JOY_BUTTON_B)
 	check(app.title_panel == null or not is_instance_valid(app.title_panel), "B closes the options")
-	check(app.title_screen.visible and app.title_hotspots.size() == 6, "the start screen shows six menu entries")
+	check(app.title_screen.visible and app.title_hotspots.size() == Backgrounds.MENU_ITEMS.size(), "the start screen shows all menu entries")
 	var inside := true
 	var r: Rect2 = Rect2(Vector2.ZERO, app.title_screen.size)
 	for h in app.title_hotspots: inside = inside and r.encloses(Rect2(h.position, h.size))
-	check(inside, "the menu buttons sit on the painted menu inside the screen")
-	app._title_activate(4)
+	check(inside, "the menu buttons sit inside the screen")
+	app._title_activate(Backgrounds.MENU_ITEMS.find("shop"))
 	check(app.title_panel_kind == "shop" and app.shop_buttons.size() == 23, "SHOP opens the shop with all backgrounds")
 	app.progression.coins = 5000
 	app._shop_press("orbital_ring")
 	check(app.progression.unlocked.has("orbital_ring") and app.progression.menu_bg == "orbital_ring", "buying in the shop unlocks and selects the background")
-	check(app.title_bg.texture.resource_path.ends_with("bg_06.png"), "the start screen switches to the bought background")
+	check(app.title_arena == "bg_" + str(app.Backgrounds.LIST[5].id), "the start screen switches to the bought background's arena")
 	# Buying with the controller: move to a card, press A.
 	app.progression.coins = 5000
 	await process_frame # the rebuilt shop needs one layout pass before the controller can navigate it
@@ -103,13 +109,13 @@ func test_main() -> void:
 	app._nav_pad(JOY_BUTTON_A, app.title_panel)
 	check(focused != null and app.progression.unlocked.size() >= 2, "shop cards are bought with d-pad and A (%d owned)" % app.progression.unlocked.size())
 	app._close_title_panel()
-	app._title_activate(0)
+	app._title_activate(Backgrounds.MENU_ITEMS.find("story"))
 	check(app.story.menu_panel.visible and not app.title_screen.visible, "STORY opens the story menu")
 	app._pad_menu_button(0, JOY_BUTTON_DPAD_DOWN)
 	check(app.nav_focus != null and app.story.menu_panel.is_ancestor_of(app.nav_focus), "the controller focus moves inside the story menu")
 	app._pad_menu_button(0, JOY_BUTTON_B)
 	check(not app.story.menu_panel.visible and app.title_screen.visible, "B leaves the story menu back to the main menu")
-	app._title_activate(1)
+	app._title_activate(Backgrounds.MENU_ITEMS.find("versus"))
 	check(not app.title_screen.visible, "VERSUS goes to the fighter selection")
 	var arena_before: String = app.current_arena
 	app._pad_menu_button(0, JOY_BUTTON_RIGHT_SHOULDER)
@@ -119,7 +125,7 @@ func test_main() -> void:
 	check(app.current_combat_mode != mode_before, "View changes the game mode")
 	app._pad_menu_button(0, JOY_BUTTON_B)
 	check(app.title_screen.visible and app.title_stage == "menu", "B in the fighter selection returns to the main menu")
-	app._title_activate(1)
+	app._title_activate(Backgrounds.MENU_ITEMS.find("versus"))
 	# Match rewards.
 	app.team_mode = "1v1"
 	app.player_count = 2

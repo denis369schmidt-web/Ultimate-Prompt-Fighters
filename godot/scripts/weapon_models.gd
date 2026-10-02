@@ -300,6 +300,39 @@ static func projectile(kind: String, color: Color) -> Node3D:
 				_box(root, Vector3(0.05, 0.3, 0.05), Vector3(-0.3 + k * 0.3, 0.05, 0), core_m, Vector3(0, 0, 20 * (k - 1)))
 		"pillar", "bone":
 			pass # eruption pillars are spawned along the path by main.gd
+		"star_seal":
+			# Twelve-ray star mandala lying on the floor.
+			var ring := TorusMesh.new()
+			ring.inner_radius = 1.55
+			ring.outer_radius = 1.7
+			ring.rings = 32
+			_part(root, ring, Vector3.ZERO, _mat(color, 0.0, 0.3, 4.5))
+			var inner := TorusMesh.new()
+			inner.inner_radius = 0.7
+			inner.outer_radius = 0.78
+			inner.rings = 24
+			_part(root, inner, Vector3.ZERO, _mat(color.lightened(0.4), 0.0, 0.3, 5.0))
+			for k in range(12):
+				var ray := _box(root, Vector3(0.05, 0.02, 1.5 if k % 2 == 0 else 1.0), Vector3.ZERO, _mat(color.lightened(0.2), 0.0, 0.3, 4.0), Vector3(0, k * 30.0, 0))
+				ray.position = Vector3(sin(deg_to_rad(k * 30.0)), 0, cos(deg_to_rad(k * 30.0))) * (0.75 if k % 2 == 0 else 0.5)
+		"ice_decoy":
+			# Ice statue: a translucent crystal figure.
+			var ice := _mat(color, 0.1, 0.05, 1.2)
+			ice.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			ice.albedo_color = Color(color.r, color.g, color.b, 0.55)
+			ice.refraction_enabled = false
+			_cyl(root, 0.22, 0.32, 1.2, Vector3(0, -0.2, 0), ice, 6)
+			_ball(root, 0.2, Vector3(0, 0.6, 0), ice)
+			_cyl(root, 0.0, 0.12, 0.5, Vector3(0.3, 0.1, 0), ice, 5, Vector3(0, 0, -30))
+			_cyl(root, 0.0, 0.12, 0.5, Vector3(-0.3, 0.1, 0), ice, 5, Vector3(0, 0, 30))
+			_cyl(root, 0.0, 0.1, 0.4, Vector3(0, -0.8, 0.25), ice, 5, Vector3(60, 0, 0))
+		"flame_wall":
+			# Fire wall: a sword in the floor inside layered flame sheets.
+			_box(root, Vector3(0.1, 1.5, 0.04), Vector3(0, -0.15, 0), _mat(Color(0.75, 0.75, 0.8), 0.9, 0.25))
+			_box(root, Vector3(0.5, 0.08, 0.08), Vector3(0, 0.62, 0), _mat(Color(0.8, 0.6, 0.2), 0.9, 0.3))
+			for k in range(3):
+				var fl := _cyl(root, 0.05, 0.5 - k * 0.1, 2.0 - k * 0.3, Vector3(0, -0.05 + k * 0.1, 0), _mat(color.lerp(Color(1, 0.9, 0.4), k * 0.35), 0.0, 0.3, 4.0 + k), 7)
+				fl.transparency = 0.35 + k * 0.15
 		_:
 			_ball(root, 0.2, Vector3.ZERO, _mat(color, 0.0, 0.2, 4.0))
 	return root

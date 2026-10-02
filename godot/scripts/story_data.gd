@@ -13,7 +13,7 @@ extends RefCounted
 ##   vanish / appear  who
 ##   wait    time
 ##   qte     kind (press|mash|sequence), keys, time, count, text, flag, success, fail
-##   fight   cast, lives, teams, mods, qte, goal
+##   fight   cast, lives, teams, mods, qte, goal, time (s), damage {slot: %}, ai (1–9)
 ##   credits
 
 const TITLE := "DIE LETZTE ZEILE"

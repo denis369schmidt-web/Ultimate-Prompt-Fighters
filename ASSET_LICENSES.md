@@ -29,6 +29,24 @@ Kairo, Varakh, Xylar, Glaciem, Oryn, Tobi, Jubei, Ren, Amethya, Bruno, Hikaru, Z
 - Ein Test (`tests/test_roster.gd`) prüft, dass kein sichtbarer Text und keine Figuren-ID fremde Marken enthält
   und fremde Namen im Prompt keine eigenen Helden mehr auswählen.
 
+### C. Eigene Kämpfer statt Tripo-Scans (2026-10-02)
+Zehn Kämpfer basierten früher auf öffentlichen Tripo-Community-Modellen anderer Nutzer. Diese Dateien sind entfernt;
+die Figuren sind neu und eigenständig aufgebaut wie die eigenen Helden in Abschnitt B:
+Brunhild, Thorn Witch, Nyx, Shira, Frostwyrm, Cyborg Mech, Reaper Hound, Treant, Celestial Fox, Mossback.
+
+- **IDs:** `brunhild`, `thorn_witch`, `nyx`, `shira`, `frostwyrm`, `cyborg_mech`, `reaper_hound`, `treant`, `celestial_fox`, `mossback`
+  (alte Spielstände werden in `progression.gd` umgeschrieben).
+- **Aussehen:** komplett im Code (`scripts/hero_gear.gd`): Flügelhelm und Bartaxt, Dornenkrone und Rankenpeitschen, Seelensense,
+  Katzenohren und -schwanz, Eisschwanz, Mech-Panzerung und Schulterkanone, Schädelmaske und Wirbelschwanz, Rindenpanzer und Geweih,
+  neun Fuchsschwänze und Fuchsfeuer, Felsrücken und Widderhörner, dazu generierte Texturen (Rinde, Moos, Knochen, Fels).
+- **Körper:** Mixamo-Charaktere (Abschnitt 2) als Basis unter der eigenen Ausrüstung.
+- **Boss Leviathan:** prozeduraler Seedrache aus `scripts/boss_models.gd` statt des Tripo-Drachen.
+
+### D. Arbër, der Bohrmeister (2026-10-02)
+Eigene Figur: Mixamo-Körper (brute_titan, Axt ausgeblendet) mit im Code gebauter Ausrüstung (`hero_gear.gd`):
+Qeleshe, bestickte Xhamadan-Weste (prozedurale Textur), Schärpe, Werkzeuggürtel, zwei Akku-Bohrer mit Spiralbohrern und der
+schwarze Doppelkopfadler (Shqiponja) als Flugtier. Bohrsound selbst synthetisiert.
+
 ---
 
 ## 2. 3D-Werkzeuge & Basis-Meshes
@@ -37,8 +55,11 @@ Kairo, Varakh, Xylar, Glaciem, Oryn, Tobi, Jubei, Ren, Amethya, Bruno, Hikaru, Z
 - **Mixamo (Adobe)**: Charaktere und Animationen aus `godot/assets/models/mixamo/` – laut Adobe-Bedingungen
   lizenzfrei für persönliche, kommerzielle und gemeinnützige Projekte einschließlich Spielen; nicht als
   eigenständige Asset-Dateien weiterverteilen.
-- **Tripo-Scans** (`godot/assets/models/tripo_*.glb`): Herkunft/Lizenz vor einem kommerziellen Release je Modell
-  prüfen (offener Punkt).
+- **Tripo-Scans: entfernt (2026-10-02).** Die früheren Community-Modelle von Tripo (fremde Urheber) liegen in
+  `_quarantine_ip/tripo/` (gitignored, nicht im Build). Siehe Abschnitt 1C.
+- **Schriften** (`godot/assets/fonts/`): Russo One (Jovanny Lemonad) und Teko (The Teko Project Authors), beide
+  SIL Open Font License 1.1 (`OFL_russoone.txt`, `OFL_teko.txt`), aus github.com/google/fonts. Logo und Menü des Startbildschirms
+  sind damit im Spiel gesetzt (`shaders/title_logo.gdshader`), kein gemaltes Bild.
 - **Godot Engine 4.7.2 stable**: MIT License (Copyright (c) 2014-present Godot Engine contributors).
 
 ---

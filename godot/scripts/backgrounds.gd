@@ -5,7 +5,7 @@ extends RefCounted
 ## screen turns into real buttons. Buying a background with coins also unlocks its arena.
 ## Arena: motif (builder in arena_builder.gd) plus theme values (materials, colors, weather).
 
-const MENU_ITEMS := ["story", "versus", "extras", "options", "shop", "credits"]
+const MENU_ITEMS := ["story", "adventure", "versus", "extras", "options", "shop", "credits"]
 
 const LIST := [
 	{"id": "neon_alley", "name": "NEON-GASSE", "img": "bg_01", "price": 0, "menu": [0.37, 0.49, 0.63, 0.89],
@@ -89,6 +89,11 @@ static func arena_id(bg: Dictionary) -> String:
 ## Background of an arena id ("bg_neon_alley" → neon_alley entry), or {}.
 static func for_arena(arena: String) -> Dictionary:
 	return find(arena.trim_prefix("bg_")) if arena.begins_with("bg_") else {}
+
+## Small preview (512 px wide) for shop cards; the full image is only loaded for the active menu.
+static func thumb_path(bg: Dictionary) -> String:
+	var t := "res://assets/textures/menu_bg/thumbs/%s.png" % bg.img
+	return t if ResourceLoader.exists(t) else image_path(bg)
 
 static func image_path(bg: Dictionary) -> String:
 	return "res://assets/textures/menu_bg/%s.png" % bg.img

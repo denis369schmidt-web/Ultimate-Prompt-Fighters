@@ -85,7 +85,7 @@ const BOSSES := {
 		"patterns": [["spear_rain", "charge", "sword_sweep"], ["spear_rain", "charge", "sword_sweep", "fire_pillars"]],
 		"intro": "Der alte Gott der Schlachten. Er hat jeden Krieg gesegnet."},
 	"leviathan": {"name": "LEVIATHAN", "title": "DER NEID", "realm": "hell", "vice": "Neid", "color": Color("38bdf8"),
-		"arena": "hell_city", "hp": 940.0, "dmg": 15.0, "hover": 0.6, "body_w": 1.7, "body_h": 3.4, "body": "res://assets/models/tripo_dragon_blue.glb", "look": "abyss", "height": 3.4, "speed": 2.4, "model": "leviathan",
+		"arena": "hell_city", "hp": 940.0, "dmg": 15.0, "hover": 0.6, "body_w": 1.7, "body_h": 3.4, "look": "abyss", "height": 3.4, "speed": 2.4, "model": "leviathan",
 		"patterns": [["charge", "water_beam", "tidal_ring"], ["charge", "water_beam", "tidal_ring", "acid_rain"]],
 		"intro": "Er will, was du hast. Er will, was du bist."},
 	"lucifer": {"name": "LUZIFER", "title": "DER GEFALLENE", "realm": "hell", "vice": "Hochmut", "color": Color("7dd3fc"),

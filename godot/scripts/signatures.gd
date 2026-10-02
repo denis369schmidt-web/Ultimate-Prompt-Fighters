@@ -35,6 +35,15 @@ extends RefCounted
 ##   trail_dash  – dash that leaves a shocking spark trail on the ground
 ##   singularity – gravity core that drags opponents in, then explodes
 ##   one_punch   – slow punch that breaks shields; knockback grows with percent, sure KO past a threshold
+##   tri_slash   – sword dash; special again within `window` dashes again, the third cut launches upward
+##   sun_wheel   – flaming wheel: rolls forward in a rising arc, hitting all around
+##   sling_fist  – hold special to wind up: the fist flies further and hits hardest with its tip
+##   star_seal   – star mandala on the floor: shocks opponents inside, Raiga in it is enraged
+##   ice_decoy   – leaves an ice statue and blinks back; whoever touches the statue freezes
+##   eagle       – the double-headed eagle carries the fighter: free flight (jump/up rises, down sinks),
+##                 faster in the air, the eagle dives at opponents in reach every `rehit` seconds
+##   turbo       – turbo boots: faster running, full-speed body hits knock opponents away
+##   flame_wall  – sword plunged into the floor: a fire wall that burns and stops enemy shots
 
 const SIGS := {
 	"ninja": {"mech": "mark", "shape": "kunai", "color": Color("49def4"), "speed": 20.0, "life": 0.5, "size": 0.35, "push": 0.1, "mark": true, "dmg": 0.45},
@@ -42,36 +51,37 @@ const SIGS := {
 		"pool": {"life": 4.0, "size": 1.2, "rehit": 0.5, "dmg": 0.35}, "dmg": 0.7},
 	"valkyrie": {"mech": "javelin", "shape": "lance", "color": Color("ffe26a"), "speed": 12.0, "rise": 2.0, "gravity": 14.0, "life": 2.0, "size": 0.55,
 		"pierce": true, "javelin": true, "dmg": 0.85},
-	"dragon": {"mech": "beam", "color": Color("ff5a1f"), "length": 4.2, "thick": 1.2, "dmg": 0.9, "burn": true},
+	"dragon": {"mech": "flame_wall", "shape": "flame_wall", "color": Color("ff5a1f"), "life": 3.0, "size": 0.55, "rehit": 0.45, "dmg": 0.4, "windup": 0.22},
 	"kairo": {"mech": "charge_beam", "color": Color("7dd3fc"), "length": 5.0, "max_length": 14.0, "thick": 0.8, "charge": 1.4, "dmg": 0.8, "windup": 0.25},
 	"varakh": {"mech": "volley", "shape": "orb", "color": Color("ffe838"), "count": 6, "interval": 0.1, "speed": 15.0, "life": 0.9, "size": 0.3, "final_explode": 2.0, "final_mult": 2.5, "dmg": 0.16},
 	"xylar": {"mech": "nova", "shape": "orb", "color": Color("c084fc"), "hold": 1.0, "grow": 0.5, "size": 0.3, "max_size": 1.1, "speed": 8.0, "life": 3.0, "explode": 1.4, "dmg": 0.55, "windup": 0.12},
-	"glaciem": {"mech": "projectile", "shape": "shard", "color": Color("9be7ff"), "speed": 14.0, "life": 0.8, "size": 0.5, "freeze": 1.0, "dmg": 0.6},
+	"glaciem": {"mech": "ice_decoy", "shape": "ice_decoy", "color": Color("9be7ff"), "life": 3.5, "size": 0.55, "freeze": 1.3, "blink": 2.6, "dmg": 0.55, "windup": 0.05},
 	"oryn": {"mech": "singularity", "color": Color("9900ee"), "gravity_pull": 9.0, "pull_radius": 4.0, "fuse": 1.6, "explode": 2.6, "dmg": 1.0},
-	"tobi": {"mech": "barrage", "color": Color("ff2b2b"), "hits": 7, "range": 3.4, "dmg": 1.3},
-	"jubei": {"mech": "dash", "color": Color("3bfac8"), "speed": 13.0, "multi": 3, "dmg": 1.0},
+	"tobi": {"mech": "sling_fist", "color": Color("ff2b2b"), "length": 3.0, "max_length": 7.5, "charge": 1.2, "tip": 1.5, "dmg": 1.1, "windup": 0.2},
+	"jubei": {"mech": "tri_slash", "color": Color("3bfac8"), "speed": 11.0, "window": 0.9, "dmg": 0.75, "windup": 0.07},
 	"ren": {"mech": "shadow_clone", "color": Color("ff9b3d"), "speed": 10.0, "dash_time": 0.45, "life": 5.0, "echo_mult": 0.5, "dmg": 0.8},
 	"amethya": {"mech": "trail_dash", "color": Color("60d5ff"), "speed": 17.0, "multi": 1, "trail_life": 2.0, "trail_dmg": 0.18, "dmg": 1.0},
 	"bruno": {"mech": "one_punch", "color": Color("ffd23f"), "ko_at": 120.0, "kb_scale": 70.0, "dmg": 1.5, "windup": 0.55},
-	"hikaru": {"mech": "whirl", "color": Color("ff6524"), "radius": 2.4, "time": 0.6, "pull": 0.0, "dmg": 1.1},
-	"zip": {"mech": "dash", "color": Color("3b82f6"), "speed": 16.0, "multi": 4, "dmg": 1.0},
-	"raiga": {"mech": "counter", "color": Color("00e5ff"), "dmg": 1.5},
+	"hikaru": {"mech": "sun_wheel", "color": Color("ff6524"), "radius": 1.5, "time": 0.55, "speed": 7.5, "rise": 6.5, "dmg": 1.15},
+	"arber": {"mech": "eagle", "color": Color("e41e20"), "time": 6.5, "rehit": 1.0, "reach": 3.4, "dmg": 0.55, "lift": 0.12, "boost": 1.3, "windup": 0.28},
+	"zip": {"mech": "turbo", "color": Color("3b82f6"), "time": 4.0, "boost": 1.6, "min_speed": 4.5, "rehit": 0.6, "dmg": 0.45},
+	"raiga": {"mech": "star_seal", "shape": "star_seal", "color": Color("00e5ff"), "life": 5.0, "size": 1.7, "rehit": 0.7, "dmg": 0.25},
 	"albion": {"mech": "beam", "color": Color("e0f2fe"), "length": 8.0, "thick": 1.4, "dmg": 1.15, "windup": 0.45},
 	"pyrax": {"mech": "projectile", "shape": "fireball", "color": Color("ff6610"), "speed": 9.0, "life": 1.4, "size": 0.6, "gravity": 9.0, "rise": 5.0, "explode": 2.0, "dmg": 1.0},
 	"anubis": {"mech": "projectile", "shape": "hook", "color": Color("c9a227"), "speed": 16.0, "life": 0.5, "size": 0.5, "pull": true, "dmg": 0.6},
 	"phoenix": {"mech": "projectile", "shape": "firebird", "color": Color("ff8a1f"), "speed": 11.0, "life": 1.2, "size": 0.7, "wave": 1.0, "pierce": true, "dmg": 0.9},
 	"specter": {"mech": "teleport", "color": Color("9b30ff"), "dmg": 1.1},
-	"golden_golem": {"mech": "eruption", "color": Color("ffd24a"), "count": 4, "speed": 7.0, "dmg": 0.8},
+	"brunhild": {"mech": "eruption", "color": Color("ffd24a"), "count": 4, "speed": 7.0, "dmg": 0.8},
 	"lepora": {"mech": "projectile", "shape": "arrow", "color": Color("86efac"), "speed": 24.0, "life": 0.8, "size": 0.4, "gravity": 3.0, "pierce": true, "dmg": 0.8},
-	"tripo_fantasy_female": {"mech": "mine", "color": Color("4ade80"), "shape": "thorns", "dmg": 1.0},
-	"tripo_nyx_harvester": {"mech": "projectile", "shape": "scythe", "color": Color("a855f7"), "speed": 13.0, "life": 1.4, "size": 0.7, "turn": 0.5, "pierce": true, "dmg": 0.8},
-	"tripo_cat_girl": {"mech": "barrage", "color": Color("f472b6"), "hits": 5, "range": 1.9, "dmg": 1.0},
-	"tripo_dragon_blue": {"mech": "beam", "color": Color("7dd3fc"), "length": 5.5, "thick": 1.1, "freeze": 0.8, "dmg": 0.9},
-	"tripo_white_sci": {"mech": "beam", "color": Color("22d3ee"), "length": 10.0, "thick": 0.3, "dmg": 0.8, "windup": 0.2},
-	"tripo_skeleton_dog": {"mech": "dash", "color": Color("d6d3d1"), "speed": 12.0, "multi": 2, "dmg": 1.0},
-	"tripo_wooden_forest": {"mech": "eruption", "color": Color("65a30d"), "count": 3, "speed": 6.0, "dmg": 0.9},
-	"tripo_nine_tailed": {"mech": "projectile", "shape": "foxfire", "color": Color("38bdf8"), "speed": 8.0, "life": 1.5, "size": 0.45, "count": 3, "homing": 6.0, "dmg": 0.45},
-	"tripo_quadruped_tree": {"mech": "rage", "color": Color("84cc16"), "time": 6.0},
+	"thorn_witch": {"mech": "mine", "color": Color("4ade80"), "shape": "thorns", "dmg": 1.0},
+	"nyx": {"mech": "projectile", "shape": "scythe", "color": Color("a855f7"), "speed": 13.0, "life": 1.4, "size": 0.7, "turn": 0.5, "pierce": true, "dmg": 0.8},
+	"shira": {"mech": "barrage", "color": Color("f472b6"), "hits": 5, "range": 1.9, "dmg": 1.0},
+	"frostwyrm": {"mech": "beam", "color": Color("7dd3fc"), "length": 5.5, "thick": 1.1, "freeze": 0.8, "dmg": 0.9},
+	"cyborg_mech": {"mech": "beam", "color": Color("22d3ee"), "length": 10.0, "thick": 0.3, "dmg": 0.8, "windup": 0.2},
+	"reaper_hound": {"mech": "dash", "color": Color("d6d3d1"), "speed": 12.0, "multi": 2, "dmg": 1.0},
+	"treant": {"mech": "eruption", "color": Color("65a30d"), "count": 3, "speed": 6.0, "dmg": 0.9},
+	"celestial_fox": {"mech": "projectile", "shape": "foxfire", "color": Color("38bdf8"), "speed": 8.0, "life": 1.5, "size": 0.45, "count": 3, "homing": 6.0, "dmg": 0.45},
+	"mossback": {"mech": "rage", "color": Color("84cc16"), "time": 6.0},
 	"steel_knight": {"mech": "bulwark", "color": Color("e2e8f0"), "time": 0.75, "dmg": 1.2},
 	"vanguard_soldier": {"mech": "projectile", "shape": "grenade", "color": Color("fbbf24"), "speed": 8.0, "life": 1.6, "size": 0.4, "gravity": 12.0, "rise": 6.0, "explode": 2.4, "dmg": 1.0},
 	"sorceress_medea": {"mech": "projectile", "shape": "orb", "color": Color("c084fc"), "speed": 6.0, "life": 2.2, "size": 0.55, "homing": 9.0, "dmg": 0.9},
@@ -100,6 +110,8 @@ const MECH_POSE := {
 	"board": "Cast", "cannon": "Summon", "bulwark": "Block", "iai": "Charge", "leap_slam": "Rise",
 	"charge_beam": "Beam", "volley": "Barrage", "nova": "Summon", "shadow_clone": "SpecialAttack", "trail_dash": "Dash",
 	"singularity": "Cast", "one_punch": "HeavyPunch",
+	"tri_slash": "Dash", "tri_slash_2": "Dash", "tri_slash_3": "Rise", "sun_wheel": "Spin", "sling_fist": "HeavyPunch",
+	"star_seal": "Slam", "ice_decoy": "Dodge", "turbo": "Dash", "flame_wall": "Slam", "eagle": "Summon",
 }
 
 static func for_family(family: String) -> Dictionary:

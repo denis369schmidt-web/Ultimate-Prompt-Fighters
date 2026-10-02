@@ -1,11 +1,12 @@
 extends "res://tests/test_base.gd"
 ## Fighter kits (fighter_kits.gd): own physics, movesets, signatures and finishers for
-## package 1 – all on the real combat code.
+## packages 1-3 – all on the real combat code.
 
 const FighterKits = preload("res://scripts/fighter_kits.gd")
 const Signatures = preload("res://scripts/signatures.gd")
 
 const PROMPTS := {
+	"arber": "Arbër der Bohrmeister mit zwei Bohrmaschinen und dem Doppeladler",
 	"ninja": "Blitzschneller Schattenninja mit elektrischen Klingen",
 	"valkyrie": "Strahlende Moe Valkyrie Paladin Kriegerin mit Lichtflügeln und Rapier",
 	"golem": "Gepanzerter Lavagolem mit brennenden Fäusten",
@@ -20,6 +21,13 @@ const PROMPTS := {
 	"amethya": "Kage der Donnerklinge mit Tausend Funken",
 	"oryn": "Oryn der Schwerkraftprophet mit Abstoßungswelle",
 	"bruno": "Bruno der Einschlag-Held mit Ernstfall-Schlag",
+	"jubei": "Jubei der Windklingen-Wanderer mit Sturmschnitt",
+	"hikaru": "Hikaru der Glutklingen-Wanderer mit Morgenrotschnitt",
+	"tobi": "Tobi der Federfaust-Raufbold mit Schleuderfaust",
+	"raiga": "Raiga die Donnerfaust mit Sternschlag",
+	"glaciem": "Glaciem die Frostassassine mit Eissplitter",
+	"zip": "Zip der Blitzkurier mit Turbo-Sprint",
+	"dragon": "Mächtiger Cyber Drachenritter mit flammendem Drachen-Großschwert",
 }
 const DUMMY := "Albion der Silberwyrm mit Sturmstrahl"
 const KIT_MOVES := ["jab", "ftilt", "utilt", "dtilt", "fsmash", "usmash", "dsmash", "dash_attack",
@@ -48,6 +56,14 @@ func run() -> void:
 	test_trail_dash()
 	test_singularity_and_repel()
 	test_one_punch()
+	test_tri_slash()
+	test_sun_wheel()
+	test_sling_fist()
+	test_star_seal()
+	test_ice_decoy()
+	test_turbo()
+	test_eagle()
+	test_flame_wall()
 	test_ai_plays_every_kit()
 	finish("kits")
 
@@ -144,7 +160,7 @@ func test_unique_signatures_and_finishers() -> void:
 		fin_names[fin.name] = true
 		codes[str(fin.code)] = true
 		check(fin.get("variant", "") != "", "%s has its own finisher %s (%s)" % [fam, fin.name, Combat.code_text(fin.code)])
-	check(mechs.size() == PROMPTS.size(), "package 1 has %d different, exclusive signature mechanics" % mechs.size())
+	check(mechs.size() == PROMPTS.size(), "packages 1-3 have %d different, exclusive signature mechanics" % mechs.size())
 	check(fin_names.size() == PROMPTS.size() and codes.size() == PROMPTS.size(), "finisher names and codes are all different")
 
 func test_finisher_codes() -> void:
@@ -502,6 +518,142 @@ func test_one_punch() -> void:
 	ticks(m, 200, ev)
 	check(has_event(ev, "one_punch_ko") and m.fighters[1].lives == 2, "past 120 % it is a sure KO")
 
+## Ticks until fighter 0 can act again (max n ticks).
+func until_ready(m, n: int, events: Array = []) -> void:
+	for k in range(n):
+		if m.fighters[0].pending.is_empty() and m.fighters[0].state == "Ready": return
+		m.tick(idle_commands())
+		events.append_array(m.events)
+
+func test_tri_slash() -> void:
+	var m = duel("jubei", DUMMY, 2.5)
+	var ev: Array = []
+	for k in range(3):
+		m.queue_attack(0, true)
+		m.tick(idle_commands())
+		ev.append_array(m.events)
+		until_ready(m, 60, ev)
+	var stages := {}
+	var hits := 0
+	for e in ev:
+		if e.type == "signature" and str(e.mech).begins_with("tri_slash"): stages[e.mech] = true
+		if e.type == "hit" and e.actor == 0: hits += 1
+	check(stages.size() == 3, "special three times: three different cuts (%s)" % str(stages.keys()))
+	check(hits >= 3 and m.fighters[1].damage_percent > 15.0, "all three cuts land (%d hits, %.1f%%)" % [hits, m.fighters[1].damage_percent])
+	# Waiting too long breaks the chain: the next special starts over.
+	m = duel("jubei", DUMMY, 2.5)
+	m.queue_attack(0, true)
+	ticks(m, 150)
+	check(m.fighters[0].chain_stage == 0, "the chain ends after the window")
+
+func test_sun_wheel() -> void:
+	var m = duel("hikaru", DUMMY, 2.4)
+	m.queue_attack(0, true)
+	var top := 0.0
+	var hits := 0
+	for n in range(70):
+		m.tick(idle_commands())
+		top = maxf(top, m.fighters[0].y)
+		for e in m.events: if e.type == "hit" and e.actor == 0: hits += 1
+	check(top > 0.8, "the sun wheel rolls up in an arc (%.2f m)" % top)
+	check(hits >= 2, "and hits several times (%d)" % hits)
+
+func test_sling_fist() -> void:
+	var m = duel("tobi", DUMMY, 3.0)
+	m.set_meta("hold", 0)
+	m.queue_attack(0, true)
+	var short_len: float = beam_length(m)
+	var m2 = duel("tobi", DUMMY, 7.0)
+	m2.set_meta("hold", 120)
+	m2.queue_attack(0, true)
+	var long_len: float = beam_length(m2)
+	check(long_len > short_len + 3.5, "holding special stretches the fist further (%.1f → %.1f m)" % [short_len, long_len])
+	ticks(m2, 30)
+	check(m2.fighters[1].damage_percent > 10.0, "the fully stretched fist hits far away (%.1f%%)" % m2.fighters[1].damage_percent)
+	var m3 = duel("tobi", DUMMY, 1.2)
+	m3.set_meta("hold", 120)
+	m3.queue_attack(0, true)
+	beam_length(m3)
+	ticks(m3, 30)
+	check(m3.fighters[1].damage_percent == 0.0, "only the fist hits: an opponent right in front is passed over")
+
+func test_star_seal() -> void:
+	var m = duel("raiga", DUMMY, 6.0)
+	m.queue_attack(0, true)
+	ticks(m, 20)
+	var seal: Dictionary = {}
+	for pr in m.projectiles: if pr.owner == 0 and pr.spec.get("seal", false): seal = pr
+	check(not seal.is_empty(), "the star seal lies on the floor")
+	check(m.fighters[0].rage_timer > 0.0, "Raiga in the seal is enraged")
+	place(m.fighters[1], seal.x + 0.8, -1)
+	var before: float = m.fighters[1].damage_percent
+	for n in range(90):
+		m.fighters[1].x = seal.x + 0.8
+		m.tick(idle_commands())
+	check(m.fighters[1].damage_percent > before + 2.0, "opponents in the seal are shocked repeatedly (%.1f%%)" % (m.fighters[1].damage_percent - before))
+	place(m.fighters[0], seal.x - 6.0, 1)
+	ticks(m, 30)
+	check(m.fighters[0].rage_timer == 0.0, "outside the seal the rage fades")
+
+func test_ice_decoy() -> void:
+	var m = duel("glaciem", DUMMY, 3.0)
+	var x0: float = m.fighters[0].x
+	m.queue_attack(0, true)
+	ticks(m, 12)
+	var decoy: Dictionary = {}
+	for pr in m.projectiles: if pr.owner == 0 and str(pr.spec.get("shape", "")) == "ice_decoy": decoy = pr
+	check(not decoy.is_empty() and absf(decoy.x - x0) < 0.2, "an ice statue stays where Glaciem stood")
+	check(m.fighters[0].x < x0 - 2.0, "Glaciem blinks back (%.1f m)" % (x0 - m.fighters[0].x))
+	var frozen := false
+	for n in range(80):
+		m.tick([cmd(), cmd({"move": -1.0})])
+		if m.fighters[1].freeze_timer > 0.0: frozen = true
+		if frozen: break
+	check(frozen, "the opponent touching the statue freezes")
+
+func test_turbo() -> void:
+	var dist := {}
+	for turbo in [false, true]:
+		var m = duel("zip", DUMMY, 12.0)
+		m.fighters[1].x = 8.0
+		if turbo:
+			m.queue_attack(0, true)
+			until_ready(m, 40)
+		var x0: float = m.fighters[0].x
+		for n in range(40): m.tick([cmd({"move": 1.0}), cmd()])
+		dist[turbo] = m.fighters[0].x - x0
+	check(dist[true] > dist[false] * 1.3, "turbo boots: faster running (%.1f vs %.1f m)" % [dist[true], dist[false]])
+	var m2 = duel("zip", DUMMY, 6.0)
+	m2.queue_attack(0, true)
+	until_ready(m2, 40)
+	var ev: Array = []
+	for n in range(90):
+		m2.tick([cmd({"move": 1.0}), cmd()])
+		ev.append_array(m2.events)
+	check(has_event(ev, "turbo_ram") and m2.fighters[1].damage_percent > 0.0, "running into the opponent at full speed knocks it away")
+
+func test_flame_wall() -> void:
+	var m = duel("dragon", "Varakh der Sternenprinz mit Nova-Strahl", 6.0)
+	m.queue_attack(0, true)
+	ticks(m, 25)
+	var wall: Dictionary = {}
+	for pr in m.projectiles: if pr.owner == 0 and pr.spec.get("wall", false): wall = pr
+	check(not wall.is_empty() and wall.x > m.fighters[0].x, "the fire wall stands in front of the Templar")
+	m.queue_attack(1, true)
+	var ev: Array = []
+	ticks(m, 80, ev)
+	check(has_event(ev, "wall_block") and m.fighters[0].damage_percent == 0.0, "the wall stops enemy shots")
+	m = duel("dragon", DUMMY, 6.0)
+	m.queue_attack(0, true)
+	ticks(m, 25)
+	for pr in m.projectiles: if pr.owner == 0 and pr.spec.get("wall", false): wall = pr
+	var hits := 0
+	for n in range(100):
+		place(m.fighters[1], wall.x, -1)
+		m.tick(idle_commands())
+		for e in m.events: if e.type == "hit" and e.actor == 0: hits += 1
+	check(hits >= 2, "standing in the wall burns repeatedly (%d)" % hits)
+
 func test_ai_plays_every_kit() -> void:
 	for fam in PROMPTS:
 		var m = duel(fam, DUMMY, 4.0)
@@ -512,3 +664,29 @@ func test_ai_plays_every_kit() -> void:
 			for e in m.events: if e.type == "hit" and e.actor == 0: hits += 1
 			if m.result != -2: break
 		check(hits > 0, "the AI lands hits with %s (%d)" % [fam, hits])
+
+func test_eagle() -> void:
+	var p: Dictionary = Prompt.interpret(PROMPTS.arber, 0)
+	check(p.family == "arber" and Prompt.interpret("Albaner mit zwei Bohrmaschinen", 0).family == "arber", "Arbër is found by name and by his drills")
+	var m = duel("arber", DUMMY, 2.0)
+	var ev: Array = []
+	m.queue_attack(0, true)
+	ticks(m, 30, ev)
+	check(has_event(ev, "eagle_summon") and m.fighters[0].eagle > 0.0, "the special calls the double-headed eagle")
+	# Gliding: with the eagle he stays in the air far longer than a normal jump.
+	ticks(m, 90, ev)
+	check(not m.fighters[0].is_grounded and m.fighters[0].y > 0.8, "the eagle carries him through the air (y %.1f after 2 s)" % m.fighters[0].y)
+	var y0: float = m.fighters[0].y
+	for n in range(30): m.tick([cmd({"jump_held": true, "up": true}), cmd()])
+	check(m.fighters[0].y > y0 + 0.5, "jump makes the eagle climb (%.1f → %.1f)" % [y0, m.fighters[0].y])
+	check(has_event(ev, "eagle_strike") and m.fighters[1].damage_percent > 0.0, "the eagle dives at the opponent in reach (%.0f %%)" % m.fighters[1].damage_percent)
+	ticks(m, 360, ev)
+	check(has_event(ev, "eagle_leave") and m.fighters[0].eagle == 0.0, "the eagle leaves when the time is up")
+	# Drills: the jab is a multi-hit.
+	var m2 = duel("arber", DUMMY, 1.2)
+	var hits := 0
+	m2.start_move(0, "jab")
+	for n in range(40):
+		m2.tick(idle_commands(2))
+		for e in m2.events: if e.type == "hit" and e.get("actor", -1) == 0: hits += 1
+	check(hits >= 3, "the twin drills hit several times in a row (%d hits)" % hits)

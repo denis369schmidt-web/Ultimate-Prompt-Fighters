@@ -119,6 +119,14 @@ var scale_base := Vector3.ZERO
 var squash := 0.0
 var lean := 0.0
 var was_grounded := true
+## Natural motion: the run cycle follows the distance actually covered (no sliding feet),
+## body offsets ease in and out instead of snapping, the motion style sets tempo and sturdiness.
+var run_phase := 0.0
+var gait := 0.0
+var body_offset := Vector3.ZERO
+var motion_style: Dictionary = {}
+var air_blend := 0.0
+const MotionStyles = preload("res://scripts/motion_styles.gd")
 ## Own gear and outfit of the house heroes (hero_gear.gd), null for everyone else.
 var hero_gear: Node3D = null
 const HeroGear = preload("res://scripts/hero_gear.gd")
@@ -140,6 +148,9 @@ const MIXAMO_BODIES := {
 	"golem": "pumpkin_abomination", "tobi": "brute_titan", "jubei": "elven_archer",
 	"nekra": "zombie_girl", "grimbolt": "goblin_warrior", "echo": "cyber_ybot",
 	"kettenwart": "war_zombie", "don_valente": "boss_enforcer", "lepora": "eve_warrior", "bruno": "samurai_dreyar",
+	"brunhild": "arissa_fighter", "thorn_witch": "elven_archer", "nyx": "vampire_lord", "shira": "assassin_night",
+	"frostwyrm": "parasite_beast", "cyborg_mech": "cyber_ybot", "reaper_hound": "maw_alien", "treant": "pumpkin_abomination",
+	"celestial_fox": "maria_prop", "mossback": "warrok_brute", "arber": "brute_titan",
 }
 
 static func load_model_scene(path: String) -> PackedScene:
@@ -156,6 +167,7 @@ static func load_model_scene(path: String) -> PackedScene:
 
 func setup(p: Dictionary) -> void:
 	profile = p
+	motion_style = MotionStyles.data(MotionStyles.style_of(str(p.get("family", ""))))
 	var boss_body := ""
 	if p.has("boss"):
 		boss_body = str(load("res://scripts/bosses.gd").data(str(p.boss)).get("body", ""))
@@ -217,7 +229,7 @@ func setup(p: Dictionary) -> void:
 		if m.mesh:
 			max_mesh_height = maxf(max_mesh_height, m.mesh.get_aabb().size.y)
 
-	var target_h: float = 2.15 if p.family in ["warrok_brute", "mutant_titan", "golem", "golden_golem", "pumpkin_abomination", "kettenwart"] else 1.80
+	var target_h: float = 2.15 if p.family in ["warrok_brute", "mutant_titan", "golem", "brunhild", "pumpkin_abomination", "kettenwart", "treant", "mossback"] else 1.80
 	if p.has("boss"): target_h = float(load("res://scripts/bosses.gd").data(str(p.boss)).get("height", 3.3))
 	elif p.family == "grimbolt": target_h = 1.3   # small goblin
 	elif p.family == "don_valente": target_h = 1.9
@@ -290,10 +302,7 @@ func setup(p: Dictionary) -> void:
 					elif b_key == "left_shin" and ("leftleg" in bn or "leftshin" in bn) and not "up" in bn: bone_map[b_key] = b_idx; break
 					elif b_key == "right_shin" and ("rightleg" in bn or "rightshin" in bn) and not "up" in bn: bone_map[b_key] = b_idx; break
 
-	if _is_scanned_model(p.family):
-		_fit_scanned_model(p.family, target_h)
-	else:
-		_normalize_by_head(target_h)
+	_normalize_by_head(target_h)
 	setup_freeze_block()
 
 	var p_text: String = str(p.get("prompt", "")).to_lower()
@@ -504,6 +513,7 @@ func setup(p: Dictionary) -> void:
 			mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 			mat.diffuse_mode = BaseMaterial3D.DIFFUSE_TOON
 			mat.specular_mode = BaseMaterial3D.SPECULAR_TOON
+			mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
 
 			# Assign fighter meshes to Visual Layers 1 & 2 for isolated 3-point rim lighting
 			mesh.layers = 1 | 2
@@ -805,55 +815,6 @@ func setup(p: Dictionary) -> void:
 					mat.albedo_color = Color("181028")
 					mat.metallic = 0.65
 					mat.roughness = 0.22
-			elif p.family in ["golden_golem", "tripo_fantasy_female", "tripo_nyx_harvester", "tripo_cat_girl", "tripo_dragon_blue", "tripo_white_sci", "tripo_skeleton_dog", "tripo_wooden_forest", "tripo_nine_tailed", "tripo_quadruped_tree"] or p.family.begins_with("tripo_"):
-				mat.uv1_triplanar = false
-				mat.rim_enabled = true
-				mat.rim = 0.78
-				mat.rim_tint = 0.40
-				if original != null and "albedo_texture" in original and original.albedo_texture != null:
-					mat.albedo_texture = original.albedo_texture
-				if original != null and "normal_texture" in original and original.normal_texture != null:
-					mat.normal_enabled = true
-					mat.normal_texture = original.normal_texture
-				if p.family == "golden_golem":
-					mat.metallic = 0.90
-					mat.roughness = 0.20
-					mat.clearcoat_enabled = true
-					mat.clearcoat = 0.85
-					if original != null and "albedo_texture" in original and original.albedo_texture != null:
-						mat.albedo_texture = original.albedo_texture
-						mat.albedo_color = Color(1.2, 1.1, 0.9)
-					else:
-						mat.albedo_color = Color("e5b820")
-				elif p.family == "tripo_white_sci":
-					mat.metallic = 0.72
-					mat.roughness = 0.28
-					mat.clearcoat_enabled = true
-					mat.clearcoat = 0.70
-				elif p.family == "tripo_nyx_harvester":
-					mat.metallic = 0.38
-					mat.roughness = 0.42
-					mat.rim = 0.88
-				elif p.family == "tripo_dragon_blue":
-					mat.metallic = 0.25
-					mat.roughness = 0.32
-				elif p.family == "tripo_nine_tailed":
-					mat.metallic = 0.12
-					mat.roughness = 0.48
-					mat.rim = 0.92
-					mat.rim_tint = 0.65
-				elif p.family in ["tripo_wooden_forest", "tripo_quadruped_tree"]:
-					mat.metallic = 0.04
-					mat.roughness = 0.82
-					if mat.albedo_texture == null:
-						# The Sylvan Beast scan ships untextured: mossy bark from the rock scan.
-						mat.albedo_texture = load("res://assets/polyhaven/textures/mossy_rock/mossy_rock_diff_2k.jpg")
-						mat.normal_enabled = true
-						mat.normal_texture = load("res://assets/polyhaven/textures/mossy_rock/mossy_rock_nor_gl_2k.jpg")
-						mat.uv1_triplanar = true
-						mat.uv1_scale = Vector3.ONE * 1.6
-						mat.albedo_color = Color(0.95, 1.0, 0.85)
-						mat.rim = 0.35
 			else: # Ninja
 				if "Eye" in mesh.name or "Visor" in mesh.name or "Conduit" in mesh.name or "PowerPort" in mesh.name or "GreaveGlow" in mesh.name or "BackNode" in mesh.name or "Center" in mesh.name:
 					# Sharp glowing cyber-shinobi energy nodes & assassin eye slits
@@ -1261,19 +1222,6 @@ func _normalize_by_head(target_h: float) -> void:
 		model.scale *= ratio
 		base_model_scale = model.scale
 
-## Tripo scans (and the gold golem) come centred on their origin and, when rigged, as
-## quadrupeds whose "head" bone is not near the top, so neither mesh height nor head
-## height fits them. They are fitted by their real bounds instead.
-static func _is_scanned_model(family: String) -> bool:
-	return family.begins_with("tripo_") or family == "golden_golem"
-
-## Scan creatures are bigger than humanoids but must not fill the stage.
-const SCAN_HEIGHT := {"tripo_dragon_blue": 2.3, "tripo_skeleton_dog": 1.9, "tripo_nine_tailed": 2.2, "tripo_quadruped_tree": 2.3}
-const SCAN_MAX_WIDTH := 3.2
-## Scans face +X; Mixamo bodies (and the facing logic in update_state) face +Z.
-const SCAN_YAW := -90.0
-const SCAN_YAW_OVERRIDE := {"tripo_skeleton_dog": 180.0}
-
 ## Bounds of all meshes in this view's space (skinned meshes in their bind pose).
 func _model_bounds() -> AABB:
 	var inv: Transform3D = global_transform.affine_inverse()
@@ -1285,87 +1233,6 @@ func _model_bounds() -> AABB:
 		box = b if first else box.merge(b)
 		first = false
 	return box
-
-## Statue scans stand on a display base; this share of their height is cut away.
-const PEDESTAL_CUT := {"tripo_nyx_harvester": 0.12, "tripo_fantasy_female": 0.05, "tripo_wooden_forest": 0.03, "tripo_nine_tailed": 0.14}
-static var _cut_meshes := {}
-## Lowest kept point per family, as a share of the uncut height (the vertex arrays and so
-## the mesh bounds still include the removed base).
-static var _cut_floor := {}
-## Cutting a million-vertex scan takes seconds, so the result is baked here once.
-const CUT_DIR := "res://assets/models/cut"
-
-## Drops every triangle that lies completely below the cut height (view space), and flat
-## ones a little above it: the top face of a base sits where the feet stand.
-func _cut_pedestal(family: String) -> void:
-	var box: AABB = _model_bounds()
-	var cut_y: float = box.position.y + box.size.y * float(PEDESTAL_CUT[family])
-	var flat_y: float = box.position.y + box.size.y * float(PEDESTAL_CUT[family]) * 1.3
-	var inv: Transform3D = global_transform.affine_inverse()
-	var lowest := INF
-	var k := 0
-	for m in model.find_children("*", "MeshInstance3D", true, false):
-		if m.mesh == null: continue
-		var key := "%s/%d" % [family, k]
-		var baked := "%s/%s_%d.res" % [CUT_DIR, family, k]
-		k += 1
-		if not _cut_meshes.has(key) and ResourceLoader.exists(baked):
-			_cut_meshes[key] = load(baked)
-		if not _cut_meshes.has(key):
-			var xf: Transform3D = inv * m.global_transform
-			var out := ArrayMesh.new()
-			for s in range(m.mesh.get_surface_count()):
-				var arrays: Array = m.mesh.surface_get_arrays(s)
-				var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
-				var idx: PackedInt32Array = arrays[Mesh.ARRAY_INDEX] if arrays[Mesh.ARRAY_INDEX] != null else PackedInt32Array(range(verts.size()))
-				var pos := PackedVector3Array()
-				pos.resize(verts.size())
-				for v in range(verts.size()):
-					pos[v] = xf * verts[v]
-				var kept := PackedInt32Array()
-				for t in range(0, idx.size() - 2, 3):
-					var a: Vector3 = pos[idx[t]]
-					var b: Vector3 = pos[idx[t + 1]]
-					var c: Vector3 = pos[idx[t + 2]]
-					var top: float = maxf(a.y, maxf(b.y, c.y))
-					if top < cut_y: continue
-					if top < flat_y:
-						var n: Vector3 = (b - a).cross(c - a)
-						if n.length_squared() > 0.0 and absf(n.normalized().y) > 0.85: continue
-					kept.append(idx[t]); kept.append(idx[t + 1]); kept.append(idx[t + 2])
-					lowest = minf(lowest, minf(a.y, minf(b.y, c.y)))
-				if kept.is_empty(): continue
-				arrays[Mesh.ARRAY_INDEX] = kept
-				out.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays, [], {}, m.mesh.surface_get_format(s) & Mesh.ARRAY_FLAG_USE_8_BONE_WEIGHTS)
-				out.surface_set_material(out.get_surface_count() - 1, m.mesh.surface_get_material(s))
-			if lowest < INF: out.set_meta("floor", (lowest - box.position.y) / box.size.y)
-			DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(CUT_DIR))
-			ResourceSaver.save(out, baked, ResourceSaver.FLAG_COMPRESS)
-			_cut_meshes[key] = out
-		m.mesh = _cut_meshes[key]
-		if m.mesh.has_meta("floor"): lowest = minf(lowest, box.position.y + box.size.y * float(m.mesh.get_meta("floor")))
-	if lowest < INF: _cut_floor[family] = (lowest - box.position.y) / box.size.y
-
-## Scales a scan to its target height (capped in width) and stands it on the floor.
-func _fit_scanned_model(family: String, target_h: float) -> void:
-	if not is_inside_tree(): return
-	var turn := Basis(Vector3.UP, deg_to_rad(float(SCAN_YAW_OVERRIDE.get(family, SCAN_YAW))))
-	for c in model.get_children():
-		if c is Node3D: c.transform = Transform3D(turn, Vector3.ZERO) * c.transform
-	if PEDESTAL_CUT.has(family): _cut_pedestal(family)
-	var box: AABB = _model_bounds()
-	if box.size.y <= 0.01: return
-	var ratio: float = float(SCAN_HEIGHT.get(family, target_h)) / box.size.y
-	var wide: float = maxf(box.size.x, box.size.z) * ratio
-	if wide > SCAN_MAX_WIDTH: ratio *= SCAN_MAX_WIDTH / wide
-	model.scale *= ratio
-	base_model_scale = model.scale
-	# Lift the children: model.position.y itself is animated every frame.
-	var fitted: AABB = _model_bounds()
-	var floor_y: float = fitted.position.y + fitted.size.y * float(_cut_floor.get(family, 0.0))
-	var lift: float = -floor_y / maxf(0.001, model.scale.y)
-	for c in model.get_children():
-		if c is Node3D: c.position.y += lift
 
 func _char_dir(v: Vector3) -> Vector3:
 	return (rig_right * v.x + rig_up * v.y + rig_forward * v.z).normalized()
@@ -1422,17 +1289,24 @@ func _pose_targets(pose: String, t: float, p: float) -> Dictionary:
 	var spine := Vector3(0, 1, 0.1 + breath)
 	match pose:
 		"Move":
-			var s := sin(p * 11.0)
-			ll = _leg(-1.0, s * 0.62, 0.35 + maxf(0.0, -s) * 0.9)
-			rl = _leg(1.0, -s * 0.62, 0.35 + maxf(0.0, s) * 0.9)
-			la = _arm(-1.0, Vector3(0.18, -cos(s * 0.7), -sin(s * 0.7)), Vector3(0.1, 0.35, 0.95))
-			ra = _arm(1.0, Vector3(0.18, -cos(-s * 0.7), -sin(-s * 0.7)), Vector3(0.1, 0.35, 0.95))
-			spine = Vector3(0, 1, 0.28)
+			# Stride: swing grows with speed (walk -> sprint), the knee folds on the way back
+			# and the arms swing against the legs.
+			var s := sin(run_phase)
+			var c := cos(run_phase)
+			var g: float = clampf(gait, 0.3, 1.0)
+			ll = _leg(-1.0, s * 0.62 * g, 0.25 + (maxf(0.0, -s) * 0.95 + maxf(0.0, c) * 0.25) * g)
+			rl = _leg(1.0, -s * 0.62 * g, 0.25 + (maxf(0.0, s) * 0.95 + maxf(0.0, -c) * 0.25) * g)
+			var arm_sw: float = 0.75 * g
+			la = _arm(-1.0, Vector3(0.18, -cos(s * arm_sw), -sin(s * arm_sw)), Vector3(0.1, 0.25 + 0.2 * g, 0.95))
+			ra = _arm(1.0, Vector3(0.18, -cos(-s * arm_sw), -sin(-s * arm_sw)), Vector3(0.1, 0.25 + 0.2 * g, 0.95))
+			spine = Vector3(sin(run_phase) * 0.04 * g, 1, 0.12 + 0.22 * g + absf(c) * 0.04)
 		"Jump":
-			ll = _leg(-1.0, 1.05, 1.6)
-			rl = _leg(1.0, 0.55, 1.1)
-			la = _arm(-1.0, Vector3(0.75, 0.35, 0.15), Vector3(0.6, 0.75, 0.2))
-			ra = _arm(1.0, Vector3(0.75, 0.35, 0.15), Vector3(0.6, 0.75, 0.2))
+			# Tucked at the start of the jump, opening up towards the apex.
+			var o: float = air_blend
+			ll = _leg(-1.0, lerpf(1.05, 0.5, o), lerpf(1.6, 0.7, o))
+			rl = _leg(1.0, lerpf(0.55, 0.0, o), lerpf(1.1, 0.4, o))
+			la = _arm(-1.0, Vector3(0.75, 0.35, 0.15).lerp(Vector3(0.85, 0.1, 0.05), o), Vector3(0.6, 0.75, 0.2))
+			ra = _arm(1.0, Vector3(0.75, 0.35, 0.15).lerp(Vector3(0.85, 0.1, 0.05), o), Vector3(0.6, 0.75, 0.2))
 			spine = Vector3(0, 1, 0.15)
 		"Fall":
 			var flap := sin(p * 6.0) * 0.12
@@ -1467,7 +1341,8 @@ func _pose_targets(pose: String, t: float, p: float) -> Dictionary:
 			rl = _leg(1.0, -0.2, 0.5, 0.22)
 			spine = Vector3(0, 1, 0.25)
 		"HitReact", "Grabbed":
-			var jolt := maxf(0.0, 1.0 - t * 4.0)
+			# Sturdy styles (brutes, knights) are thrown around less than light ones.
+			var jolt := maxf(0.0, 1.0 - t * 4.0) * (1.3 - float(motion_style.get("sturdy", 0.4)))
 			la = _arm(-1.0, Vector3(0.6, -0.3, -0.7), Vector3(0.6, 0.1, -0.5))
 			ra = _arm(1.0, Vector3(0.6, -0.4, -0.6), Vector3(0.6, 0.2, -0.5))
 			ll = _leg(-1.0, 0.4, 0.5)
@@ -1697,7 +1572,7 @@ func update_procedural_skeleton(pose: String, delta: float, facing: float, is_fr
 		proc_pose_age = 0.0
 	proc_pose_age += delta
 	var fast: bool = not (pose in ["Idle", "Move", "Fall", "Victory", "Defeat", "Ledge", "Dazed", "Carrying"])
-	var blend: float = minf(1.0, delta * (26.0 if fast else 12.0))
+	var blend: float = 1.0 - exp(-delta * (24.0 if fast else 11.0))
 	var targets: Dictionary = _pose_targets(pose, proc_pose_age, pulse_time)
 	for link in LIMB_CHAIN:
 		if targets.has(link[0]):
@@ -1757,6 +1632,13 @@ func update_state(state: Dictionary, delta: float) -> void:
 		model.visible = true
 
 	var pose: String = state.pose
+	# Run cycle: phase advances with the ground speed, scaled by the style's tempo.
+	var ground_speed: float = absf(float(state.get("walk_v", 0.0)))
+	gait = lerpf(gait, clampf(ground_speed / 5.5, 0.0, 1.0), 1.0 - exp(-delta * 8.0))
+	run_phase = fmod(run_phase + ground_speed * delta * float(motion_style.get("tempo", 11.0)) / 4.2, TAU * 64.0)
+	var vy: float = float(state.get("vy", 0.0))
+	air_blend = lerpf(air_blend, clampf(1.0 - vy / 8.0, 0.0, 1.0), 1.0 - exp(-delta * 10.0))
+	var offset_target := Vector3.ZERO
 
 	if custom_attack_node:
 		var is_atk: bool = (pose in ["Attack", "LightAttack"])
@@ -1784,22 +1666,18 @@ func update_state(state: Dictionary, delta: float) -> void:
 		if animation and animation.is_playing() and skeleton != null: animation.stop(true)
 		current_pose = pose
 		if pose == "Idle":
-			model.position.y = sin(pulse_time * 2.8) * 0.035
-			model.rotation.z = sin(pulse_time * 1.4) * 0.015
+			offset_target.y = sin(pulse_time * 2.8) * 0.035
 		elif pose == "Move":
-			model.position.y = abs(sin(pulse_time * 8.0)) * 0.05
-			model.rotation.z = sin(pulse_time * 8.0) * 0.05 * state.facing
+			# Hips bob twice per stride, lowest when a foot plants.
+			offset_target.y = (absf(cos(run_phase)) - 0.5) * 0.07 * gait
 		elif pose in ["Attack", "LightAttack"]:
-			model.position.x = state.facing * 0.20
+			offset_target.x = state.facing * 0.20
 			model.rotation.y = lerp_angle(model.rotation.y, target_rot + state.facing * 0.35, minf(1.0, delta * 15.0))
 		elif pose == "SpecialAttack":
-			model.position.y = 0.10 + sin(pulse_time * 10.0) * 0.03
+			offset_target.y = 0.10 + sin(pulse_time * 10.0) * 0.03
 			model.rotation.y = lerp_angle(model.rotation.y, target_rot - state.facing * 0.25, minf(1.0, delta * 15.0))
 		elif pose == "HitReact":
-			model.position.x = -state.facing * 0.15
-			model.rotation.z = -state.facing * 0.10
-		else:
-			model.position = Vector3.ZERO
+			offset_target.x = -state.facing * 0.15 * (1.3 - float(motion_style.get("sturdy", 0.4)))
 
 	if skeleton != null:
 		update_procedural_skeleton(pose, delta, state.facing, is_frozen)
@@ -1826,7 +1704,11 @@ func update_state(state: Dictionary, delta: float) -> void:
 	else:
 		tumble_angle = 0.0
 	var hip_drop: float = {"Sweep": -0.4, "SlashLow": -0.32, "Crouch": -0.28, "Counter": -0.18, "Slam": -0.22, "Dodge": -0.3, "Beam": -0.1}.get(pose, 0.0)
-	model.position.y += hip_drop * (1.0 if pose == current_pose else 0.0)
+	offset_target.y += hip_drop
+	# Body offsets ease towards their target instead of snapping between poses.
+	var fast_pose: bool = not (pose in ["Idle", "Move", "Fall", "Victory", "Defeat"])
+	body_offset = body_offset.lerp(offset_target, 1.0 - exp(-delta * (22.0 if fast_pose else 10.0)))
+	model.position = body_offset
 
 	if hero_gear != null: hero_gear.apply_state(state)
 	if shield:

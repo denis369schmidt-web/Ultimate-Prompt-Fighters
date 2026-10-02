@@ -105,6 +105,12 @@ var weekly := {}              # {"week", "list", "bonus"}
 var first_win_day := -1
 var bounty_day := -1
 var wheel_day := -1
+var adventure := {}           # family -> {wave, score, runs, combo} (adventure mode records)
+var adventure_best := {}      # best run overall {score, wave, family, day}
+var legend_relics := {}       # family -> true: legend finished (story_legends.gd)
+var challenge := {}           # daily challenge: done_day, streak, best_streak, total (fun_modes.gd)
+var last_seen := -1           # last day the game was opened (comeback gift)
+var event := {}               # the week's event (fun_modes.gd), set by main – not saved
 var _day := 0
 
 # Current match
@@ -140,6 +146,19 @@ static func rank_for(level: int) -> String:
 	for r in RANKS:
 		if level >= int(r[0]): title = r[1]
 	return title
+
+## Mastery stars of one fighter (0..5).
+func stars_of(fam: String) -> int:
+	return stars_for(int(fighter_xp.get(fam, 0)))
+
+## A finished legend: the relic, coins and a chest – only once per fighter. Returns true the first time.
+func grant_legend(fam: String, coins_gain: int) -> bool:
+	if legend_relics.has(fam): return false
+	legend_relics[fam] = true
+	coins += coins_gain
+	chests += 1
+	save_progress()
+	return true
 
 static func stars_for(fxp: int) -> int:
 	var s := 0
@@ -177,14 +196,17 @@ func load_progress() -> void:
 	login = cfg.get_value("shop", "login", {"last": -1, "step": 0})
 	path_claimed = int(cfg.get_value("shop", "path_claimed", 0))
 	win_streak = int(cfg.get_value("player", "win_streak", 0))
-	for key in ["rank_points", "best_league", "boost_matches", "title", "weekly", "first_win_day", "bounty_day", "wheel_day"]:
+	for key in ["rank_points", "best_league", "boost_matches", "title", "weekly", "first_win_day", "bounty_day", "wheel_day", "adventure", "adventure_best", "legend_relics", "challenge", "last_seen"]:
 		set(key, cfg.get_value("extra", key, get(key)))
 	_migrate_family_ids()
 
 ## Saves written before the roster rename keep their fighter progress under the new ids.
 const RENAMED_IDS := {"goku": "kairo", "vegeta": "varakh", "frieza": "xylar", "subzero": "glaciem", "pain": "oryn",
 	"luffy": "tobi", "zoro": "jubei", "naruto": "ren", "sasuke": "amethya", "saitama": "bruno", "tanjiro": "hikaru",
-	"sonic": "zip", "akaza": "raiga", "blue_eyes": "albion", "charizard": "pyrax", "tripo_fran_statue": "lepora"}
+	"sonic": "zip", "akaza": "raiga", "blue_eyes": "albion", "charizard": "pyrax", "tripo_fran_statue": "lepora",
+	"golden_golem": "brunhild", "tripo_fantasy_female": "thorn_witch", "tripo_nyx_harvester": "nyx", "tripo_cat_girl": "shira",
+	"tripo_dragon_blue": "frostwyrm", "tripo_white_sci": "cyborg_mech", "tripo_skeleton_dog": "reaper_hound",
+	"tripo_wooden_forest": "treant", "tripo_nine_tailed": "celestial_fox", "tripo_quadruped_tree": "mossback"}
 
 func _migrate_family_ids() -> void:
 	for old in RENAMED_IDS:
@@ -216,7 +238,7 @@ func save_progress() -> void:
 	for key in ["skins_owned", "skin", "weapons_owned", "start_weapon", "chests", "login", "path_claimed", "granted"]:
 		cfg.set_value("shop", key, get(key))
 	cfg.set_value("player", "win_streak", win_streak)
-	for key in ["rank_points", "best_league", "boost_matches", "title", "weekly", "first_win_day", "bounty_day", "wheel_day"]:
+	for key in ["rank_points", "best_league", "boost_matches", "title", "weekly", "first_win_day", "bounty_day", "wheel_day", "adventure", "adventure_best", "legend_relics", "challenge", "last_seen"]:
 		cfg.set_value("extra", key, get(key))
 	cfg.save(save_path)
 
@@ -384,6 +406,7 @@ func end_match(result: int, bonus_coins: int = 0, context: Dictionary = {}) -> D
 	if boosted:
 		mult *= 2.0
 		boost_matches -= 1
+	mult *= float(event.get("xp", 1.0))
 	var total := int(round(base * mult))
 	xp += total
 	fighter_xp[_family] = int(fighter_xp.get(_family, 0)) + total
@@ -402,7 +425,7 @@ func end_match(result: int, bonus_coins: int = 0, context: Dictionary = {}) -> D
 	win_streak = win_streak + 1 if won else 0
 	stats["best_win_streak"] = maxi(int(stats.get("best_win_streak", 0)), win_streak)
 	var streak_bonus: float = 1.0 + 0.1 * float(mini(5, maxi(0, win_streak - 1)))
-	var earned: int = int(total / 4.0 * streak_bonus * float(grade[2])) + maxi(0, bonus_coins)
+	var earned: int = int(total / 4.0 * streak_bonus * float(grade[2]) * float(event.get("coins", 1.0))) + maxi(0, bonus_coins)
 	var extras: Array = []
 	if won and first_win_day != _day:
 		first_win_day = _day

@@ -490,7 +490,7 @@ func test_signatures() -> void:
 	var prompts := {
 		"ninja": "Blitzschneller Schattenninja mit elektrischen Klingen", "golem": "Gepanzerter Lavagolem mit brennenden Fäusten",
 		"kairo": "Kairo der Sturmmönch mit Solar-Kanone", "tobi": "Tobi der Gummikapitän mit Schleuderfaust",
-		"raiga": "Raiga der Kompassdämon mit Kompassnova", "tripo_quadruped_tree": "Sylvan Beast Treant quadruped creature Tripo",
+		"raiga": "Raiga der Kompassdämon mit Kompassnova", "mossback": "Sylvan Beast Treant quadruped creature",
 		"wizard_sorcerer": "Erzmagier Pyrus Feuerzauberer mit Meteorschlag und Flammenstab", "nekra": "Nekra die Seelenhirtin mit Knochengarten",
 		"grimbolt": "Grimbolt der Goblin-Tüftler mit Zeitbombe", "echo": "Echo das Hologramm mit Phasentausch",
 		"kettenwart": "Kettenwart der Kerkermeister mit Seelenketten", "don_valente": "Don Valente der Unterweltpate mit Leibwächter-Geschütz",
@@ -528,10 +528,10 @@ func test_signatures() -> void:
 		for ev in m.events:
 			if ev.type == "swap": swapped = true
 	check(swapped and m.fighters[0].x > ax + 1.0, "phase swap exchanges positions")
-	# Counter answers an attack.
+	# Counter answers an attack (Raiga's down special).
 	m = sig_match("Raiga der Kompassdämon mit Kompassnova")
 	place(m.fighters[1], -0.5, 0.0, 1)
-	m.queue_attack(0, true)
+	m.start_move(0, "dspecial")
 	for n in range(40):
 		m.tick(idle_commands())
 		if m.fighters[0].counter > 0.0: break

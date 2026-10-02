@@ -9,7 +9,7 @@ extends RefCounted
 
 const TOTAL_STAT_BUDGET := 100.0
 
-# Available Archetype Bodies (Mixamo, Tripo AI, and Classics)
+# Available Archetype Bodies (Mixamo and Classics)
 const BODY_MODULES := {
 	"ninja": {
 		"id": "body_ninja", "family": "ninja_master", "name": "Shinobi Schattenmeister",
@@ -86,26 +86,26 @@ const BODY_MODULES := {
 		"weight": 1.35, "base_hp": 130.0, "stats": {"vit": 28, "pwr": 28, "def": 24, "spd": 10, "tech": 10},
 		"anim_family": "golem", "scale": 1.08, "model_file": "res://assets/models/mixamo/mutant_titan.glb"
 	},
-	# Tripo AI Titans
-	"golden_golem": {
-		"id": "body_golden_golem", "family": "golden_golem", "name": "Goldener Titan Golem",
+	# Eigene Kämpfer auf Mixamo-Körpern
+	"brunhild": {
+		"id": "body_brunhild", "family": "brunhild", "name": "Goldener Titan Golem",
 		"weight": 1.40, "base_hp": 135.0, "stats": {"vit": 28, "pwr": 28, "def": 26, "spd": 10, "tech": 8},
-		"anim_family": "golem", "scale": 2.15, "model_file": "res://assets/models/golden_golem.glb"
+		"anim_family": "golem", "scale": 1.1, "model_file": "res://assets/models/mixamo/arissa_fighter.glb"
 	},
 	"kitsune": {
-		"id": "body_kitsune", "family": "tripo_cat_girl", "name": "Kitsune Klingentänzerin",
+		"id": "body_kitsune", "family": "shira", "name": "Kitsune Klingentänzerin",
 		"weight": 0.95, "base_hp": 105.0, "stats": {"vit": 16, "pwr": 24, "def": 14, "spd": 26, "tech": 20},
-		"anim_family": "ninja", "scale": 1.95, "model_file": "res://assets/models/tripo_cat_girl.glb"
+		"anim_family": "ninja", "scale": 1.95, "model_file": "res://assets/models/mixamo/assassin_night.glb"
 	},
 	"blue_wyrm": {
-		"id": "body_blue_wyrm", "family": "tripo_dragon_blue", "name": "Blauer Frost-Wyrm",
+		"id": "body_blue_wyrm", "family": "frostwyrm", "name": "Blauer Frost-Wyrm",
 		"weight": 1.30, "base_hp": 125.0, "stats": {"vit": 24, "pwr": 28, "def": 22, "spd": 16, "tech": 10},
-		"anim_family": "dragon", "scale": 2.25, "model_file": "res://assets/models/tripo_dragon_blue.glb"
+		"anim_family": "dragon", "scale": 1.0, "model_file": "res://assets/models/mixamo/parasite_beast.glb"
 	},
 	"nyx_reaper": {
-		"id": "body_nyx", "family": "tripo_nyx_harvester", "name": "Nyx Seelenernter",
+		"id": "body_nyx", "family": "nyx", "name": "Nyx Seelenernter",
 		"weight": 1.05, "base_hp": 115.0, "stats": {"vit": 18, "pwr": 26, "def": 18, "spd": 20, "tech": 18},
-		"anim_family": "specter", "scale": 1.95, "model_file": "res://assets/models/tripo_nyx_harvester.glb"
+		"anim_family": "specter", "scale": 1.95, "model_file": "res://assets/models/mixamo/vampire_lord.glb"
 	},
 	# Eigene Helden
 	"glaciem": {
@@ -306,7 +306,7 @@ static func remix_character(prompt_text: String, slot_index: int = 0) -> Diction
 	elif has_any(lower, ["mutant", "monster", "abomination"]):
 		body_key = "mutant"
 	elif has_any(lower, ["gold", "golden golem", "midas"]):
-		body_key = "golden_golem"
+		body_key = "brunhild"
 	elif has_any(lower, ["kitsune", "katze", "cat", "fuchs"]):
 		body_key = "kitsune"
 	elif has_any(lower, ["wyrm", "drache", "dragon"]):

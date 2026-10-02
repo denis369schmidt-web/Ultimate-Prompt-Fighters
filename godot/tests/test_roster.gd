@@ -69,6 +69,30 @@ func run() -> void:
 		v.flash()
 		v.queue_free()
 
+	# Former Tripo community scans (other people's models) are gone; their fighters are own builds.
+	var own := ["brunhild", "thorn_witch", "nyx", "shira", "frostwyrm", "cyborg_mech", "reaper_hound", "treant", "celestial_fox", "mossback"]
+	var ids: Array = []
+	for preset in app.mk_presets: ids.append(str(preset.id))
+	for fam in own:
+		check(fam in ids and HeroGear.has_hero(fam), "%s is an own fighter with its own gear" % fam)
+	var leftovers: Array = []
+	for f in DirAccess.get_files_at("res://assets/models"):
+		if f.begins_with("tripo_") or f.begins_with("golden_golem"): leftovers.append(f)
+	check(leftovers.is_empty() and not DirAccess.dir_exists_absolute("res://assets/models/cut"), "no Tripo scan files are left in the project %s" % [leftovers])
+	var tripo_ids: Array = ids.filter(func(i): return str(i).begins_with("tripo_") or i == "golden_golem")
+	check(tripo_ids.is_empty(), "no fighter id refers to Tripo %s" % [tripo_ids])
+	check(str(load("res://scripts/bosses.gd").data("leviathan").get("body", "")) == "", "Leviathan is the procedural sea dragon")
+	# Every arena gets an ambience loop that exists (neon city stays quiet on purpose).
+	var AD = load("res://scripts/audio_director.gd")
+	var missing: Array = []
+	for arena in app.ARENAS:
+		var loop: String = AD.ambience_for(str(arena))
+		if loop != "" and not ResourceLoader.exists(AD.AMBIENCE_DIR + loop + ".ogg"): missing.append("%s→%s" % [arena, loop])
+	check(missing.is_empty(), "every arena ambience file exists %s" % [missing])
+	for loop in ["bonfire", "torches", "forest_enchanted", "forest_night", "ocean", "winter_wind", "desert_wind"]:
+		var st = load(AD.AMBIENCE_DIR + loop + ".ogg")
+		check(st != null and st.get_length() > 30.0, "ambience %s loads and is long enough to loop" % loop)
+
 	app.queue_free()
 	await process_frame
 	finish("roster")

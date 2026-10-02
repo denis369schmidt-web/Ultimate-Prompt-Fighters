@@ -2,13 +2,10 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cfgjqpq0hdmj2"
+uid="uid://b4mpfnmmep3q0"
 path="res://.godot/imported/exo_red_BODY_normal.png-9c5d89e2a6d9f10dc758c8bee394c6d3.ctex"
 metadata={
 "vram_texture": false
-}
-generator_parameters={
-"md5": "f65ca2c83e7488384696a6ed05a6833a"
 }
 
 [deps]
@@ -26,7 +23,7 @@ compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
 compress/normal_map=0
 compress/channel_pack=0
-mipmaps/generate=true
+mipmaps/generate=false
 mipmaps/limit=-1
 roughness/mode=0
 roughness/src_normal=""

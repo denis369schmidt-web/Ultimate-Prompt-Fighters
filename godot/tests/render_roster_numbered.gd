@@ -17,7 +17,7 @@ func _initialize() -> void:
 	call_deferred("run")
 
 ## Top of the model in world space: the higher of head bone and mesh bounds (skinned
-## Mixamo bounds stop at the hips, Tripo rigs map "head" to a low bone).
+## Mixamo bounds stop at the hips).
 func model_top(view) -> float:
 	var top := -INF
 	if view.skeleton != null and view.bone_map.has("head"):

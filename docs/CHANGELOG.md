@@ -4,6 +4,22 @@ Format: neueste Einträge oben. Jeder Schritt nennt Spieler-Wirkung und technisc
 
 ## [Unreleased]
 
+### Schritt 11 – Eigene Kämpfer statt Tripo-Scans, Arbër, echter Startbildschirm, Arena-Ambience (2026-10-02)
+
+**Lizenz-Bereinigung**: Die zehn Kämpfer auf Tripo-Community-Modellen fremder Urheber (Brunhild, Thorn Witch, Nyx, Shira, Frostwyrm, Cyborg Mech, Reaper Hound, Treant, Celestial Fox, Mossback) sind neu und eigenständig gebaut: Mixamo-Körper plus eigene Ausrüstung im Code (Flügelhelm und Bartaxt, Dornenkrone und Rankenpeitschen, Seelensense, Katzenohren, Eisschwanz, Mech-Panzerung mit Schulterkanone, Schädelhelm, Rindenpanzer mit Geweih, neun Fuchsschwänze mit Fuchsfeuer, Felsrücken mit Widderhörnern). Neue IDs ohne „tripo“, alte Spielstände werden umgeschrieben. Leviathan ist der prozedurale Seedrache. Alle Tripo-Dateien liegen in `_quarantine_ip/tripo/`.
+
+**Neuer Kämpfer Arbër, der Bohrmeister**: albanischer Handwerker-Held mit zwei Akku-Bohrern (Mehrfachtreffer, eigener Bohrsound) in Qeleshe und bestickter Xhamadan-Weste. Signatur **Ruf der Shqiponja**: Der schwarze Doppelkopfadler trägt ihn 6,5 s durch die Luft (Springen/Hoch steigt, Runter sinkt, sonst Gleitflug), stößt jede Sekunde auf den nächsten Gegner herab. Finisher **FLUG DER SHQIPONJA** (↑ ← Spezial).
+
+**Startbildschirm**: Logo aus echter Schrift (Russo One, Teko – OFL) mit Metallverlauf, Kontur, Leuchten und Glanzlicht statt des gemalten KI-Bildes; dahinter läuft die Arena des gewählten Hintergrunds live mit drei Kämpfern und langsamer Kamerafahrt; Menü aus echten Knöpfen.
+
+**Abenteuer-Modus** (`scripts/adventure.gd`, Hauptmenü ABENTEUER): ein Kämpfer gegen endlos viele Gegner. Jede Welle härter (KI-Stufe, Schaden, Gewicht), jede 5. ein Boss (Himmel und Hölle im Wechsel), Schaden bleibt und heilt nur zu 35 %. Punkte für Wellen, Tempo, Restgesundheit, Combos und Bosse; Rekorde pro Kämpfer, bester Lauf und Bestenliste. Kurze Kinosequenzen vor Bossen, an Meilensteinen (alle 10 Wellen: Münzen und Truhe) und am Ende eines Laufs.
+
+**Legenden** (`scripts/story_legends.gd`, Story → 📜 LEGENDEN): für alle 49 Kämpfer eine eigene Hintergrundgeschichte in vier Kapiteln (Herkunft, Rivale, Abgrund, Legende) mit Kamerafahrten, Dialogen und je einem Kampf; die Kapitel öffnen sich mit den Meisterschafts-Sternen des Kämpfers. Die vollendete Legende gibt sein Relikt: 400 Münzen, eine Glückstruhe, Goldrahmen und +15 % Heilung im Abenteuer.
+
+**Spaß & Wiederkommen** (`scripts/fun_modes.gd`): 8 **Mutatoren** für Versus-Kämpfe, frei kombinierbar unter OPTIONEN (Mondsprung, Turbo, Glaskanonen, Schwergewichte, Riesen, Winzlinge, Sudden Death, Volle Kraft). **Tages-Herausforderung** unter EXTRAS: jeden Tag ein fester Kampf (Kämpfer, Gegner, Mutatoren, Ziel wie „in unter 60 s“, „makellos“, „allein gegen zwei“), Serie über Tage mit steigender Belohnung und Truhe am 7. Tag. **Wochen-Events** im Wechsel (Doppel-XP, Goldrausch, Mutatoren-Festival, Woche der Herausforderer, Legenden-Woche). **Herausforderer**: Nach gewonnenen Solokämpfen taucht manchmal ein Überraschungsgegner mit Mutator auf – Sieg gibt Münzen und vielleicht eine Truhe. **Willkommen zurück**: nach 3+ Tagen Pause ein Geschenk. Alles als Hinweis auf dem Startbildschirm.
+
+**Arenen**: Nebelschichten, Lichtstrahlen, Vogel-/Fledermausschwärme, Oberflächendetail, Umgebungsgeräusche je Arena (JC Sounds, CC BY 4.0, in den Credits).
+
 ### Schritt 10 – Göttliche Prüfung, 19 Bosse, Startmenü, Shop, Arenen, Belohnungssysteme (2026-09-30)
 
 **Storymodus „DIE GÖTTLICHE PRÜFUNG“** (`story_divina.gd`, frei nach Dante): 21 Kapitel – Prolog im dunklen Wald (Wölfin, Vergil), INFERNO durch neun Höllenkreise (10 Dämonenfürsten), Aufstieg durch den Erdmittelpunkt, PARADISO mit Beatrice durch neun Himmelssphären (9 Engelschöre), Epilog im Empyreum. Kampagnen-Reiter im Storymenü; Prolog, Hölle und Himmel sind jeweils direkt startbar, die Kapitel eines Reichs schalten nacheinander frei. Story-Kämpfe gegen Bosse mit Verbündetem (Vergil bzw. Beatrice).

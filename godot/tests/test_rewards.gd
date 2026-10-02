@@ -4,6 +4,7 @@ extends "res://tests/test_base.gd"
 const Rewards = preload("res://scripts/rewards.gd")
 const Progression = preload("res://scripts/progression.gd")
 const Backgrounds = preload("res://scripts/backgrounds.gd")
+const BossModels = preload("res://scripts/boss_models.gd")
 
 func _initialize() -> void:
 	call_deferred("run")
@@ -174,7 +175,10 @@ func test_main() -> void:
 	var mi: MeshInstance3D = null
 	for m in app.views[0].model.find_children("*", "MeshInstance3D", true, false):
 		if m.mesh != null: mi = m; break
-	check(mi != null and mi.get_surface_override_material(0) != null and mi.get_surface_override_material(0).emission_enabled, "P1's fighter wears the skin")
+	var skin_mat = mi.get_surface_override_material(0) if mi != null else null
+	# House heroes keep their texture: the skin recolors the outfit shader; other bodies get the glowing skin material.
+	var worn: bool = skin_mat is ShaderMaterial and skin_mat.get_shader_parameter("primary") == BossModels.SKIN_PALETTE["galaxy"][0] 		or skin_mat is BaseMaterial3D and skin_mat.emission_enabled
+	check(worn, "P1's fighter wears the skin")
 	app._shop_item_press("weapons", "thunder_hammer")
 	app._close_title_panel()
 	app.hide_title()

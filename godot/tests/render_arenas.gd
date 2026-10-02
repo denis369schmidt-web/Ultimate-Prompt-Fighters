@@ -15,6 +15,7 @@ func run() -> void:
 	var app = load("res://main.tscn").instantiate()
 	root.add_child(app)
 	for n in range(5): await process_frame
+	app.hide_title() # the start screen would cover the arena
 	for arena in app.ARENAS:
 		if not only.is_empty() and not arena in only: continue
 		app.apply_arena(arena)

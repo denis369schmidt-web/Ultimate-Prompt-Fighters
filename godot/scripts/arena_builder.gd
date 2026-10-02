@@ -22,6 +22,31 @@ const Backgrounds = preload("res://scripts/backgrounds.gd")
 const WATER_SHADER = preload("res://shaders/arena_water.gdshader")
 const LAVA_SHADER = preload("res://shaders/arena_lava.gdshader")
 const WINDOW_SHADER = preload("res://shaders/arena_windows.gdshader")
+const FOG_SHADER = preload("res://shaders/arena_fog.gdshader")
+const SHAFT_SHADER = preload("res://shaders/light_shaft.gdshader")
+
+## Life of an arena: fog banks (tint, density), light shafts (count, tint), a flock in the sky
+## (birds, gulls, bats, doves or none) and foreground motes. Arenas without an entry get one
+## from their weather (see _life_for).
+const LIFE := {
+	"blood_moon": {"fog": Color(0.45, 0.12, 0.14), "fog_density": 0.5, "shafts": 0, "flock": "bats"},
+	"volcano_sanctum": {"fog": Color(0.55, 0.22, 0.1), "fog_density": 0.45, "shafts": 2, "shaft_tint": Color(1.0, 0.55, 0.25), "flock": "none"},
+	"imperial_colosseum": {"fog": Color(0.95, 0.88, 0.75), "fog_density": 0.25, "shafts": 3, "shaft_tint": Color(1.0, 0.9, 0.7), "flock": "birds"},
+	"pirate_galleon": {"fog": Color(0.85, 0.82, 0.8), "fog_density": 0.3, "shafts": 2, "shaft_tint": Color(1.0, 0.8, 0.6), "flock": "gulls"},
+	"gladiator_fortress": {"fog": Color(0.8, 0.75, 0.65), "fog_density": 0.3, "shafts": 3, "shaft_tint": Color(1.0, 0.85, 0.6), "flock": "birds"},
+	"mystic_grove": {"fog": Color(0.7, 0.85, 0.8), "fog_density": 0.6, "shafts": 4, "shaft_tint": Color(0.75, 1.0, 0.85), "flock": "birds"},
+	"frozen_summit": {"fog": Color(0.9, 0.95, 1.0), "fog_density": 0.5, "shafts": 1, "shaft_tint": Color(0.85, 0.95, 1.0), "flock": "none"},
+	"neon_metropolis": {"fog": Color(0.35, 0.2, 0.45), "fog_density": 0.45, "shafts": 0, "flock": "none"},
+	"heaven_gate": {"fog": Color(1.0, 0.85, 0.6), "fog_density": 0.45, "shafts": 4, "shaft_tint": Color(1.0, 0.85, 0.55), "flock": "doves"},
+	"heaven_spheres": {"fog": Color(0.75, 0.82, 1.0), "fog_density": 0.4, "shafts": 3, "shaft_tint": Color(0.8, 0.88, 1.0), "flock": "doves"},
+	"wheel_heaven": {"fog": Color(0.95, 0.85, 0.55), "fog_density": 0.35, "shafts": 3, "shaft_tint": Color(1.0, 0.9, 0.5), "flock": "doves"},
+	"empyrean": {"fog": Color(0.6, 0.15, 0.08), "fog_density": 0.45, "shafts": 3, "shaft_tint": Color(1.0, 0.5, 0.25), "flock": "none"},
+	"hell_gate": {"fog": Color(0.35, 0.08, 0.06), "fog_density": 0.55, "shafts": 0, "flock": "bats"},
+	"hell_flames": {"fog": Color(0.5, 0.12, 0.05), "fog_density": 0.5, "shafts": 0, "flock": "bats"},
+	"hell_city": {"fog": Color(0.3, 0.08, 0.05), "fog_density": 0.5, "shafts": 0, "flock": "bats"},
+	"cocytus": {"fog": Color(0.6, 0.72, 0.9), "fog_density": 0.55, "shafts": 1, "shaft_tint": Color(0.7, 0.85, 1.0), "flock": "none"},
+}
+var flocks: Array = []          # [node, birds:Array, speed, dir, wait]
 
 ## Per arena: stage top / side materials, trim color, underside style, weather.
 ## Per arena: stage top / side materials ("ph:" = Poly Haven scan), trim color,
@@ -119,8 +144,62 @@ static func flat(color: Color, rough: float = 0.7, metal: float = 0.0) -> Standa
 	m.albedo_color = color
 	m.roughness = rough
 	m.metallic = metal
+	surface_detail(m, 0.35 if metal > 0.5 else 1.0)
 	_mat_cache[key] = m
 	return m
+
+## Generated surface detail shared by all plain materials: soft value variation (wear, dirt)
+## in the albedo, a fine bump in the normal map and matching roughness breakup. World-space
+## triplanar, so it never stretches. strength 0..1 (metals get less grime).
+static var _detail_tex: Dictionary = {}
+
+static func _detail(kind: String) -> Texture2D:
+	if _detail_tex.has(kind): return _detail_tex[kind]
+	var nt := NoiseTexture2D.new()
+	var low: bool = load("res://scripts/platform.gd").low_graphics()
+	nt.width = 512 if low else 1024
+	nt.height = nt.width
+	nt.seamless = true
+	var fn := FastNoiseLite.new()
+	fn.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
+	fn.fractal_type = FastNoiseLite.FRACTAL_FBM
+	fn.fractal_octaves = 6
+	match kind:
+		"albedo":
+			fn.frequency = 0.008
+			var g := Gradient.new()
+			g.set_color(0, Color(0.78, 0.78, 0.78))
+			g.set_color(1, Color(1.0, 1.0, 1.0))
+			nt.color_ramp = g
+		"rough":
+			fn.frequency = 0.02
+			fn.seed = 7
+		_:
+			fn.frequency = 0.035
+			fn.seed = 3
+			nt.as_normal_map = true
+			nt.bump_strength = 3.0
+	nt.noise = fn
+	_detail_tex[kind] = nt
+	return nt
+
+static func surface_detail(m: StandardMaterial3D, strength: float = 1.0) -> void:
+	if m.albedo_texture == null:
+		m.albedo_texture = _detail("albedo")
+		# The noise darkens by about 11 % on average; compensate so palettes keep their brightness.
+		var c: Color = m.albedo_color
+		m.albedo_color = Color(c.r * 1.12, c.g * 1.12, c.b * 1.12, c.a)
+	if m.normal_texture == null:
+		m.normal_enabled = true
+		m.normal_texture = _detail("normal")
+		m.normal_scale = 0.35 * strength
+	if m.roughness_texture == null:
+		m.roughness_texture = _detail("rough")
+		m.roughness_texture_channel = BaseMaterial3D.TEXTURE_CHANNEL_RED
+	m.uv1_triplanar = true
+	m.uv1_world_triplanar = true
+	m.uv1_scale = Vector3.ONE * 0.6
+	m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
 
 static func glow(color: Color, energy: float = 2.5) -> StandardMaterial3D:
 	var key := "glow|%s|%.2f" % [color.to_html(), energy]
@@ -379,6 +458,156 @@ func build(id: String) -> void:
 	if has_method(fn): call(fn, th)
 	elif not bg.is_empty(): call("_motif_" + str(bg.motif), th, bg)
 	particles(th.weather)
+	_life(id, th)
+
+# ───────────────────────────────────────────────────────────── life ──
+
+static func _life_for(id: String, th: Dictionary) -> Dictionary:
+	if LIFE.has(id): return LIFE[id]
+	match str(th.get("weather", "dust")):
+		"embers": return {"fog": Color(0.45, 0.18, 0.1), "fog_density": 0.4, "shafts": 1, "shaft_tint": Color(1.0, 0.6, 0.3), "flock": "none"}
+		"snow": return {"fog": Color(0.88, 0.93, 1.0), "fog_density": 0.45, "shafts": 1, "shaft_tint": Color(0.85, 0.95, 1.0), "flock": "none"}
+		"rain": return {"fog": Color(0.4, 0.45, 0.55), "fog_density": 0.5, "shafts": 0, "flock": "none"}
+		"fireflies": return {"fog": Color(0.6, 0.8, 0.7), "fog_density": 0.5, "shafts": 3, "shaft_tint": Color(0.8, 1.0, 0.85), "flock": "birds"}
+		"petals": return {"fog": Color(0.85, 0.7, 0.75), "fog_density": 0.35, "shafts": 2, "shaft_tint": Color(1.0, 0.85, 0.85), "flock": "birds"}
+	return {"fog": Color(0.85, 0.8, 0.72), "fog_density": 0.3, "shafts": 2, "shaft_tint": Color(1.0, 0.9, 0.7), "flock": "birds"}
+
+## Fog banks, light shafts, a flock in the sky and foreground motes: the arena breathes.
+func _life(id: String, th: Dictionary) -> void:
+	flocks.clear()
+	var life: Dictionary = _life_for(id, th)
+	var noise := NoiseTexture2D.new()
+	noise.width = 256
+	noise.height = 256
+	noise.seamless = true
+	var fn := FastNoiseLite.new()
+	fn.frequency = 0.012
+	fn.fractal_octaves = 4
+	noise.noise = fn
+	# Two fog banks at different depths drift at different speeds (parallax).
+	for k in range(2):
+		var q := QuadMesh.new()
+		q.size = Vector2(70.0, 16.0)
+		var m := ShaderMaterial.new()
+		m.shader = FOG_SHADER
+		m.set_shader_parameter("noise_tex", noise)
+		m.set_shader_parameter("tint", life.fog)
+		m.set_shader_parameter("density", float(life.fog_density) * (1.0 if k == 0 else 0.7))
+		m.set_shader_parameter("speed", 0.008 + k * 0.006)
+		m.set_shader_parameter("seed", float(k) * 3.7 + rng.randf())
+		var fog := add_mesh(q, Vector3(0, 1.5 + k * 1.5, -9.0 - k * 9.0), m, Vector3.ZERO, null, false)
+		fog.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	for k in range(int(life.get("shafts", 0))):
+		var sq := QuadMesh.new()
+		sq.size = Vector2(rng.randf_range(2.0, 3.5), 22.0)
+		var sm := ShaderMaterial.new()
+		sm.shader = SHAFT_SHADER
+		sm.set_shader_parameter("tint", life.get("shaft_tint", Color(1, 0.9, 0.7)))
+		sm.set_shader_parameter("strength", rng.randf_range(0.18, 0.32))
+		sm.set_shader_parameter("seed", rng.randf() * 10.0)
+		var x: float = -12.0 + (k + 0.5) * 24.0 / maxf(1.0, float(life.shafts)) + rng.randf_range(-2.0, 2.0)
+		add_mesh(sq, Vector3(x, 6.0, -6.0 - rng.randf_range(0.0, 4.0)), sm, Vector3(0, 0, rng.randf_range(-24.0, -12.0)), null, false)
+	_foreground_motes(th)
+	if str(life.get("flock", "none")) != "none": _flock(str(life.flock))
+
+## A few big, soft, out-of-focus motes between camera and stage: depth like a camera lens.
+func _foreground_motes(th: Dictionary) -> void:
+	var p := CPUParticles3D.new()
+	var quad := QuadMesh.new()
+	quad.size = Vector2(0.16, 0.16)
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	mat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+	mat.vertex_color_use_as_albedo = true
+	var g := GradientTexture2D.new()
+	g.fill = GradientTexture2D.FILL_RADIAL
+	g.fill_from = Vector2(0.5, 0.5)
+	g.fill_to = Vector2(1.0, 0.5)
+	var grad := Gradient.new()
+	grad.set_color(0, Color(1, 1, 1, 1))
+	grad.set_color(1, Color(1, 1, 1, 0))
+	g.gradient = grad
+	mat.albedo_texture = g
+	quad.material = mat
+	p.mesh = quad
+	p.amount = 18
+	p.lifetime = 9.0
+	p.preprocess = 9.0
+	p.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
+	p.emission_box_extents = Vector3(9, 3, 0.8)
+	p.position = Vector3(0, 2.5, 3.2)
+	p.direction = Vector3(1, 0.3, 0)
+	p.spread = 60.0
+	p.gravity = Vector3.ZERO
+	p.initial_velocity_min = 0.05
+	p.initial_velocity_max = 0.25
+	p.scale_amount_min = 0.6
+	p.scale_amount_max = 1.8
+	var tint: Color = th.get("trim", Color.WHITE)
+	var ramp := Gradient.new()
+	ramp.set_color(0, Color(tint.r, tint.g, tint.b, 0.0))
+	ramp.add_point(0.5, Color(tint.r, tint.g, tint.b, 0.22))
+	ramp.set_color(ramp.get_point_count() - 1, Color(tint.r, tint.g, tint.b, 0.0))
+	p.color_ramp = ramp
+	add_child(p)
+
+## A flock that crosses the far sky now and then, wings beating.
+func _flock(kind: String) -> void:
+	var root := Node3D.new()
+	add_child(root)
+	var col: Color = {"birds": Color(0.08, 0.08, 0.1), "gulls": Color(0.92, 0.92, 0.9), "bats": Color(0.05, 0.03, 0.04), "doves": Color(1.0, 0.98, 0.94)}.get(kind, Color.BLACK)
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.albedo_color = col
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	var birds: Array = []
+	var count: int = 9 if kind != "bats" else 14
+	for k in range(count):
+		var bird := Node3D.new()
+		root.add_child(bird)
+		var span: float = 0.55 if kind in ["gulls", "doves"] else (0.35 if kind == "bats" else 0.4)
+		for side in [-1, 1]:
+			var wing := MeshInstance3D.new()
+			var pm := PrismMesh.new()
+			pm.size = Vector3(span, 0.08, 0.02)
+			pm.left_to_right = 0.0 if side < 0 else 1.0
+			wing.mesh = pm
+			wing.material_override = mat
+			wing.position = Vector3(side * span * 0.5, 0, 0)
+			wing.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			bird.add_child(wing)
+		# V formation for birds, a loose swarm for bats.
+		var row: int = (k + 1) / 2
+		var side_k: float = -1.0 if k % 2 == 0 else 1.0
+		bird.position = Vector3(-row * 0.9, side_k * row * 0.45, rng.randf_range(-0.5, 0.5)) if kind != "bats" \
+			else Vector3(rng.randf_range(-3, 3), rng.randf_range(-1.2, 1.2), rng.randf_range(-1, 1))
+		birds.append([bird, rng.randf() * TAU])
+	flocks.append({"node": root, "birds": birds, "speed": 3.0 if kind != "bats" else 4.5, "dir": 1.0, "wait": rng.randf_range(1.0, 6.0), "kind": kind})
+	root.visible = false
+
+func _update_flocks(delta: float) -> void:
+	for fl in flocks:
+		var root: Node3D = fl.node
+		if not is_instance_valid(root): continue
+		if not root.visible:
+			fl.wait = float(fl.wait) - delta
+			if fl.wait <= 0.0:
+				fl.dir = 1.0 if rng.randf() < 0.5 else -1.0
+				root.position = Vector3(-38.0 * fl.dir, rng.randf_range(7.0, 12.0), rng.randf_range(-26.0, -16.0))
+				root.scale = Vector3(fl.dir, 1, 1)
+				root.visible = true
+			continue
+		root.position.x += float(fl.speed) * float(fl.dir) * delta
+		root.position.y += sin(time * 0.7) * 0.15 * delta
+		for b in fl.birds:
+			var beat: float = sin(time * (9.0 if fl.kind != "bats" else 16.0) + float(b[1]))
+			for w in (b[0] as Node3D).get_children():
+				(w as Node3D).rotation.z = beat * 0.6 * signf((w as Node3D).position.x)
+		if absf(root.position.x) > 40.0:
+			root.visible = false
+			fl.wait = rng.randf_range(12.0, 28.0)
 
 ## Main stage: textured top, trim that glows along the edges, themed underside.
 func _stage(th: Dictionary) -> void:
@@ -430,11 +659,15 @@ func _platforms(th: Dictionary) -> void:
 	for plat in Combat.PLATFORMS:
 		var w: float = plat.x2 - plat.x1
 		var cx: float = (plat.x1 + plat.x2) * 0.5
-		box(Vector3(w + 0.1, 0.22, 1.7), Vector3(cx, plat.y - 0.11, -0.1), pbr(th.top, 0.4))
-		box(Vector3(w + 0.14, 0.05, 0.05), Vector3(cx, plat.y - 0.01, 0.76), glow(th.trim, 2.0), Vector3.ZERO, false)
-		var under := cyl(0.0, 0.26, 0.55, Vector3(cx, plat.y - 0.5, -0.1), glow(th.trim, 2.4), 6, Vector3(180, 0, 0))
-		under.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		bobbers.append([under, under.position.y, rng.randf_range(1.0, 2.0), 0.06])
+		# Walkable top, a darker, narrower body below it (reads as a thick, carved slab).
+		box(Vector3(w + 0.1, 0.16, 1.7), Vector3(cx, plat.y - 0.08, -0.1), pbr(th.top, 0.4))
+		box(Vector3(w - 0.3, 0.26, 1.35), Vector3(cx, plat.y - 0.29, -0.15), pbr(th.side, 0.35, th.rock_tint))
+		box(Vector3(w + 0.14, 0.04, 0.04), Vector3(cx, plat.y - 0.01, 0.76), glow(th.trim, 1.8), Vector3.ZERO, false)
+		# Two small crystals float under the slab instead of a big marker cone.
+		for k in [-1, 1]:
+			var shard := cyl(0.0, 0.07, 0.3, Vector3(cx + k * w * 0.28, plat.y - 0.62, -0.1), glow(th.trim, 2.6), 5, Vector3(180, 0, 0))
+			shard.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			bobbers.append([shard, shard.position.y, rng.randf_range(1.0, 1.8), 0.07])
 
 # ───────────────────────────────────────────────────────────── scenes ──
 
@@ -1252,6 +1485,7 @@ func _scene_neon_metropolis(th: Dictionary) -> void:
 
 func _process(delta: float) -> void:
 	time += delta
+	_update_flocks(delta)
 	for r in rotors:
 		if is_instance_valid(r[0]): r[0].rotate(r[1], float(r[2]) * delta)
 	for b in bobbers:

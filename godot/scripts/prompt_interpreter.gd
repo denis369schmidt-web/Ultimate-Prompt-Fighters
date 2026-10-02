@@ -23,7 +23,7 @@ static func interpret(raw: Variant, slot: int = 0) -> Dictionary:
 	var sorceress_medea_early := has_any(lower, ["sorceress medea", "erzmagierin", "medea"])
 	var skeleton_reaper_early := has_any(lower, ["skeleton reaper", "skelettkrieger", "skelett schnitter"])
 	var sylvan_early := has_any(lower, ["sylvan beast", "quadruped", "sylvan", "tree beast"])
-	var golden_golem := has_any(lower, ["golden golem", "gold golem", "goldener golem", "aureus", "gold titan", "tripo golem", "golden armored golem", "golden armor golem", "gold golem"])
+	var brunhild := has_any(lower, ["brunhild", "golden golem", "gold golem", "goldener golem", "aureus", "gold titan", "golden armored golem", "golden armor golem", "gold golem"])
 	var lepora := has_any(lower, ["lepora", "mondjägerin", "mondbogen", "moon huntress", "huntress bow"])
 	var thorn_witch := not sorceress_medea_early and has_any(lower, ["thorn witch", "bramble", "sorceress", "dornenhexe", "cracked skin", "thorn", "thorn sorceress"])
 	var nyx_harvester := not skeleton_reaper_early and has_any(lower, ["nyx", "harvester", "soul harvester", "winged demon", "seelenernter", "nyx harvester"])
@@ -76,23 +76,26 @@ static func interpret(raw: Variant, slot: int = 0) -> Dictionary:
 	var kettenwart := has_any(lower, ["kettenwart", "kerkermeister", "seelenketten"])
 	var don_valente := has_any(lower, ["don valente", "unterweltpate", "leibwächter-geschütz"])
 
+	var arber := has_any(lower, ["arbër", "arber", "bohrmeister", "shqiponja", "doppeladler", "doppelkopfadler", "zwei bohrmaschinen"])
+
 	var fam := "ninja"
-	if nekra: fam = "nekra"
+	if arber: fam = "arber"
+	elif nekra: fam = "nekra"
 	elif grimbolt: fam = "grimbolt"
 	elif echo: fam = "echo"
 	elif kettenwart: fam = "kettenwart"
 	elif don_valente: fam = "don_valente"
-	elif golden_golem: fam = "golden_golem"
+	elif brunhild: fam = "brunhild"
 	elif lepora: fam = "lepora"
-	elif thorn_witch: fam = "tripo_fantasy_female"
-	elif nyx_harvester: fam = "tripo_nyx_harvester"
-	elif cat_girl: fam = "tripo_cat_girl"
-	elif blue_dragon: fam = "tripo_dragon_blue"
-	elif white_sci: fam = "tripo_white_sci"
-	elif skeleton_dog: fam = "tripo_skeleton_dog"
-	elif wooden_forest: fam = "tripo_wooden_forest"
-	elif nine_tailed: fam = "tripo_nine_tailed"
-	elif sylvan_beast: fam = "tripo_quadruped_tree"
+	elif thorn_witch: fam = "thorn_witch"
+	elif nyx_harvester: fam = "nyx"
+	elif cat_girl: fam = "shira"
+	elif blue_dragon: fam = "frostwyrm"
+	elif white_sci: fam = "cyborg_mech"
+	elif skeleton_dog: fam = "reaper_hound"
+	elif wooden_forest: fam = "treant"
+	elif nine_tailed: fam = "celestial_fox"
+	elif sylvan_beast: fam = "mossback"
 	elif steel_knight: fam = "steel_knight"
 	elif vanguard_soldier: fam = "vanguard_soldier"
 	elif sorceress_medea: fam = "sorceress_medea"
@@ -157,7 +160,13 @@ static func interpret(raw: Variant, slot: int = 0) -> Dictionary:
 			"spec_name": "Leibwächter-Geschütz", "spec_type": "turret", "spec_range": 5.0, "spec_cd": 4.0, "spec_windup": 0.22, "spec_push": 0.5, "spec_angle": 25.0, "spec_dmg_bonus": 0.0,
 			"fname": "DON VALENTE (UNTERWELTPATE)", "modules": ["gold_knuckles", "fedora"]
 		},
-		"golden_golem": {
+		"arber": {
+			"values": [24, 26, 20, 18, 12], "element": "metal_drill", "weight": 1.08,
+			"std_name": "Doppelbohrer", "std_range": 1.9, "std_cd": 0.42, "std_windup": 0.07, "std_push": 0.22,
+			"spec_name": "Ruf der Shqiponja", "spec_type": "summon", "spec_range": 3.2, "spec_cd": 7.0, "spec_windup": 0.28, "spec_push": 0.7, "spec_angle": 60.0, "spec_dmg_bonus": 1.0,
+			"fname": "ARBËR (DER BOHRMEISTER)", "modules": ["twin_drills", "double_eagle"]
+		},
+		"brunhild": {
 			"values": [26, 28, 22, 12, 12], "element": "metal_gold", "weight": 1.40,
 			"std_name": "Midas Strike", "std_range": 2.30, "std_cd": 0.58, "std_windup": 0.12, "std_push": 0.35,
 			"spec_name": "Midas Quake", "spec_type": "shockwave", "spec_range": 3.80, "spec_cd": 3.6, "spec_windup": 0.32, "spec_push": 0.90, "spec_angle": 45.0, "spec_dmg_bonus": 3.0,
@@ -169,55 +178,55 @@ static func interpret(raw: Variant, slot: int = 0) -> Dictionary:
 			"spec_name": "Mist Arrow", "spec_type": "beam", "spec_range": 4.20, "spec_cd": 2.8, "spec_windup": 0.18, "spec_push": 0.65, "spec_angle": 32.0, "spec_dmg_bonus": 1.5,
 			"fname": "LEPORA (MONDJÄGERIN)", "modules": ["moon_bow", "mist_quiver"]
 		},
-		"tripo_fantasy_female": {
+		"thorn_witch": {
 			"values": [20, 26, 16, 22, 16], "element": "nature_thorn", "weight": 0.98,
 			"std_name": "Bramble Whip", "std_range": 2.40, "std_cd": 0.48, "std_windup": 0.09, "std_push": 0.22,
 			"spec_name": "Thorn Burst", "spec_type": "radial", "spec_range": 3.40, "spec_cd": 3.1, "spec_windup": 0.22, "spec_push": 0.70, "spec_angle": 360.0, "spec_dmg_bonus": 2.0,
 			"fname": "THORN SORCERESS", "modules": ["thorn_circlet", "bramble_whip"]
 		},
-		"tripo_nyx_harvester": {
+		"nyx": {
 			"values": [22, 28, 16, 24, 10], "element": "soul_dark", "weight": 1.10,
 			"std_name": "Reaper Slash", "std_range": 2.35, "std_cd": 0.46, "std_windup": 0.08, "std_push": 0.25,
 			"spec_name": "Soul Reaping", "spec_type": "reach_strike", "spec_range": 3.50, "spec_cd": 3.2, "spec_windup": 0.25, "spec_push": 0.85, "spec_angle": 40.0, "spec_dmg_bonus": 2.5,
 			"fname": "NYX HARVESTER", "modules": ["demon_wings", "soul_scythe"]
 		},
-		"tripo_cat_girl": {
+		"shira": {
 			"values": [18, 26, 14, 28, 14], "element": "claw_strike", "weight": 0.92,
 			"std_name": "Feral Scratch", "std_range": 2.05, "std_cd": 0.40, "std_windup": 0.06, "std_push": 0.18,
 			"spec_name": "Cat Rush Strike", "spec_type": "dash_slash", "spec_range": 3.20, "spec_cd": 2.6, "spec_windup": 0.16, "spec_push": 0.65, "spec_angle": 35.0, "spec_dmg_bonus": 1.8,
 			"fname": "SHIRA (ONI-KLINGE)", "modules": ["ornate_sash", "feral_claws"]
 		},
-		"tripo_dragon_blue": {
+		"frostwyrm": {
 			"values": [26, 28, 20, 16, 10], "element": "ice_breath", "weight": 1.35,
 			"std_name": "Wyrm Tail", "std_range": 2.50, "std_cd": 0.52, "std_windup": 0.10, "std_push": 0.30,
 			"spec_name": "Glacial Breath", "spec_type": "beam", "spec_range": 4.00, "spec_cd": 3.6, "spec_windup": 0.30, "spec_push": 0.85, "spec_angle": 42.0, "spec_dmg_bonus": 2.5,
 			"fname": "FROSTWYRM", "modules": ["blue_scales", "frost_breath"]
 		},
-		"tripo_white_sci": {
+		"cyborg_mech": {
 			"values": [20, 26, 22, 18, 14], "element": "plasma_pulse", "weight": 1.20,
 			"std_name": "Mech Strike", "std_range": 2.20, "std_cd": 0.48, "std_windup": 0.09, "std_push": 0.24,
 			"spec_name": "Plasma Burst", "spec_type": "beam", "spec_range": 3.80, "spec_cd": 3.2, "spec_windup": 0.24, "spec_push": 0.78, "spec_angle": 38.0, "spec_dmg_bonus": 2.0,
 			"fname": "CYBORG MECH", "modules": ["joint_plating", "plasma_cannon"]
 		},
-		"tripo_skeleton_dog": {
+		"reaper_hound": {
 			"values": [18, 28, 14, 28, 12], "element": "death_bite", "weight": 0.90,
 			"std_name": "Shadow Bite", "std_range": 2.10, "std_cd": 0.42, "std_windup": 0.07, "std_push": 0.20,
 			"spec_name": "Grave Maw", "spec_type": "reach_strike", "spec_range": 3.30, "spec_cd": 2.8, "spec_windup": 0.20, "spec_push": 0.75, "spec_angle": 35.0, "spec_dmg_bonus": 2.2,
 			"fname": "REAPER HOUND", "modules": ["bone_collar", "shadow_fang"]
 		},
-		"tripo_wooden_forest": {
+		"treant": {
 			"values": [28, 24, 24, 12, 12], "element": "wood_root", "weight": 1.45,
 			"std_name": "Branch Slam", "std_range": 2.40, "std_cd": 0.60, "std_windup": 0.14, "std_push": 0.38,
 			"spec_name": "Verdant Root Crush", "spec_type": "shockwave", "spec_range": 3.70, "spec_cd": 3.7, "spec_windup": 0.35, "spec_push": 0.95, "spec_angle": 48.0, "spec_dmg_bonus": 3.0,
 			"fname": "ANCIENT TREANT", "modules": ["bark_carapace", "verdant_root"]
 		},
-		"tripo_nine_tailed": {
+		"celestial_fox": {
 			"values": [22, 28, 16, 24, 10], "element": "nine_fire", "weight": 1.05,
 			"std_name": "Tail Whip", "std_range": 2.30, "std_cd": 0.46, "std_windup": 0.08, "std_push": 0.22,
 			"spec_name": "Celestial Foxfire", "spec_type": "radial", "spec_range": 3.60, "spec_cd": 3.3, "spec_windup": 0.24, "spec_push": 0.80, "spec_angle": 360.0, "spec_dmg_bonus": 2.5,
 			"fname": "CELESTIAL KYUUBI", "modules": ["fox_orb", "nine_tails"]
 		},
-		"tripo_quadruped_tree": {
+		"mossback": {
 			"values": [26, 26, 22, 14, 12], "element": "wood_beast", "weight": 1.30,
 			"std_name": "Sylvan Charge", "std_range": 2.35, "std_cd": 0.50, "std_windup": 0.10, "std_push": 0.32,
 			"spec_name": "Forest Stomp", "spec_type": "shockwave", "spec_range": 3.60, "spec_cd": 3.4, "spec_windup": 0.28, "spec_push": 0.88, "spec_angle": 45.0, "spec_dmg_bonus": 2.6,

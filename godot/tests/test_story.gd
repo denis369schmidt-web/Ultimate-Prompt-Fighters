@@ -16,6 +16,7 @@ func run() -> void:
 	story.persist = false
 	story.completed = 0
 	story.flags = {}
+	story.set_campaign("zeile")
 
 	test_data(app)
 	test_qte(story)

@@ -50,8 +50,10 @@ static func _noise_tex(key: String, freq: float, normal: bool, ramp: Array = [],
 	n.frequency = freq
 	n.fractal_octaves = 5
 	var nt := NoiseTexture2D.new()
-	nt.width = size
-	nt.height = size
+	# Desktop: twice the resolution for crisp close-ups; phones keep the base size.
+	var res: int = size if load("res://scripts/platform.gd").low_graphics() else mini(size * 2, 2048)
+	nt.width = res
+	nt.height = res
 	nt.seamless = true
 	nt.noise = n
 	nt.generate_mipmaps = true
@@ -1018,6 +1020,31 @@ static func decorate(view: Node3D, boss_id: String) -> void:
 	m._decorate(view)
 
 ## Surface looks: living marble, gold, silver, obsidian with glowing veins, bone, bronze, frost …
+## Skin looks as outfit palettes for the house heroes: primary, secondary, accent, metal, roughness.
+const SKIN_PALETTE := {
+	"marble": [Color(0.93, 0.91, 0.87), Color(0.42, 0.4, 0.38), Color(0.98, 0.96, 0.9), 0.05, 0.35],
+	"pearl": [Color(0.88, 0.92, 1.0), Color(0.36, 0.4, 0.5), Color(1.0, 1.0, 1.0), 0.2, 0.3],
+	"ivory": [Color(1.0, 0.93, 0.8), Color(0.45, 0.36, 0.26), Color(0.95, 0.8, 0.5), 0.1, 0.4],
+	"rose": [Color(0.98, 0.66, 0.72), Color(0.42, 0.16, 0.24), Color(1.0, 0.86, 0.9), 0.15, 0.4],
+	"frost": [Color(0.66, 0.84, 1.0), Color(0.12, 0.24, 0.4), Color(0.85, 0.97, 1.0), 0.3, 0.3],
+	"gold": [Color(1.0, 0.76, 0.3), Color(0.32, 0.2, 0.08), Color(1.0, 0.92, 0.6), 0.85, 0.3],
+	"silver": [Color(0.85, 0.88, 0.94), Color(0.2, 0.22, 0.27), Color(1.0, 1.0, 1.0), 0.85, 0.28],
+	"bronze": [Color(0.8, 0.5, 0.26), Color(0.25, 0.14, 0.07), Color(1.0, 0.75, 0.45), 0.8, 0.38],
+	"rust": [Color(0.6, 0.34, 0.2), Color(0.2, 0.12, 0.08), Color(0.85, 0.55, 0.3), 0.5, 0.6],
+	"emerald": [Color(0.2, 0.8, 0.5), Color(0.04, 0.2, 0.12), Color(0.7, 1.0, 0.8), 0.4, 0.3],
+	"neon": [Color(0.2, 0.95, 1.0), Color(0.06, 0.04, 0.16), Color(1.0, 0.3, 0.9), 0.3, 0.3],
+	"lava": [Color(1.0, 0.42, 0.12), Color(0.12, 0.05, 0.04), Color(1.0, 0.82, 0.3), 0.3, 0.45],
+	"infernal": [Color(0.85, 0.12, 0.1), Color(0.1, 0.03, 0.03), Color(1.0, 0.6, 0.2), 0.4, 0.4],
+	"shadow": [Color(0.3, 0.26, 0.4), Color(0.04, 0.03, 0.06), Color(0.7, 0.5, 1.0), 0.3, 0.45],
+	"crystal": [Color(0.7, 0.9, 1.0), Color(0.2, 0.3, 0.5), Color(1.0, 1.0, 1.0), 0.2, 0.15],
+	"ghost": [Color(0.75, 0.95, 0.9), Color(0.2, 0.3, 0.32), Color(0.9, 1.0, 1.0), 0.0, 0.4],
+	"galaxy": [Color(0.45, 0.3, 0.95), Color(0.05, 0.04, 0.16), Color(0.9, 0.85, 1.0), 0.4, 0.3],
+	"celestial": [Color(0.95, 0.88, 0.6), Color(0.15, 0.2, 0.42), Color(1.0, 1.0, 0.85), 0.6, 0.3],
+	"obsidian": [Color(0.22, 0.14, 0.15), Color(0.04, 0.03, 0.03), Color(1.0, 0.3, 0.15), 0.4, 0.22],
+	"abyss": [Color(0.14, 0.3, 0.36), Color(0.02, 0.05, 0.08), Color(0.2, 0.85, 0.95), 0.4, 0.25],
+	"bone": [Color(0.9, 0.85, 0.74), Color(0.36, 0.3, 0.24), Color(1.0, 0.96, 0.86), 0.0, 0.6],
+}
+
 func _restyle(model: Node3D, look: String) -> void:
 	var marble: Texture2D = load("res://assets/polyhaven/textures/marble_01/marble_01_diff_2k.jpg")
 	var veins := _noise_tex("lava_veins", 0.02, false, [], 512)
@@ -1034,6 +1061,19 @@ func _restyle(model: Node3D, look: String) -> void:
 		if mi.mesh == null or mi.has_meta("gear"): continue
 		for sfc in range(mi.mesh.get_surface_count()):
 			var base = mi.get_active_material(sfc)
+			if base is ShaderMaterial and SKIN_PALETTE.has(look):
+				# House heroes (hero_recolor shader): the skin recolors the outfit but keeps the
+				# texture, the skin tones and every detail, instead of painting one flat color.
+				var hm: ShaderMaterial = base.duplicate()
+				var pal: Array = SKIN_PALETTE[look]
+				hm.set_shader_parameter("primary", pal[0])
+				hm.set_shader_parameter("secondary", pal[1])
+				hm.set_shader_parameter("accent", pal[2])
+				hm.set_shader_parameter("metallic_v", pal[3])
+				hm.set_shader_parameter("roughness_v", pal[4])
+				hm.set_shader_parameter("rim_color", pal[2])
+				mi.set_surface_override_material(sfc, hm)
+				continue
 			var mat: StandardMaterial3D = base.duplicate() if base is StandardMaterial3D else StandardMaterial3D.new()
 			mat.emission_enabled = false
 			match look:

@@ -1,5 +1,5 @@
 extends Node3D
-## Own look of the house heroes (kairo … lepora): every hero gets an outfit recolor
+## Own look of the house heroes (kairo … lepora, brunhild … mossback): every hero gets an outfit recolor
 ## (shaders/hero_recolor.gdshader: skin stays, cloth and armor move into the hero palette),
 ## gear that rides on the skeleton (BoneAttachment3D) and reactive effects – halos spin up while
 ## charging, jets fire while dashing, gauntlets heat up before a heavy blow, everything flashes
@@ -43,6 +43,28 @@ const HEROES := {
 		"gear": ["ember_wings", "wyrm_horns", "flame_tail", "embers"]},
 	"lepora": {"primary": Color("94a3b8"), "secondary": Color("172033"), "accent": Color("f1f5f9"), "rim": Color("5eead4"),
 		"gear": ["moon_circlet", "quiver", "moon_bow", "fireflies"]},
+	"brunhild": {"primary": Color("d9a520"), "secondary": Color("3a2a12"), "accent": Color("fff1b8"), "rim": Color("ffd24a"), "metal": 0.7, "rough": 0.3,
+		"gear": ["winged_helm", "crest_pauldrons", "great_axe", "cape"]},
+	"thorn_witch": {"primary": Color("166534"), "secondary": Color("2a1a10"), "accent": Color("bbf7d0"), "rim": Color("4ade80"),
+		"gear": ["thorn_crown", "vine_whips", "thorn_spikes", "fireflies"]},
+	"nyx": {"primary": Color("4c1d95"), "secondary": Color("120612"), "accent": Color("e9d5ff"), "rim": Color("a855f7"),
+		"gear": ["ember_wings", "void_horns", "soul_scythe", "aura_sink"]},
+	"shira": {"primary": Color("db2777"), "secondary": Color("1a0a14"), "accent": Color("fbcfe8"), "rim": Color("f472b6"),
+		"gear": ["cat_ears", "cat_tail", "back_blades", "wind_scarf"]},
+	"frostwyrm": {"primary": Color("3b82f6"), "secondary": Color("0b2540"), "accent": Color("e0f2fe"), "rim": Color("7dd3fc"), "metal": 0.4,
+		"gear": ["silver_wings", "wyrm_horns", "breath_glow", "ice_tail", "frost_mist"]},
+	"cyborg_mech": {"primary": Color("e5e7eb"), "secondary": Color("1f2937"), "accent": Color("f8fafc"), "rim": Color("22d3ee"), "metal": 0.6, "rough": 0.3,
+		"gear": ["visor", "mech_plating", "shoulder_cannon", "jet_boots"]},
+	"reaper_hound": {"primary": Color("57534e"), "secondary": Color("0c0a09"), "accent": Color("8f877c"), "rim": Color("ef4444"),
+		"gear": ["skull_mask", "bone_spikes", "bone_tail", "aura_sink"]},
+	"treant": {"primary": Color("65a30d"), "secondary": Color("4a3219"), "accent": Color("d9f99d"), "rim": Color("a3e635"), "rough": 0.85,
+		"gear": ["bark_armor", "antlers", "moss_tufts", "fireflies"]},
+	"celestial_fox": {"primary": Color("f1f5f9"), "secondary": Color("1e3a8a"), "accent": Color("fde68a"), "rim": Color("38bdf8"),
+		"gear": ["fox_ears", "nine_tails", "foxfire_orbs", "moon_circlet"]},
+	"mossback": {"primary": Color("4d7c0f"), "secondary": Color("57534e"), "accent": Color("a8987a"), "rim": Color("84cc16"), "rough": 0.9,
+		"gear": ["stone_back", "ram_horns", "moss_tufts"]},
+	"arber": {"primary": Color("1f1b1a"), "secondary": Color("2e2724"), "accent": Color("e8b923"), "rim": Color("ff3b30"), "recolor": 0.7, "sash": Color("a3161a"),
+		"hide": ["BattleAxe", "Earrings"], "gear": ["qeleshe", "xhamadan", "tool_belt", "twin_drills", "double_eagle"]},
 }
 
 var view: Node3D
@@ -63,6 +85,12 @@ var particles: Dictionary = {}
 var arcs: Array = []         # [ImmediateMesh, from, to, count]
 var arc_timer := 0.0
 var _bones: Dictionary = {}
+var drill_bits: Array = []   # spinning bits (Arbër)
+var drill_sparks: Array = []
+var drilling := false
+var eagle_wings: Array = []  # [node, side (inner ±1, outer ±0.5)]
+var eagle_on := false
+var eagle_facing := 1
 
 static var _tex: Dictionary = {}
 
@@ -83,6 +111,9 @@ static func equip(v: Node3D, fam: String) -> Node3D:
 # ─────────────────────────────────────────────────────────── build ──
 
 func _build() -> void:
+	for mi in view.model.find_children("*", "MeshInstance3D", true, false):
+		for part in hero.get("hide", []):
+			if str(part) in str(mi.name): mi.visible = false
 	_recolor_body()
 	for item in hero.gear:
 		if has_method("_g_" + item): call("_g_" + item)
@@ -262,8 +293,8 @@ func _membrane(color: Color, vein: Color) -> StandardMaterial3D:
 static func _noise(key: String, freq: float, normal: bool, bump: float = 6.0, ramp: Array = []) -> Texture2D:
 	if _tex.has(key): return _tex[key]
 	var nt := NoiseTexture2D.new()
-	nt.width = 256
-	nt.height = 256
+	nt.width = 256 if load("res://scripts/platform.gd").low_graphics() else 1024
+	nt.height = nt.width
 	nt.seamless = true
 	var fn := FastNoiseLite.new()
 	fn.frequency = freq
@@ -1159,6 +1190,674 @@ func _g_fireflies() -> void:
 	p.position = Vector3(0, 1.1, 0)
 	particles["aura"] = p
 
+# ─────────────────────────────── own fighters (formerly scan models) ──
+
+## Hanging chain of segments (tail, vine); returns the tip node. Each segment swings later.
+func _chain(parent: Node3D, segs: int, seg_len: float, r0: float, r1: float, mat: Material, first_rot: Vector3, bend: Vector3, amp: float, phase: float = 0.0) -> Node3D:
+	var node := parent
+	for k in range(segs):
+		var seg := Node3D.new()
+		seg.rotation_degrees = first_rot if k == 0 else bend
+		seg.position = Vector3.ZERO if k == 0 else Vector3(0, 0, -seg_len)
+		node.add_child(seg)
+		var r: float = lerpf(r0, r1, float(k) / maxf(1.0, segs - 1))
+		_part(seg, _cyl(r * 0.85, r, seg_len * 1.12), Vector3(0, 0, -seg_len * 0.5), mat, Vector3(90, 0, 0))
+		sways.append([seg, seg.rotation_degrees, amp, 1.7, phase + k * 0.45, 0.0])
+		node = seg
+	var tip := Node3D.new()
+	tip.position = Vector3(0, 0, -seg_len)
+	node.add_child(tip)
+	return tip
+
+func _bark() -> StandardMaterial3D:
+	var m := _mat(Color.WHITE, 0.0, 0.9)
+	m.albedo_texture = _noise("bark_" + hero.secondary.to_html(), 0.06, false, 0.0, [hero.secondary.darkened(0.45), hero.secondary.lightened(0.15)])
+	m.normal_enabled = true
+	m.normal_texture = _noise("bark_n", 0.07, true, 12.0)
+	m.normal_scale = 1.4
+	m.uv1_scale = Vector3(1, 5, 1)
+	return m
+
+func _bone_m() -> StandardMaterial3D:
+	var m := _mat(hero.accent.darkened(0.08), 0.05, 0.45)
+	m.normal_enabled = true
+	m.normal_texture = _noise("bone_n", 0.05, true, 4.0)
+	m.normal_scale = 0.5
+	return m
+
+## Brunhild: golden helm with swept wings.
+func _g_winged_helm() -> void:
+	var head := _attach("head", Vector3(0, 0.1, 0))
+	var gold := _metal(hero.primary, 0.2)
+	_part(head, _sphere(0.122, 32), Vector3(0, 0.02, -0.01), gold, Vector3.ZERO, Vector3(1.0, 0.82, 1.08))
+	_part(head, _box(0.03, 0.12, 0.05), Vector3(0, 0.0, 0.12), gold)
+	_part(head, _torus(0.118, 0.13), Vector3(0, -0.04, 0), _metal(hero.accent, 0.15), Vector3(-6, 0, 0))
+	var feather := _metal(hero.accent, 0.18)
+	for s in [-1.0, 1.0]:
+		var w := Node3D.new()
+		w.position = Vector3(0.12 * s, 0.03, -0.02)
+		w.rotation_degrees = Vector3(-25, -s * 20, -s * 55)
+		head.add_child(w)
+		for k in range(5):
+			var f := _part(w, _blade(0.16 + k * 0.035, 0.05, 0.01), Vector3(0, 0, -k * 0.03), feather)
+			f.rotation_degrees = Vector3(-k * 14, 0, 0)
+
+## Brunhild: two-handed bearded axe in the right hand, glowing edge.
+func _g_great_axe() -> void:
+	var hand := _attach("right_hand", Vector3(0, 0, 0.02))
+	var ax := Node3D.new()
+	ax.basis = _basis_along(_bone_dir("right_hand"))
+	hand.add_child(ax)
+	var haft := _mat(hero.secondary.lightened(0.15), 0.1, 0.55)
+	var shaft := Node3D.new()
+	shaft.rotation_degrees = Vector3(90, 0, 0)
+	ax.add_child(shaft)
+	_part(shaft, _cyl(0.022, 0.026, 1.25), Vector3(0, 0.25, 0), haft)
+	for k in range(4):
+		_part(shaft, _torus(0.024, 0.032), Vector3(0, -0.2 + k * 0.08, 0), _metal(hero.accent))
+	var head := Node3D.new()
+	head.position = Vector3(0, 0.78, 0)
+	shaft.add_child(head)
+	var steel := _metal(hero.primary.lightened(0.25), 0.18)
+	# Bearded blade: a curved fan in the XY-plane, both faces.
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var pts: Array = []
+	for i in range(9):
+		var a := lerpf(-1.1, 1.1, i / 8.0)
+		pts.append(Vector3(0.12 + 0.24 * cos(a * 0.6), 0.2 * sin(a) - 0.05 * a * a, 0))
+	for th in [0.012, -0.012]:
+		var c := Vector3(0.03, 0, th)
+		for i in range(8):
+			var a: Vector3 = pts[i] + Vector3(0, 0, th * 0.2)
+			var b: Vector3 = pts[i + 1] + Vector3(0, 0, th * 0.2)
+			if th > 0:
+				st.add_vertex(c); st.add_vertex(a); st.add_vertex(b)
+			else:
+				st.add_vertex(c); st.add_vertex(b); st.add_vertex(a)
+	st.generate_normals()
+	_part(head, st.commit(), Vector3.ZERO, steel)
+	_part(head, _blade(0.4, 0.03, 0.02), Vector3(0.355, -0.2, 0), _glow(hero.rim, 2.4))
+	_part(head, _box(0.06, 0.12, 0.06), Vector3.ZERO, steel)
+	_part(head, _cyl(0.0, 0.03, 0.14), Vector3(-0.09, 0, 0), steel, Vector3(0, 0, 90))
+
+## Thorn witch: crown of black thorns with glowing buds.
+func _g_thorn_crown() -> void:
+	var head := _attach("head", Vector3(0, 0.13, 0))
+	var wood := _bark()
+	_part(head, _torus(0.1, 0.118), Vector3.ZERO, wood, Vector3(-8, 0, 0))
+	var bud := _glow(hero.rim, 3.0)
+	for k in range(11):
+		var a := TAU * k / 11.0
+		var h: float = 0.07 + 0.1 * (0.5 + 0.5 * cos(a))
+		var p := Vector3(sin(a) * 0.11, 0.0, cos(a) * 0.11)
+		var thorn := _part(head, _cyl(0.0, 0.016, h, 8), p + Vector3(0, h * 0.5, 0), wood)
+		thorn.rotation = Vector3(cos(a) * 0.35, 0, -sin(a) * 0.35)
+		if k % 3 == 0:
+			_part(head, _sphere(0.016, 12), p + Vector3(sin(a) * 0.02, h + 0.005, cos(a) * 0.02), bud)
+
+## Thorn witch: thorny vines curling from both wrists.
+func _g_vine_whips() -> void:
+	var vine := _bark()
+	var spike := _mat(hero.secondary.lightened(0.4), 0.0, 0.5)
+	for side in ["left_hand", "right_hand"]:
+		var h := _attach(side)
+		var tip := _chain(h, 9, 0.11, 0.016, 0.007, vine, Vector3(70, 0, 0), Vector3(14, 6, 0), 9.0, 0.6 if side == "left_hand" else 0.0)
+		_part(tip, _sphere(0.03, 12), Vector3.ZERO, _glow(hero.rim, 3.2))
+		var n: Node = tip.get_parent()
+		while n is Node3D and n != h:
+			_part(n, _cyl(0.0, 0.008, 0.05, 6), Vector3(0.012, 0, -0.04), spike, Vector3(0, 0, -70))
+			n = n.get_parent()
+	var p := _particles(self, hero.rim, 10, 0.6, Vector3.UP, Vector3(0, 0.3, 0), Vector2(0.05, 0.25), 1.6, 0.016, 3.0)
+	p.position = Vector3(0, 1.0, 0)
+	particles["vine"] = p
+
+## Thorn witch: spiked shoulder bark.
+func _g_thorn_spikes() -> void:
+	var wood := _bark()
+	for side in ["left_shoulder", "right_shoulder"]:
+		var s := -1.0 if side == "left_shoulder" else 1.0
+		var sh := _attach(side, Vector3(0.06 * -s, 0.05, 0))
+		_part(sh, _sphere(0.09, 16), Vector3.ZERO, wood, Vector3.ZERO, Vector3(1.2, 0.7, 1.1))
+		for k in range(4):
+			var sp := _part(sh, _cyl(0.0, 0.022, 0.16, 8), Vector3((k - 1.5) * 0.04, 0.08, -0.02), wood)
+			sp.rotation_degrees = Vector3(-25, 0, (k - 1.5) * 18 - s * 20)
+
+## Nyx: long scythe with a glowing soul blade.
+func _g_soul_scythe() -> void:
+	var hand := _attach("right_hand", Vector3(0, 0, 0.02))
+	var sc := Node3D.new()
+	sc.basis = _basis_along(_bone_dir("right_hand"))
+	hand.add_child(sc)
+	var shaft := Node3D.new()
+	shaft.rotation_degrees = Vector3(90, 0, 0)
+	sc.add_child(shaft)
+	var bone := _bone_m()
+	_part(shaft, _cyl(0.018, 0.022, 1.7), Vector3(0, 0.3, 0), _mat(hero.secondary.lightened(0.1), 0.4, 0.3))
+	for k in range(5):
+		_part(shaft, _sphere(0.03, 10), Vector3(0, -0.4 + k * 0.32, 0), bone, Vector3.ZERO, Vector3(1, 0.6, 1))
+	var top := Node3D.new()
+	top.position = Vector3(0, 1.15, 0)
+	shaft.add_child(top)
+	_part(top, _sphere(0.045, 16), Vector3.ZERO, _glow(hero.rim, 3.5))
+	_part(top, _blade(0.75, 0.16, 0.02, -0.35), Vector3.ZERO, _glow(hero.rim, 2.2), Vector3(0, 0, -100))
+	_part(top, _blade(0.7, 0.07, 0.025, -0.33), Vector3(0, 0.01, 0), _metal(hero.accent.darkened(0.3), 0.15), Vector3(0, 0, -100))
+
+## Shira: cat ears with pink inner fur.
+func _g_cat_ears() -> void:
+	var head := _attach("head", Vector3(0, 0.15, -0.01))
+	var fur := _cloth(hero.secondary.lightened(0.15))
+	var inner := _mat(hero.primary.lightened(0.2), 0.0, 0.7)
+	for s in [-1.0, 1.0]:
+		var ear := Node3D.new()
+		ear.position = Vector3(0.075 * s, 0.02, 0)
+		ear.rotation_degrees = Vector3(-8, 0, -s * 18)
+		head.add_child(ear)
+		_part(ear, _cyl(0.0, 0.05, 0.13, 3), Vector3(0, 0.06, 0), fur, Vector3(0, 30, 0), Vector3(1, 1, 0.45))
+		_part(ear, _cyl(0.0, 0.032, 0.09, 3), Vector3(0, 0.05, 0.012), inner, Vector3(0, 30, 0), Vector3(1, 1, 0.25))
+		sways.append([ear, ear.rotation_degrees, 3.0, 3.1, s, 0.0])
+
+## Shira: long cat tail with a ribbon and bell.
+func _g_cat_tail() -> void:
+	var hips := _attach("hips", Vector3(0, -0.03, -0.12))
+	var fur := _cloth(hero.secondary.lightened(0.15))
+	var tip := _chain(hips, 9, 0.1, 0.035, 0.022, fur, Vector3(-40, 0, 0), Vector3(14, 4, 0), 10.0)
+	_part(tip, _sphere(0.026, 12), Vector3.ZERO, _cloth(hero.primary))
+	var first: Node3D = hips.get_child(0)
+	_part(first, _torus(0.035, 0.05), Vector3(0, 0, -0.04), _cloth(hero.primary), Vector3(90, 0, 0))
+	_part(first, _sphere(0.025, 12), Vector3(0, -0.05, -0.04), _metal(hero.accent))
+
+## Frostwyrm: segmented tail ending in an ice crystal.
+func _g_ice_tail() -> void:
+	var hips := _attach("hips", Vector3(0, -0.02, -0.12))
+	var scales := _metal(hero.primary.darkened(0.2), 0.32)
+	var ice := _crystal(hero.rim)
+	var tip := _chain(hips, 8, 0.15, 0.09, 0.035, scales, Vector3(-45, 0, 0), Vector3(11, 0, 0), 6.0)
+	_part(tip, _crystal_mesh(0.3, 0.06), Vector3(0, 0, -0.12), ice, Vector3(90, 0, 0))
+	var n: Node = tip.get_parent()
+	var k := 0
+	while n is Node3D and n != hips:
+		if k % 2 == 0:
+			_part(n, _crystal_mesh(0.08, 0.018), Vector3(0, 0.05, -0.05), ice, Vector3(-30, 0, 0))
+		n = n.get_parent()
+		k += 1
+
+## Cyborg: shoulder plates, chest core with glowing seams.
+func _g_mech_plating() -> void:
+	var white := _metal(hero.primary, 0.3)
+	var dark := _metal(hero.secondary, 0.35)
+	var seam := _glow(hero.rim, 2.4)
+	for side in ["left_shoulder", "right_shoulder"]:
+		var s := -1.0 if side == "left_shoulder" else 1.0
+		var sh := _attach(side, Vector3(0.08 * -s, 0.06, 0))
+		_part(sh, _box(0.2, 0.06, 0.2), Vector3(0, 0.02, 0), white, Vector3(0, 0, -s * 18))
+		_part(sh, _box(0.17, 0.05, 0.17), Vector3(0, -0.04, 0), dark, Vector3(0, 0, -s * 24))
+		_part(sh, _box(0.2, 0.012, 0.02), Vector3(0, 0.055, 0.08), seam, Vector3(0, 0, -s * 18))
+	var chest := _attach("chest", Vector3(0, 0.02, 0.12))
+	_part(chest, _cyl(0.06, 0.06, 0.03, 6), Vector3.ZERO, dark, Vector3(90, 0, 0))
+	_part(chest, _sphere(0.04, 16), Vector3(0, 0, 0.02), _glow(hero.rim, 4.0))
+	for k in range(2):
+		_part(chest, _box(0.16 - k * 0.04, 0.01, 0.01), Vector3(0, -0.08 - k * 0.05, -0.01), seam)
+
+## Cyborg: shoulder cannon whose muzzle charges up.
+func _g_shoulder_cannon() -> void:
+	var back := _attach("chest", Vector3(0.14, 0.18, -0.12))
+	var mount := Node3D.new()
+	back.add_child(mount)
+	var white := _metal(hero.primary, 0.3)
+	_part(mount, _box(0.08, 0.1, 0.1), Vector3.ZERO, _metal(hero.secondary, 0.35))
+	_part(mount, _cyl(0.04, 0.05, 0.42), Vector3(0, 0.06, 0.12), white, Vector3(80, 0, 0))
+	for k in range(3):
+		_part(mount, _torus(0.045, 0.056), Vector3(0, 0.03 + k * 0.012, 0.05 + k * 0.08), _glow(hero.rim, 2.0), Vector3(80, 0, 0))
+	var muzzle := Node3D.new()
+	muzzle.position = Vector3(0, 0.1, 0.34)
+	mount.add_child(muzzle)
+	_part(muzzle, _sphere(0.05), Vector3.ZERO, _glow(hero.rim, 4.5))
+	muzzle.scale = Vector3.ONE * 0.01
+	react["charge_orb"] = muzzle
+
+## Reaper hound: bone skull mask with burning eyes.
+func _g_skull_mask() -> void:
+	var head := _attach("head", Vector3(0, 0.08, 0.06))
+	var bone := _bone_m()
+	var socket := _mat(Color(0.02, 0.01, 0.01), 0.0, 0.9)
+	# Half mask over brow, eyes and snout; the lower jaw stays free.
+	_part(head, _sphere(0.1, 24), Vector3(0, 0.02, 0.02), bone, Vector3.ZERO, Vector3(1.05, 0.62, 0.7))
+	_part(head, _box(0.07, 0.035, 0.09), Vector3(0, -0.025, 0.08), bone, Vector3(12, 0, 0))
+	var eye := _glow(hero.rim, 4.0)
+	for s in [-1.0, 1.0]:
+		_part(head, _sphere(0.024, 12), Vector3(0.04 * s, 0.015, 0.075), socket, Vector3.ZERO, Vector3(1.2, 0.9, 0.5))
+		_part(head, _sphere(0.009, 8), Vector3(0.04 * s, 0.015, 0.088), eye)
+		_part(head, _cyl(0.0, 0.008, 0.045, 6), Vector3(0.022 * s, -0.06, 0.11), bone, Vector3(170, 0, 0))
+		_part(head, _cyl(0.0, 0.02, 0.15, 8), Vector3(0.075 * s, 0.07, -0.04), bone, Vector3(-55, 0, -s * 30))
+
+## Reaper hound: vertebra spikes down the back.
+func _g_bone_spikes() -> void:
+	var bone := _bone_m()
+	for key in ["chest", "spine"]:
+		var b := _attach(key, Vector3(0, 0.0, -0.13))
+		for k in range(3):
+			_part(b, _cyl(0.0, 0.03, 0.17 - k * 0.03, 8), Vector3(0, 0.08 - k * 0.08, 0), bone, Vector3(-60, 0, 0))
+
+## Reaper hound: whip of vertebrae with a ghost flame.
+func _g_bone_tail() -> void:
+	var hips := _attach("hips", Vector3(0, -0.03, -0.12))
+	var tip := _chain(hips, 10, 0.09, 0.03, 0.015, _bone_m(), Vector3(-35, 0, 0), Vector3(10, 0, 0), 9.0)
+	var fire := _particles(tip, hero.rim, 22, 0.04, Vector3.UP, Vector3(0, 1.4, 0), Vector2(0.2, 0.5), 0.55, 0.03, 4.0)
+	fire.local_coords = false
+	particles["tail_fire"] = fire
+
+## Treant: bark plates over chest, shoulders and forearms, a glowing heartwood.
+func _g_bark_armor() -> void:
+	var bark := _bark()
+	var chest := _attach("chest", Vector3(0, 0.0, 0.05))
+	_part(chest, _sphere(0.2, 20), Vector3.ZERO, bark, Vector3.ZERO, Vector3(1.25, 1.0, 0.8))
+	_part(chest, _sphere(0.045, 14), Vector3(0, 0, 0.16), _glow(hero.rim, 3.5))
+	for side in ["left_shoulder", "right_shoulder", "left_forearm", "right_forearm"]:
+		_part(_attach(side), _sphere(0.1, 14), Vector3(0, 0.03, 0), bark, Vector3.ZERO, Vector3(1.3, 0.9, 1.3))
+
+## Treant: branching antlers with leaf buds.
+func _g_antlers() -> void:
+	var head := _attach("head", Vector3(0, 0.12, -0.01))
+	var wood := _bark()
+	var leaf := _mat(hero.primary, 0.0, 0.7)
+	for s in [-1.0, 1.0]:
+		var prev := Vector3(0.06 * s, 0, 0)
+		var pts: Array = []
+		for k in range(5):
+			var f := (k + 1) / 5.0
+			var p := Vector3(0.06 * s + 0.2 * s * f, 0.32 * f - 0.05 * f * f, -0.06 * f)
+			var seg := _part(head, _cyl(0.012 * (1.2 - f), 0.016 * (1.3 - f), 1.0, 8), Vector3.ZERO, wood)
+			_align(seg, prev, p)
+			pts.append(p)
+			prev = p
+		for k in [1, 2, 3]:
+			var a: Vector3 = pts[k]
+			var b: Vector3 = a + Vector3(-0.02 * s, 0.1, 0.03 * (k - 2))
+			var br := _part(head, _cyl(0.004, 0.009, 1.0, 6), Vector3.ZERO, wood)
+			_align(br, a, b)
+			_part(head, _sphere(0.025, 8), b, leaf, Vector3.ZERO, Vector3(1.2, 0.5, 0.8))
+
+## Moss tufts on shoulders, head and back, swaying.
+func _g_moss_tufts() -> void:
+	var moss := _mat(Color.WHITE, 0.0, 0.95)
+	moss.albedo_texture = _noise("moss_" + hero.primary.to_html(), 0.12, false, 0.0, [hero.primary.darkened(0.45), hero.primary.lightened(0.1)])
+	for key in ["left_shoulder", "right_shoulder", "head", "chest"]:
+		var b := _attach(key, Vector3(0, 0.08 if key == "head" else 0.04, -0.06 if key == "chest" else 0.0))
+		for k in range(5):
+			var a := TAU * k / 5.0
+			var tuft := _part(b, _sphere(0.035, 8), Vector3(cos(a) * 0.05, 0.0, sin(a) * 0.05), moss, Vector3.ZERO, Vector3(1.0, 0.55, 1.0))
+			sways.append([tuft, Vector3.ZERO, 6.0, 1.3, a, 0.0])
+
+## Celestial fox: tall fox ears with gold tips.
+func _g_fox_ears() -> void:
+	var head := _attach("head", Vector3(0, 0.15, -0.01))
+	var fur := _cloth(hero.primary)
+	var tipm := _metal(hero.accent, 0.2)
+	for s in [-1.0, 1.0]:
+		var ear := Node3D.new()
+		ear.position = Vector3(0.07 * s, 0.03, 0)
+		ear.rotation_degrees = Vector3(-5, 0, -s * 14)
+		head.add_child(ear)
+		_part(ear, _cyl(0.0, 0.05, 0.18, 4), Vector3(0, 0.08, 0), fur, Vector3(0, 45, 0), Vector3(1, 1, 0.45))
+		_part(ear, _cyl(0.0, 0.02, 0.05, 4), Vector3(0, 0.155, 0), tipm, Vector3(0, 45, 0), Vector3(1, 1, 0.45))
+		sways.append([ear, ear.rotation_degrees, 2.5, 2.7, s, 0.0])
+
+## Celestial fox: nine tails fanning out behind, each with a glowing tip.
+func _g_nine_tails() -> void:
+	var hips := _attach("hips", Vector3(0, 0.0, -0.12))
+	var fur := _cloth(hero.primary)
+	var glow := _glow(hero.rim, 3.0)
+	for k in range(9):
+		var root := Node3D.new()
+		root.rotation_degrees = Vector3(0, lerpf(-70.0, 70.0, k / 8.0), 0)
+		hips.add_child(root)
+		var tip := _chain(root, 7, 0.13, 0.06, 0.035, fur, Vector3(20 + 12 * absf(k - 4.0) * 0.25, 0, 0), Vector3(9, 0, 0), 8.0, k * 0.7)
+		_part(tip, _sphere(0.035, 12), Vector3(0, 0, 0.01), glow)
+
+## Celestial fox: three blue foxfire flames orbiting.
+func _g_foxfire_orbs() -> void:
+	var orbit := Node3D.new()
+	var hips := _attach("hips", Vector3(0, 0.35, 0))
+	hips.add_child(orbit)
+	for k in range(3):
+		var a := TAU * k / 3.0
+		var o := Node3D.new()
+		o.position = Vector3(cos(a) * 0.55, 0.1 * sin(k * 2.0), sin(a) * 0.55)
+		orbit.add_child(o)
+		_part(o, _sphere(0.045, 12), Vector3.ZERO, _glow(hero.rim, 4.0))
+		_part(o, _sphere(0.08, 12), Vector3.ZERO, _glow(hero.rim, 1.2, true))
+		var f := _particles(o, hero.rim, 10, 0.03, Vector3.UP, Vector3(0, 1.0, 0), Vector2(0.1, 0.3), 0.5, 0.02, 4.0)
+		f.local_coords = false
+	spinners.append([orbit, Vector3.UP, 1.2])
+	react["orbit"] = orbit
+
+## Mossback: shell of boulders and crystal spikes on the back.
+func _g_stone_back() -> void:
+	var rock := _mat(Color.WHITE, 0.0, 0.92)
+	rock.albedo_texture = _noise("rock_" + hero.secondary.to_html(), 0.08, false, 0.0, [hero.secondary.darkened(0.4), hero.secondary.lightened(0.25)])
+	rock.normal_enabled = true
+	rock.normal_texture = _noise("rock_n", 0.09, true, 10.0)
+	var crystal := _crystal(hero.rim)
+	var back := _attach("chest", Vector3(0, 0.05, -0.16))
+	for k in range(7):
+		var a := k * 2.1
+		var p := Vector3(sin(a) * 0.14, 0.12 - k * 0.05, -0.02 * (k % 2))
+		_part(back, _sphere(0.08 + 0.02 * (k % 3), 10), p, rock, Vector3(k * 20, k * 33, 0), Vector3(1.2, 0.8, 1.0))
+	for k in range(4):
+		_part(back, _crystal_mesh(0.22 - k * 0.03, 0.035), Vector3((k - 1.5) * 0.08, 0.15, -0.08), crystal, Vector3(-40, 0, (k - 1.5) * 15))
+
+## Mossback: heavy curled ram horns.
+func _g_ram_horns() -> void:
+	var head := _attach("head", Vector3(0, 0.1, -0.02))
+	var m := _bone_m()
+	for s in [-1.0, 1.0]:
+		var prev := Vector3(0.08 * s, 0.02, 0)
+		for k in range(10):
+			var f := (k + 1) / 10.0
+			var ang := f * PI * 1.4
+			var p := Vector3((0.1 + 0.07 * cos(ang)) * s, 0.02 + 0.09 * sin(ang), -0.08 * f)
+			var seg := _part(head, _cyl(0.022 * (1.15 - f) + 0.006, 0.026 * (1.2 - f) + 0.008, 1.0, 10), Vector3.ZERO, m)
+			_align(seg, prev, p)
+			prev = p
+
+# ──────────────────────────────── Arbër, the drill master (own fighter) ──
+
+static var _embroidery: Texture2D = null
+
+## Black velvet with gold scrollwork and a red border, as on a festive xhamadan vest.
+static func _embroidery_tex() -> Texture2D:
+	if _embroidery != null: return _embroidery
+	var n := 256
+	var img := Image.create(n, n, false, Image.FORMAT_RGBA8)
+	var gold := Color("d4a017")
+	var red := Color("b91c1c")
+	for y in range(n):
+		for x in range(n):
+			var u := float(x) / n
+			var v := float(y) / n
+			var c := Color(0.045, 0.04, 0.045)
+			# Velvet: faint vertical nap.
+			c = c.lightened(0.04 * sin(u * 220.0) * sin(v * 7.0))
+			# Border bands top and bottom, red with a gold line.
+			if v < 0.07 or v > 0.93: c = red
+			if absf(v - 0.085) < 0.008 or absf(v - 0.915) < 0.008: c = gold
+			# Scrolls: rows of mirrored spirals.
+			var cu := fmod(u * 4.0, 1.0) - 0.5
+			var cv := fmod(v * 3.0, 1.0) - 0.5
+			var r := sqrt(cu * cu + cv * cv)
+			var a := atan2(cv, absf(cu))
+			var spiral := absf(fmod(r * 18.0 - a * 1.4 + 20.0, TAU / 1.4) - 1.2)
+			if r > 0.08 and r < 0.42 and spiral < 0.22 and v > 0.1 and v < 0.9: c = gold.darkened(0.15 * r)
+			if r < 0.05 and v > 0.1 and v < 0.9: c = red.lightened(0.1)
+			img.set_pixel(x, y, c)
+	img.generate_mipmaps()
+	_embroidery = ImageTexture.create_from_image(img)
+	return _embroidery
+
+## Open shell around the torso (front left open), a slice of a cylinder.
+func _arc_shell(r: float, h: float, a0: float, a1: float, segs: int = 28) -> ArrayMesh:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for k in range(segs):
+		var t0 := lerpf(a0, a1, float(k) / segs)
+		var t1 := lerpf(a0, a1, float(k + 1) / segs)
+		var p0 := Vector3(sin(t0) * r, 0, cos(t0) * r)
+		var p1 := Vector3(sin(t1) * r, 0, cos(t1) * r)
+		var u0 := float(k) / segs
+		var u1 := float(k + 1) / segs
+		var lo := Vector3(0, -h * 0.5, 0)
+		var hi := Vector3(0, h * 0.5, 0)
+		for tri in [[p0 + lo, u0, 1.0], [p1 + lo, u1, 1.0], [p1 + hi * 1.0, u1, 0.0], [p0 + lo, u0, 1.0], [p1 + hi, u1, 0.0], [p0 + hi, u0, 0.0]]:
+			st.set_uv(Vector2(tri[1], tri[2]))
+			st.add_vertex(tri[0])
+	st.generate_normals()
+	return st.commit()
+
+## White felt cap (qeleshe): short dome, slightly flattened.
+func _g_qeleshe() -> void:
+	var head := _attach("head", Vector3(0, 0.13, -0.005))
+	var felt := _mat(Color.WHITE, 0.0, 0.95)
+	felt.albedo_texture = _noise("felt", 0.09, false, 0.0, [Color(0.68, 0.66, 0.62), Color(0.8, 0.79, 0.75)])
+	felt.rim = 0.15
+	felt.normal_enabled = true
+	felt.normal_texture = _noise("felt_n", 0.2, true, 3.0)
+	felt.normal_scale = 0.4
+	_part(head, _cyl(0.096, 0.104, 0.07, 32), Vector3(0, 0.0, 0), felt)
+	_part(head, _sphere(0.097, 32), Vector3(0, 0.03, 0), felt, Vector3.ZERO, Vector3(1.0, 0.42, 1.0))
+	# Stitched rim.
+	_part(head, _torus(0.1, 0.108), Vector3(0, -0.033, 0), _mat(Color(0.8, 0.79, 0.74), 0.0, 0.9))
+
+## Embroidered vest over the bare chest, red sash (brez) with fringe at the waist.
+func _g_xhamadan() -> void:
+	var chest := _attach("chest", Vector3(0, -0.04, -0.01))
+	var velvet := _mat(Color.WHITE, 0.0, 0.7)
+	velvet.albedo_texture = _embroidery_tex()
+	velvet.cull_mode = BaseMaterial3D.CULL_DISABLED
+	velvet.rim = 0.35
+	var vest := _part(chest, _arc_shell(0.205, 0.46, deg_to_rad(30.0), deg_to_rad(330.0)), Vector3(0, 0, 0.01), velvet, Vector3.ZERO, Vector3(1.3, 1.0, 1.0))
+	vest.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+	var gold := _metal(hero.accent, 0.25)
+	# Gold cord along the opening and silver-gold buttons.
+	for s in [-1.0, 1.0]:
+		var edge := Vector3(sin(deg_to_rad(30.0)) * 0.205 * 1.3 * s, 0, cos(deg_to_rad(30.0)) * 0.205 + 0.01)
+		_part(chest, _cyl(0.008, 0.008, 0.46), edge, gold)
+		for k in range(4):
+			_part(chest, _sphere(0.012, 10), edge + Vector3(0, 0.12 - k * 0.07, 0.005), gold)
+	var hips := _attach("hips", Vector3(0, 0.1, 0))
+	var sash := _cloth(hero.get("sash", hero.secondary))
+	_part(hips, _cyl(0.19, 0.185, 0.12, 32), Vector3.ZERO, sash, Vector3.ZERO, Vector3(1.15, 1.0, 0.95))
+	var knot := Node3D.new()
+	knot.position = Vector3(0.12, -0.02, 0.1)
+	hips.add_child(knot)
+	_part(knot, _sphere(0.035, 12), Vector3.ZERO, sash)
+	for k in range(2):
+		_ribbon(knot, 0.3, 0.05, 4, sash, Vector3(8, 0, 6 - k * 12), 6.0, 18.0, k * 0.8)
+
+## Leather tool belt: pouches, a tape measure, spare drill bits.
+func _g_tool_belt() -> void:
+	var hips := _attach("hips", Vector3(0, 0.02, 0))
+	var leather := _mat(Color("5b3a1e"), 0.05, 0.6)
+	leather.normal_enabled = true
+	leather.normal_texture = _noise("leather_n", 0.15, true, 4.0)
+	_part(hips, _cyl(0.178, 0.178, 0.045, 32), Vector3.ZERO, leather, Vector3.ZERO, Vector3(1.13, 1.0, 0.94))
+	_part(hips, _box(0.06, 0.05, 0.02), Vector3(0, 0, 0.165), _metal(Color("c0c0c0"), 0.2))
+	for s in [-1.0, 1.0]:
+		var pouch := _part(hips, _box(0.09, 0.11, 0.05), Vector3(0.17 * s, -0.06, 0.06), leather, Vector3(0, s * 30, 0))
+		pouch.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+		_part(hips, _box(0.095, 0.03, 0.055), Vector3(0.17 * s, -0.01, 0.06), leather.duplicate(), Vector3(0, s * 30, 0))
+	# Yellow tape measure on the left, bits in loops on the right.
+	_part(hips, _cyl(0.035, 0.035, 0.025, 20), Vector3(-0.19, -0.04, -0.05), _mat(Color("facc15"), 0.1, 0.4), Vector3(0, 0, 90))
+	var steel := _metal(Color("9ca3af"), 0.2)
+	for k in range(4):
+		_part(hips, _cyl(0.004 + k * 0.001, 0.004 + k * 0.001, 0.12, 8), Vector3(0.2, -0.06, -0.02 - k * 0.018), steel)
+
+## Spiral drill bit: two twisted flutes around a core (along +Y).
+func _drill_bit(length: float, radius: float) -> ArrayMesh:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var steps := 40
+	var ring := 8
+	for flute in range(2):
+		for i in range(steps):
+			var f0 := float(i) / steps
+			var f1 := float(i + 1) / steps
+			var r0: float = radius * (1.0 - pow(f0, 6.0))
+			var r1: float = radius * (1.0 - pow(f1, 6.0))
+			var a0 := f0 * TAU * 3.0 + flute * PI
+			var a1 := f1 * TAU * 3.0 + flute * PI
+			for k in range(ring):
+				var b0 := TAU * k / ring
+				var b1 := TAU * (k + 1) / ring
+				var c0 := Vector3(cos(a0), 0, sin(a0)) * r0 * 0.55
+				var c1 := Vector3(cos(a1), 0, sin(a1)) * r1 * 0.55
+				var w0: float = r0 * 0.45
+				var w1: float = r1 * 0.45
+				var q := [c0 + Vector3(cos(b0) * w0, f0 * length + sin(b0) * w0 * 0.6, sin(b0) * w0), c0 + Vector3(cos(b1) * w0, f0 * length + sin(b1) * w0 * 0.6, sin(b1) * w0),
+					c1 + Vector3(cos(b1) * w1, f1 * length + sin(b1) * w1 * 0.6, sin(b1) * w1), c1 + Vector3(cos(b0) * w1, f1 * length + sin(b0) * w1 * 0.6, sin(b0) * w1)]
+				st.add_vertex(q[0]); st.add_vertex(q[1]); st.add_vertex(q[2])
+				st.add_vertex(q[0]); st.add_vertex(q[2]); st.add_vertex(q[3])
+	st.generate_normals()
+	return st.commit()
+
+## One cordless drill: housing, grip, battery with charge LEDs, chuck and spinning bit.
+func _build_drill(parent: Node3D, mirror: float) -> void:
+	var shell := _mat(hero.get("sash", hero.secondary), 0.25, 0.35)
+	shell.clearcoat_enabled = true
+	shell.clearcoat = 0.8
+	var rubber := _mat(Color(0.06, 0.06, 0.07), 0.0, 0.85)
+	var steel := _metal(Color("d1d5db"), 0.18)
+	var d := Node3D.new()
+	parent.add_child(d)
+	# Motor housing along +Y (forward out of the fist), grip down through the fist.
+	_part(d, _cyl(0.045, 0.05, 0.2, 20), Vector3(0, 0.06, 0), shell)
+	_part(d, _sphere(0.05, 16), Vector3(0, -0.04, 0), shell, Vector3.ZERO, Vector3(1, 0.7, 1))
+	_part(d, _cyl(0.05, 0.05, 0.03, 20), Vector3(0, -0.02, 0), rubber)
+	for k in range(5):
+		_part(d, _box(0.004, 0.05, 0.02), Vector3(0.045 * mirror, 0.03 + k * 0.0, -0.02 + k * 0.01), rubber, Vector3(0, 0, 0))
+	var grip := _part(d, _box(0.045, 0.16, 0.06), Vector3(0, -0.05, -0.08), rubber, Vector3(-100, 0, 0))
+	grip.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+	_part(d, _box(0.02, 0.035, 0.025), Vector3(0, 0.0, -0.045), _mat(Color("ef4444"), 0.1, 0.4), Vector3(-100, 0, 0))
+	# Battery pack under the grip with a green charge bar.
+	_part(d, _box(0.075, 0.06, 0.1), Vector3(0, -0.07, -0.17), _mat(Color(0.1, 0.1, 0.11), 0.2, 0.5))
+	for k in range(3):
+		_part(d, _box(0.012, 0.008, 0.004), Vector3(-0.016 + k * 0.016, -0.05, -0.12), _glow(Color("4ade80"), 2.4))
+	# Chuck and bit.
+	_part(d, _cyl(0.026, 0.034, 0.06, 18), Vector3(0, 0.19, 0), steel)
+	_part(d, _torus(0.026, 0.034), Vector3(0, 0.21, 0), _metal(Color(0.15, 0.15, 0.16), 0.3))
+	var bit := Node3D.new()
+	bit.position = Vector3(0, 0.22, 0)
+	d.add_child(bit)
+	_part(bit, _drill_bit(0.26, 0.022), Vector3.ZERO, steel)
+	drill_bits.append(bit)
+	var tip := Node3D.new()
+	tip.position = Vector3(0, 0.27, 0)
+	bit.add_child(tip)
+	var sp := _particles(tip, Color("ffb347"), 18, 0.02, Vector3.UP, Vector3(0, -6.0, 0), Vector2(1.5, 3.5), 0.35, 0.012, 5.0)
+	sp.local_coords = false
+	sp.emitting = false
+	drill_sparks.append(sp)
+
+func _g_twin_drills() -> void:
+	for side in ["left_hand", "right_hand"]:
+		var h := _attach(side, Vector3(0, 0, 0.02))
+		var holder := Node3D.new()
+		# Along the forearm: the drill continues the punch line past the fist.
+		holder.basis = _basis_along(_bone_dir(side.replace("hand", "forearm"))).scaled(Vector3.ONE * 1.35)
+		h.add_child(holder)
+		_build_drill(holder, -1.0 if side == "left_hand" else 1.0)
+
+## A feather: tapered blade, darker quill line.
+func _feather(parent: Node3D, length: float, width: float, pos: Vector3, rot: Vector3, mat: Material) -> MeshInstance3D:
+	return _part(parent, _blade(length, width, 0.012, 0.02), pos, mat, rot)
+
+## Shqiponja: the black double-headed eagle he rides while his special lasts.
+func _g_double_eagle() -> void:
+	var root := Node3D.new()
+	root.name = "Shqiponja"
+	add_child(root)
+	var body_n := Node3D.new()
+	body_n.position = Vector3(0, -0.12, 0)
+	root.add_child(body_n)
+	var plume := _mat(Color.WHITE, 0.15, 0.45)
+	plume.albedo_texture = _noise("plume", 0.05, false, 0.0, [Color(0.02, 0.02, 0.025), Color(0.11, 0.1, 0.12)])
+	plume.normal_enabled = true
+	plume.normal_texture = _noise("plume_n", 0.12, true, 6.0)
+	plume.normal_scale = 0.8
+	plume.rim = 0.7
+	plume.rim_tint = 0.2
+	plume.cull_mode = BaseMaterial3D.CULL_DISABLED
+	var red_edge := _mat(Color("7f1d1d"), 0.1, 0.5)
+	red_edge.cull_mode = BaseMaterial3D.CULL_DISABLED
+	var beak_m := _metal(hero.accent, 0.3)
+	var eye_m := _glow(Color("ff3b30"), 4.0)
+	# Body: broad chest, layered breast feathers, tail fan behind (+Z = flying direction).
+	_part(body_n, _sphere(0.34, 24), Vector3.ZERO, plume, Vector3.ZERO, Vector3(1.0, 0.62, 1.55))
+	for k in range(9):
+		var a := lerpf(-0.9, 0.9, k / 8.0)
+		_feather(body_n, 0.2, 0.08, Vector3(sin(a) * 0.22, -0.12, 0.25 - absf(a) * 0.1), Vector3(-160, rad_to_deg(a), 0), plume)
+	for k in range(7):
+		var a := lerpf(-38.0, 38.0, k / 6.0)
+		var tf := _feather(body_n, 0.62 - absf(a) * 0.004, 0.13, Vector3(0, 0.0, -0.45), Vector3(-92, a, 0), plume)
+		tf.scale = Vector3(1, 1, 1)
+		_feather(body_n, 0.12, 0.13, Vector3(sin(deg_to_rad(a)) * 0.6, 0.0, -0.45 - cos(deg_to_rad(a)) * 0.56), Vector3(-92, a, 0), red_edge)
+	# Two necks and heads, looking left and right of the flight direction.
+	for s in [-1.0, 1.0]:
+		var neck := Node3D.new()
+		neck.position = Vector3(0.1 * s, 0.1, 0.42)
+		neck.rotation_degrees = Vector3(-12, s * 38, 0)
+		body_n.add_child(neck)
+		_part(neck, _cyl(0.07, 0.1, 0.32, 16), Vector3(0, 0.0, 0.14), plume, Vector3(80, 0, 0))
+		for k in range(4):
+			_feather(neck, 0.12, 0.06, Vector3(0.05 * s, 0.03, 0.06 + k * 0.06), Vector3(-150, s * 30, 0), plume)
+		var head := Node3D.new()
+		head.position = Vector3(0, 0.05, 0.32)
+		neck.add_child(head)
+		_part(head, _sphere(0.1, 20), Vector3.ZERO, plume, Vector3.ZERO, Vector3(0.9, 0.9, 1.15))
+		# Hooked beak: upper part curving down, small lower part.
+		var upper := _part(head, _cyl(0.0, 0.045, 0.16, 12), Vector3(0, 0.0, 0.13), beak_m, Vector3(100, 0, 0))
+		upper.scale = Vector3(1, 1, 0.8)
+		_part(head, _cyl(0.0, 0.02, 0.06, 10), Vector3(0, -0.035, 0.2), beak_m, Vector3(160, 0, 0))
+		_part(head, _cyl(0.0, 0.03, 0.08, 10), Vector3(0, -0.03, 0.1), beak_m.duplicate(), Vector3(95, 0, 0))
+		for e in [-1.0, 1.0]:
+			_part(head, _sphere(0.018, 10), Vector3(0.06 * e, 0.025, 0.06), eye_m)
+		# Red tongue, as on the flag.
+		_part(head, _blade(0.08, 0.02, 0.006), Vector3(0, -0.045, 0.16), _mat(Color("dc2626"), 0.0, 0.5), Vector3(80, 0, 0))
+		# A little crest of feathers.
+		for k in range(3):
+			_feather(head, 0.1, 0.035, Vector3(0, 0.07, -0.04 - k * 0.03), Vector3(-130 - k * 10, 0, 0), plume)
+	# Wings: shoulder pivot (flaps), forearm, a fan of long primaries, rows of coverts.
+	for s in [-1.0, 1.0]:
+		var shoulder := Node3D.new()
+		shoulder.position = Vector3(0.24 * s, 0.08, 0.1)
+		body_n.add_child(shoulder)
+		eagle_wings.append([shoulder, s])
+		var arm := Node3D.new()
+		arm.rotation_degrees = Vector3(0, 0, 0)
+		shoulder.add_child(arm)
+		_part(arm, _cyl(0.06, 0.09, 0.8, 12), Vector3(0.4 * s, 0, 0), plume, Vector3(0, 0, 90))
+		var hand := Node3D.new()
+		hand.position = Vector3(0.78 * s, 0, 0)
+		arm.add_child(hand)
+		eagle_wings.append([hand, s * 0.5])
+		_part(hand, _cyl(0.04, 0.06, 0.6, 10), Vector3(0.3 * s, 0, 0), plume, Vector3(0, 0, 90))
+		# Primaries spread at the tip, like fingers.
+		for k in range(8):
+			var a: float = lerpf(-8.0, 62.0, k / 7.0)
+			var ln: float = 0.72 + 0.12 * sin(k / 7.0 * PI)
+			var fp := Node3D.new()
+			fp.position = Vector3((0.5 + k * 0.02) * s, 0, -0.02 * k)
+			fp.rotation_degrees = Vector3(0, s * (90.0 + a), 0)
+			hand.add_child(fp)
+			_feather(fp, ln, 0.11, Vector3.ZERO, Vector3(90, 0, 0), plume)
+			_feather(fp, 0.14, 0.11, Vector3(0, 0, ln - 0.1), Vector3(90, 0, 0), red_edge)
+		# Secondaries along the arm (trailing edge, pointing back).
+		for k in range(9):
+			var x: float = (0.1 + k * 0.13) * s
+			var parent: Node3D = arm if absf(x) < 0.78 else hand
+			var px: float = x if parent == arm else x - 0.78 * s
+			_feather(parent, 0.5 - k * 0.012, 0.12, Vector3(px, -0.01, -0.02), Vector3(-90, 0, s * 4.0), plume)
+		# Coverts: short feathers over the leading edge.
+		for k in range(10):
+			_feather(arm if k < 6 else hand, 0.2, 0.09, Vector3(((0.05 + (k % 6) * 0.13)) * s, 0.03, 0.02), Vector3(-80, 0, 0), plume)
+	# Legs with golden talons, tucked back under the body.
+	for s in [-1.0, 1.0]:
+		var leg := Node3D.new()
+		leg.position = Vector3(0.1 * s, -0.18, -0.05)
+		leg.rotation_degrees = Vector3(-50, 0, 0)
+		body_n.add_child(leg)
+		_part(leg, _cyl(0.03, 0.04, 0.22, 10), Vector3(0, -0.1, 0), _mat(Color("caa15a"), 0.2, 0.5))
+		for k in range(3):
+			var claw := _part(leg, _cyl(0.0, 0.012, 0.09, 8), Vector3((k - 1) * 0.025, -0.22, 0.03), beak_m, Vector3(60, 0, (k - 1) * 20))
+			claw.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+	# Feathers it sheds while flying.
+	var fall := _particles(body_n, Color(0.12, 0.02, 0.02), 8, 0.6, Vector3.DOWN, Vector3(0, -1.0, 0), Vector2(0.2, 0.6), 1.6, 0.03, 0.6)
+	fall.local_coords = false
+	particles["eagle_feathers"] = fall
+	root.scale = Vector3.ONE * 0.01
+	root.visible = false
+	react["eagle"] = root
+
 # ───────────────────────────────────────────────────── bone helpers ──
 
 ## Direction from a bone to its child in model space (rest pose), e.g. along the forearm.
@@ -1198,6 +1897,12 @@ func apply_state(state: Dictionary) -> void:
 		(react["counter_star"] as Node3D).scale = Vector3.ONE * s
 	if particles.has("trail"):
 		(particles["trail"] as CPUParticles3D).emitting = dash > 0.5
+	if not drill_bits.is_empty():
+		drilling = st == "Attack" or pose in ["Attack", "Kick", "HeavyPunch", "Barrage", "Spin", "Slam", "SpecialAttack", "DashAttack"]
+		for sp in drill_sparks: (sp as CPUParticles3D).emitting = drilling
+	if react.has("eagle"):
+		eagle_on = float(state.get("eagle", 0.0)) > 0.0
+		eagle_facing = 1 if int(state.get("facing", 1)) >= 0 else -1
 
 func flash() -> void:
 	hit_flash = 1.0
@@ -1232,6 +1937,21 @@ func _process(delta: float) -> void:
 			(react[side] as Node3D).scale = Vector3.ONE * (1.0 + charge * 0.18)
 	if react.has("halo"):
 		(react["halo"] as Node3D).scale = Vector3.ONE * (1.0 + charge * 0.25)
+	for bit in drill_bits:
+		(bit as Node3D).rotate_y(delta * (75.0 if drilling else 5.0))
+	if react.has("eagle"):
+		var eg: Node3D = react["eagle"]
+		var s: float = move_toward(eg.scale.x, 1.3 if eagle_on else 0.01, delta * (2.8 if eagle_on else 3.5))
+		eg.scale = Vector3.ONE * s
+		eg.visible = s > 0.02
+		# Turned a little toward the camera so both wings read in the side view.
+		eg.rotation.y = lerp_angle(eg.rotation.y, deg_to_rad(58.0 * eagle_facing), minf(1.0, delta * 6.0))
+		eg.position.y = sin(t * 2.1) * 0.06
+		if particles.has("eagle_feathers"): (particles["eagle_feathers"] as CPUParticles3D).emitting = eg.visible
+		for w in eagle_wings:
+			var side: float = float(w[1])
+			var inner: bool = absf(side) > 0.75
+			(w[0] as Node3D).rotation.z = signf(side) * (0.5 if inner else 0.3) * sin(t * 4.4 - (0.0 if inner else 0.7))
 	if particles.has("aura"):
 		(particles["aura"] as CPUParticles3D).speed_scale = 1.0 + charge * 1.5
 	arc_timer -= delta

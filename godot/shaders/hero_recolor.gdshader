@@ -1,10 +1,12 @@
 shader_type spatial;
-render_mode diffuse_toon, specular_toon, cull_disabled;
+// Physically based shading (like every other model in the arena): the toon ramp flattened
+// the heroes into pale silhouettes under the bright arena lights.
+render_mode diffuse_burley, specular_schlick_ggx, cull_disabled;
 // Hero outfit recolor: keeps skin tones and texture detail, moves cloth and armor into the
 // hero's own palette (dark areas -> secondary, bright areas -> primary), adds a colored rim
 // and a hit flash. Used by hero_gear.gd on the rigged bodies of the house heroes.
 
-uniform sampler2D albedo_tex : source_color, filter_linear_mipmap, repeat_enable;
+uniform sampler2D albedo_tex : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
 uniform bool has_tex = true;
 uniform vec4 base_color : source_color = vec4(1.0);
 uniform vec3 primary : source_color = vec3(0.8, 0.6, 0.2);
@@ -12,7 +14,7 @@ uniform vec3 secondary : source_color = vec3(0.1, 0.15, 0.2);
 uniform vec3 accent : source_color = vec3(1.0, 0.9, 0.5);
 uniform float recolor : hint_range(0.0, 1.0) = 0.85;
 uniform float keep_skin : hint_range(0.0, 1.0) = 1.0;
-uniform sampler2D normal_tex : hint_normal, filter_linear_mipmap, repeat_enable;
+uniform sampler2D normal_tex : hint_normal, filter_linear_mipmap_anisotropic, repeat_enable;
 uniform bool has_normal = false;
 uniform float roughness_v : hint_range(0.0, 1.0) = 0.55;
 uniform float metallic_v : hint_range(0.0, 1.0) = 0.15;
@@ -50,6 +52,7 @@ void fragment() {
 	if (has_normal) {
 		NORMAL_MAP = texture(normal_tex, UV).rgb;
 	}
-	float fres = pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), rim_power);
-	EMISSION = rim_color * fres * (rim_strength + charge * 0.9) + vec3(1.0, 0.95, 0.9) * flash * 0.8;
+	float fres = pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), rim_power + 1.0);
+	SPECULAR = 0.45;
+	EMISSION = rim_color * fres * (rim_strength * 0.6 + charge * 0.9) + vec3(1.0, 0.95, 0.9) * flash * 0.8;
 }
