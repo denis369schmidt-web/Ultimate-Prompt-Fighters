@@ -909,6 +909,19 @@ func _update_projectiles(dt: float, contacts: Array) -> void:
 		pr.y += pr.vy * dt
 		if float(d.get("wave", 0.0)) > 0.0:
 			pr.y = pr.base_y + sin(pr.age * 9.0) * 0.5 * float(d.wave)
+		if bool(d.get("follow_owner", false)):
+			# Poison cloud: stays around its owner.
+			var fo: Dictionary = fighters[pr.owner]
+			pr.x = fo.x
+			pr.y = fo.y + 1.0
+		if d.has("cage"):
+			# Bone prison: the caged opponent cannot get out.
+			var ct2: Dictionary = fighters[int(d.cage)]
+			if ct2.state != "Defeated":
+				ct2.x = clampf(ct2.x, pr.x - 0.8, pr.x + 0.8)
+				if ct2.y > pr.y + 1.2:
+					ct2.y = pr.y + 1.2
+					ct2.vy = minf(ct2.vy, 0.0)
 		if bool(d.get("orbit", false)) and not pr.get("released", false):
 			# Foxfire ring: circles its owner until it is hurled.
 			var oo: Dictionary = fighters[pr.owner]
@@ -969,7 +982,7 @@ func _update_projectiles(dt: float, contacts: Array) -> void:
 				pr.rehit_t = 0.0
 				pr.hit = []
 		var size: float = float(pr.get("size_now", d.get("size", 0.5)))
-		var inert: bool = bool(d.get("nohit", false)) or pr.get("echoing", false) or (d.has("grow") and not pr.get("launched", false))
+		var inert: bool = pr.age < float(d.get("delay", 0.0)) or bool(d.get("nohit", false)) or pr.get("echoing", false) or (d.has("grow") and not pr.get("launched", false))
 		for ti in range(fighters.size()):
 			if gone or inert: break
 			if ti == pr.owner or is_ally(pr.owner, ti) or ti in pr.hit: continue
@@ -1004,6 +1017,7 @@ func _update_projectiles(dt: float, contacts: Array) -> void:
 					wab.damage = float(wab.damage) * wmult
 					c["attack"] = {"ability": wab, "special": false}
 					events.append({"type": "soul_weigh", "actor": pr.owner, "target": ti, "mult": wmult})
+				if float(d.get("hex", 0.0)) > 0.0: c["hex"] = [float(d.hex), float(d.get("hex_mult", 1.3))]
 				if bool(d.get("pull", false)): c["pull"] = true
 				if bool(d.get("mark", false)): c["mark"] = true
 				if bool(d.get("yank", false)): c["yank"] = true
@@ -1034,7 +1048,8 @@ func signature_ability(i: int, a: Dictionary, sig: Dictionary) -> Dictionary:
 	b.erase("type") # the signature replaces the old all-around type
 	match str(sig.mech):
 		"projectile", "meteor", "mine", "turret", "clone", "eruption", "rage", "mark", "javelin", "magma", "board", "cannon", "nova", "shadow_clone", "singularity", \
-				"star_seal", "ice_decoy", "turbo", "flame_wall", "eagle", "soul_weigh", "fox_orbit", "missile_salvo", "blizzard", "arrow_rain":
+				"star_seal", "ice_decoy", "turbo", "flame_wall", "eagle", "soul_weigh", "fox_orbit", "missile_salvo", "blizzard", "arrow_rain", \
+					"bramble", "root_snare", "hex", "bone_prison", "toxic_cloud":
 			b["no_hit"] = true
 			b["active"] = 0.1
 		"tri_slash":
@@ -1064,6 +1079,10 @@ func signature_ability(i: int, a: Dictionary, sig: Dictionary) -> Dictionary:
 			# Soul harvest: a wide sweep of the scythe that drags opponents in and feeds on them.
 			b.merge({"x_min": -0.2, "range": float(sig.get("length", 3.2)), "y_min": -0.3, "y_max": 2.6, "active": 0.22, "angle": 40.0,
 				"recovery": 0.28, "pull_force": float(sig.get("pull", 7.0)), "lifesteal": float(sig.get("lifesteal", 0.5))}, true)
+		"stampede":
+			# Stampede: a long armored charge that keeps its speed (the armor is set in _sig_activate).
+			b.merge({"x_min": -0.3, "range": 1.5, "y_min": -0.2, "y_max": 1.9, "active": float(sig.get("time", 0.9)), "angle": 48.0,
+				"rehit": 0.3, "recovery": 0.3, "sustain_vx": float(sig.get("speed", 8.5))}, true)
 		"sling_fist":
 			b.merge({"x_min": 0.3, "range": float(sig.get("length", 2.6)), "y_min": 0.7, "y_max": 1.7, "angle": 36.0, "active": 0.14,
 				"recovery": 0.42, "charge": true}, true)
@@ -1143,7 +1162,7 @@ func _sig_activate(i: int, ab: Dictionary) -> void:
 		return
 	events.append({"type": "signature", "actor": i, "mech": sig.mech, "color": col, "name": ab.get("name", "")})
 	match str(sig.mech):
-		"projectile", "mark", "javelin", "magma", "board", "soul_weigh":
+		"projectile", "mark", "javelin", "magma", "board", "soul_weigh", "hex":
 			var count: int = int(sig.get("count", 1))
 			var spread: float = float(sig.get("spread", 0.18))
 			for k in range(count):
@@ -1341,6 +1360,35 @@ func _sig_activate(i: int, ab: Dictionary) -> void:
 				var aspec: Dictionary = spec.duplicate()
 				aspec["life"] = (py - ay) / asp # the arrow ends where it hits the floor
 				spawn_projectile_spec(i, aspec, dmg, px, py, 0.0, -asp)
+		"bramble":
+			for pr in projectiles:
+				if pr.owner == i and bool(pr.spec.get("bush", false)): pr.life = 0.0 # one hedge at a time
+			spec.merge({"bush": true, "pierce": true}, true)
+			for k in range(int(sig.get("count", 3))):
+				var bx2: float = f.x + fx * (1.2 + k * float(sig.get("gap", 1.0)))
+				if f.is_grounded and absf(f.y) < 0.01: bx2 = clampf(bx2, STAGE_LEFT, STAGE_RIGHT)
+				spawn_projectile_spec(i, spec, dmg, bx2, f.y + 0.35, 0.0, 0.0)
+		"root_snare":
+			var rx: float = f.x + fx * 3.0
+			var ry: float = f.y
+			var ro: int = get_nearest_opponent(i)
+			if ro >= 0 and absf(fighters[ro].x - f.x) < 8.0:
+				rx = fighters[ro].x
+				ry = fighters[ro].y
+			spec.merge({"pierce": true}, true)
+			spawn_projectile_spec(i, spec, dmg, rx, ry + 0.5, 0.0, 0.0)
+		"stampede":
+			f.armor_timer = maxf(f.armor_timer, float(sig.get("time", 0.9)) + 0.1)
+		"bone_prison":
+			var po: int = get_nearest_opponent(i)
+			if po >= 0 and absf(fighters[po].x - f.x) < 8.0:
+				spec.merge({"cage": po, "fuse": 0.01, "nohit": true}, true)
+				spawn_projectile_spec(i, spec, dmg, fighters[po].x, fighters[po].y + 1.0, 0.0, 0.0)
+		"toxic_cloud":
+			for pr in projectiles:
+				if pr.owner == i and bool(pr.spec.get("follow_owner", false)): pr.life = 0.0
+			spec.merge({"follow_owner": true, "pierce": true}, true)
+			spawn_projectile_spec(i, spec, dmg, f.x, f.y + 1.0, 0.0, 0.0)
 		"flame_wall":
 			for pr in projectiles:
 				if pr.owner == i and bool(pr.spec.get("wall", false)): pr.life = 0.0
@@ -2613,6 +2661,7 @@ func tick(commands: Array, dt: float = STEP) -> void:
 		if f.counter > 0: f.counter = maxf(0.0, f.counter - dt)
 		if f.rage_timer > 0: f.rage_timer = maxf(0.0, f.rage_timer - dt)
 		if f.armor_timer > 0: f.armor_timer = maxf(0.0, f.armor_timer - dt)
+		if float(f.get("hex_t", 0.0)) > 0.0: f.hex_t = maxf(0.0, float(f.hex_t) - dt)
 		if f.bulwark > 0: f.bulwark = maxf(0.0, f.bulwark - dt)
 		if f.turbo > 0: f.turbo = maxf(0.0, f.turbo - dt)
 		if f.turbo_hit_t > 0: f.turbo_hit_t = maxf(0.0, f.turbo_hit_t - dt)
@@ -3158,6 +3207,7 @@ func tick(commands: Array, dt: float = STEP) -> void:
 					var dxp: float = f.x - pt.x
 					if absf(dxp) < float(attack.ability.range) + 1.0 and absf(pt.y - f.y) < 2.5:
 						pt.x += signf(dxp) * float(attack.ability.pull_force) * dt * (1.0 if absf(dxp) > 0.5 else 0.0)
+			if attack.ability.has("sustain_vx"): f.vx = float(f.facing) * float(attack.ability.sustain_vx) # stampede keeps running
 			if f.iai > 0.0 and attack.ability.has("sig") and str(attack.ability.sig.mech) == "iai":
 				# Iaido stance: the first opponent to step into reach is cut down in one flash.
 				f.iai = maxf(0.0, f.iai - dt)
@@ -3338,6 +3388,7 @@ func tick(commands: Array, dt: float = STEP) -> void:
 			var titan_mult: float = 2.0 if attacker.titan_timer > 0.0 else 1.0
 			var rage: float = 1.35 if float(attacker.get("rage_timer", 0.0)) > 0.0 else 1.0
 			var damage: float = base_dmg * combo_mult * super_bonus * titan_mult * rage * float(attacker.get("power_mult", 1.0))
+			if float(target.get("hex_t", 0.0)) > 0.0: damage *= float(target.get("hex_mult", 1.3)) # Medea's curse
 			target.damage_percent = clampf(target.damage_percent + damage, 0.0, 999.0)
 			if _armor_holds(target, damage):
 				# Armor: the damage counts, but the fighter is not interrupted or launched.
@@ -3414,6 +3465,10 @@ func tick(commands: Array, dt: float = STEP) -> void:
 				var toward: float = signf(attacker.x - target.x) if absf(attacker.x - target.x) > 0.05 else float(attacker.facing)
 				target.vx = toward * 9.0
 				target.vy = 3.5
+			if contact.has("hex"):
+				target["hex_t"] = float(contact.hex[0])
+				target["hex_mult"] = float(contact.hex[1])
+				events.append({"type": "hexed", "actor": contact.from, "target": contact.to, "duration": float(contact.hex[0])})
 			if contact.has("swap"):
 				var sx: float = attacker.x
 				var sy: float = attacker.y

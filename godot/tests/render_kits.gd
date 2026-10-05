@@ -1,7 +1,7 @@
 extends SceneTree
 ## Visual check of the fighter kits: for every kit fighter a short AI fight (signature in use)
 ## and its own finisher cinematic, captured as screenshots.
-## Usage: godot --path godot --script res://tests/render_kits.gd -- --out=<dir> [--only=<family>]
+## Usage: godot --path godot --script res://tests/render_kits.gd -- --out=<dir> [--only=<family>[,<family>…]]
 
 const Prompt = preload("res://scripts/prompt_interpreter.gd")
 const Combat = preload("res://scripts/combat.gd")
@@ -28,10 +28,11 @@ func run() -> void:
 	var app = load("res://main.tscn").instantiate()
 	root.add_child(app)
 	await frames(5)
+	app.hide_title() # the live title screen would cover the fight
 	var prompts := {}
 	for preset in app.mk_presets: prompts[preset.id] = preset.prompt
 	for fam in FighterKits.KITS:
-		if only != "" and fam != only: continue
+		if only != "" and not (fam in only.split(",")): continue
 		var p_list := [Prompt.interpret(prompts[fam], 0), Prompt.interpret(prompts["kairo"], 1)]
 		app.begin_match(p_list, "autonomous", 3)
 		app.sim.countdown = 0.0

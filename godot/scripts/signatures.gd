@@ -54,6 +54,12 @@ extends RefCounted
 ##   blizzard    – snow cloud above the opponent that follows them, hail hits and freezes briefly
 ##   arrow_rain  – arrows rain down in a row over the opponent's position, one after another
 ##   reap        – wide scythe sweep that drags opponents in and heals by part of the damage
+##   bramble     – a hedge of thorn bushes grows along the floor ahead, they burn whoever stands in them
+##   root_snare  – roots break out under the opponent after a short warning and hold them fast
+##   stampede    – long armored charge that keeps its speed and tramples everything in the way
+##   hex         – slow homing curse orb: a cursed opponent takes more damage for a few seconds
+##   bone_prison – a bone cage closes around the opponent, holds them inside and bursts
+##   toxic_cloud – poison cloud that follows its owner and eats at everyone close by
 
 const SIGS := {
 	"ninja": {"mech": "mark", "shape": "kunai", "color": Color("49def4"), "speed": 20.0, "life": 0.5, "size": 0.35, "push": 0.1, "mark": true, "dmg": 0.45},
@@ -83,20 +89,20 @@ const SIGS := {
 	"specter": {"mech": "teleport", "color": Color("9b30ff"), "dmg": 1.1},
 	"brunhild": {"mech": "war_horn", "color": Color("ffd24a"), "length": 4.2, "armor": 3.0, "dmg": 0.5, "windup": 0.35},
 	"lepora": {"mech": "arrow_rain", "shape": "arrow", "color": Color("86efac"), "count": 7, "width": 2.1, "height": 7.0, "speed": 16.0, "size": 0.4, "push": 0.25, "angle": 70.0, "dmg": 0.3, "windup": 0.22},
-	"thorn_witch": {"mech": "mine", "color": Color("4ade80"), "shape": "thorns", "dmg": 1.0},
+	"thorn_witch": {"mech": "bramble", "shape": "thorns", "color": Color("4ade80"), "count": 3, "gap": 1.0, "life": 4.0, "size": 0.45, "rehit": 0.6, "push": 0.35, "angle": 75.0, "dmg": 0.35, "windup": 0.2},
 	"nyx": {"mech": "reap", "color": Color("a855f7"), "length": 3.2, "pull": 7.0, "lifesteal": 0.5, "dmg": 1.0, "windup": 0.25},
 	"shira": {"mech": "barrage", "color": Color("f472b6"), "hits": 5, "range": 1.9, "dmg": 1.0},
 	"frostwyrm": {"mech": "blizzard", "shape": "cloud", "color": Color("bae6fd"), "life": 3.2, "size": 1.1, "height": 3.2, "follow": 2.2, "rehit": 0.5, "freeze": 0.25, "push": 0.1, "angle": 80.0, "dmg": 0.3, "windup": 0.3},
 	"cyborg_mech": {"mech": "missile_salvo", "shape": "missile", "color": Color("22d3ee"), "count": 4, "speed": 11.0, "life": 2.2, "size": 0.3, "home_delay": 0.35, "homing": 5.0, "explode": 1.1, "dmg": 0.4, "windup": 0.2},
 	"reaper_hound": {"mech": "dash", "color": Color("d6d3d1"), "speed": 12.0, "multi": 2, "dmg": 1.0},
-	"treant": {"mech": "eruption", "color": Color("65a30d"), "count": 3, "speed": 6.0, "dmg": 0.9},
+	"treant": {"mech": "root_snare", "shape": "roots", "color": Color("65a30d"), "delay": 0.5, "life": 0.85, "size": 0.7, "freeze": 0.9, "push": 0.2, "angle": 85.0, "dmg": 0.6, "windup": 0.3},
 	"celestial_fox": {"mech": "fox_orbit", "shape": "foxfire", "color": Color("38bdf8"), "count": 3, "radius": 1.3, "spin": 4.0, "life": 5.0, "size": 0.35, "rehit": 0.5, "speed": 12.0, "homing": 6.0, "dmg": 0.45},
-	"mossback": {"mech": "rage", "color": Color("84cc16"), "time": 6.0},
+	"mossback": {"mech": "stampede", "color": Color("84cc16"), "speed": 8.5, "time": 0.9, "dmg": 1.0, "windup": 0.25},
 	"steel_knight": {"mech": "bulwark", "color": Color("e2e8f0"), "time": 0.75, "dmg": 1.2},
 	"vanguard_soldier": {"mech": "projectile", "shape": "grenade", "color": Color("fbbf24"), "speed": 8.0, "life": 1.6, "size": 0.4, "gravity": 12.0, "rise": 6.0, "explode": 2.4, "dmg": 1.0},
-	"sorceress_medea": {"mech": "projectile", "shape": "orb", "color": Color("c084fc"), "speed": 6.0, "life": 2.2, "size": 0.55, "homing": 9.0, "dmg": 0.9},
-	"skeleton_reaper": {"mech": "whirl", "color": Color("a78bfa"), "radius": 2.6, "time": 0.55, "pull": 5.0, "dmg": 1.0},
-	"mutant_titan": {"mech": "rage", "color": Color("84cc16"), "time": 7.0},
+	"sorceress_medea": {"mech": "hex", "shape": "orb", "color": Color("c084fc"), "speed": 6.0, "life": 2.4, "size": 0.5, "homing": 7.0, "hex": 5.0, "hex_mult": 1.3, "dmg": 0.6, "windup": 0.25},
+	"skeleton_reaper": {"mech": "bone_prison", "shape": "bone_cage", "color": Color("a78bfa"), "life": 1.8, "size": 0.9, "explode": 1.5, "push": 0.9, "angle": 70.0, "dmg": 1.2, "windup": 0.3},
+	"mutant_titan": {"mech": "toxic_cloud", "shape": "cloud", "color": Color("84cc16"), "life": 4.0, "size": 1.7, "rehit": 0.5, "push": 0.1, "angle": 60.0, "dmg": 0.22, "windup": 0.2},
 	"swat_specops": {"mech": "projectile", "shape": "bullet", "color": Color("fb923c"), "speed": 26.0, "life": 0.45, "size": 0.3, "count": 3, "spread": 0.12, "dmg": 0.35},
 	"samurai_dreyar": {"mech": "iai", "color": Color("99f6e4"), "time": 0.9, "range": 3.8, "dmg": 1.5, "windup": 0.08},
 	"pirate_captain": {"mech": "board", "shape": "hook", "color": Color("d6d3d1"), "speed": 18.0, "life": 0.45, "size": 0.5, "push": 0.05, "yank": true, "dmg": 0.5},
@@ -124,6 +130,7 @@ const MECH_POSE := {
 	"star_seal": "Slam", "ice_decoy": "Dodge", "turbo": "Dash", "flame_wall": "Slam", "eagle": "Summon", "breath": "Beam", "rebirth": "Rise",
 	"soul_weigh": "Cast", "war_horn": "Roar", "fox_orbit": "Summon", "fox_release": "Cast", "missile_salvo": "Cast",
 	"blizzard": "Summon", "arrow_rain": "Cast", "reap": "Spin",
+	"bramble": "Slam", "root_snare": "Slam", "stampede": "Dash", "hex": "Cast", "bone_prison": "Summon", "toxic_cloud": "Roar",
 }
 
 static func for_family(family: String) -> Dictionary:

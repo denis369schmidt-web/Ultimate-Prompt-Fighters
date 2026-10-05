@@ -215,17 +215,36 @@ static func projectile(kind: String, color: Color) -> Node3D:
 			_ball(root, 0.22, Vector3.ZERO, core_m)
 			for side in [-1, 1]:
 				_box(root, Vector3(0.5, 0.05, 0.35), Vector3(-0.1, 0.12, side * 0.3), glow_m, Vector3(side * 25, 0, 20))
+		"roots":
+			var rm := _mat(Color(0.36, 0.25, 0.14), 0.0, 0.85)
+			for k in range(5):
+				var rr := _cyl(root, 0.02, 0.09, 1.3 + 0.2 * (k % 2), Vector3(-0.5 + k * 0.25, 0.0, 0.0), rm, 6, Vector3(0, 0, -20 + k * 10))
+				rr.position.y = 0.0
+			_ball(root, 0.12, Vector3(0, -0.5, 0), glow_m)
+		"bone_cage":
+			var bm := _mat(Color(0.92, 0.9, 0.82), 0.0, 0.6)
+			for k in range(6):
+				var ang := TAU * k / 6.0
+				_cyl(root, 0.04, 0.05, 2.2, Vector3(cos(ang) * 0.85, 0.0, sin(ang) * 0.4), bm, 6)
+			var ring_m := TorusMesh.new()
+			ring_m.inner_radius = 0.8
+			ring_m.outer_radius = 0.9
+			var top := _part(root, ring_m, Vector3(0, 1.1, 0), bm)
+			top.scale = Vector3(1.0, 1.0, 0.5)
+			var bot := _part(root, ring_m, Vector3(0, -1.0, 0), bm)
+			bot.scale = Vector3(1.0, 1.0, 0.5)
+			_ball(root, 0.2, Vector3(0, 1.25, 0), glow_m)
 		"missile":
 			_cyl(root, 0.06, 0.06, 0.45, Vector3.ZERO, _mat(Color(0.86, 0.88, 0.9), 0.7, 0.3), 8, Vector3(0, 0, 90))
 			_cyl(root, 0.0, 0.06, 0.14, Vector3(0.29, 0, 0), glow_m, 8, Vector3(0, 0, -90))
 			_ball(root, 0.08, Vector3(-0.28, 0, 0), core_m)
 		"cloud":
-			var cm := _mat(Color(0.86, 0.92, 0.98), 0.0, 0.9, 0.3)
+			var cm := _mat(color.lerp(Color(0.95, 0.97, 1.0), 0.45), 0.0, 0.9, 0.3)
 			cm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 			cm.albedo_color.a = 0.85
 			for k in range(5):
 				_ball(root, 0.45 + 0.12 * (k % 2), Vector3(-1.0 + k * 0.5, 0.1 * (k % 3), 0.0), cm)
-			var dark := _mat(Color(0.55, 0.62, 0.72), 0.0, 0.9, 0.0)
+			var dark := _mat(color.darkened(0.45), 0.0, 0.9, 0.0)
 			_ball(root, 0.5, Vector3(0, -0.15, 0.1), dark)
 		"arrow":
 			_cyl(root, 0.015, 0.015, 0.9, Vector3.ZERO, _mat(Color(0.5, 0.35, 0.2), 0.0, 0.7), 6, Vector3(0, 0, 90))

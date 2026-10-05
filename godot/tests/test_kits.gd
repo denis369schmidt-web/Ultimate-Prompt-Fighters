@@ -42,8 +42,16 @@ const PROMPTS := {
 	"frostwyrm": "Blue Wyrm Frost Dragon beast",
 	"lepora": "Lepora die Mondjägerin mit Mondbogen",
 	"nyx": "Nyx Harvester of Souls demon scythe reaper",
+	"albion": "Albion der Silberwyrm mit Sturmstrahl",
+	"thorn_witch": "Thorn Sorceress dark magic",
+	"treant": "Ancient Treant Wood Golem nature",
+	"mossback": "Sylvan Beast Treant quadruped creature",
+	"sorceress_medea": "Sorceress Medea Erzmagierin mit astraler Dunkelmagie",
+	"skeleton_reaper": "Skeleton Reaper Untoter Seelenernter mit Knochensense",
+	"mutant_titan": "Mutant Titan kolossaler Koloss mit Giftschlag",
 }
-const DUMMY := "Albion der Silberwyrm mit Sturmstrahl"
+# A fighter without a kit yet (generic prompts fall back to the ninja, who has one).
+const DUMMY := "Echo das Hologramm mit Phasentausch"
 const KIT_MOVES := ["jab", "ftilt", "utilt", "dtilt", "fsmash", "usmash", "dsmash", "dash_attack",
 	"nair", "fair", "bair", "uair", "dair", "uspecial", "dspecial"]
 
@@ -87,6 +95,12 @@ func run() -> void:
 	test_blizzard()
 	test_arrow_rain()
 	test_reap()
+	test_bramble()
+	test_root_snare()
+	test_stampede()
+	test_hex()
+	test_bone_prison()
+	test_toxic_cloud()
 	test_ai_plays_every_kit()
 	finish("kits")
 
@@ -183,7 +197,7 @@ func test_unique_signatures_and_finishers() -> void:
 		fin_names[fin.name] = true
 		codes[str(fin.code)] = true
 		check(fin.get("variant", "") != "", "%s has its own finisher %s (%s)" % [fam, fin.name, Combat.code_text(fin.code)])
-	check(mechs.size() == PROMPTS.size(), "packages 1-5 have %d different, exclusive signature mechanics" % mechs.size())
+	check(mechs.size() == PROMPTS.size(), "packages 1-6 have %d different, exclusive signature mechanics" % mechs.size())
 	check(fin_names.size() == PROMPTS.size() and codes.size() == PROMPTS.size(), "finisher names and codes are all different")
 
 func test_finisher_codes() -> void:
@@ -805,6 +819,95 @@ func test_reap() -> void:
 	ticks(m, 40)
 	check(m.fighters[1].damage_percent > 0.0, "the scythe sweep reaches 2.8 m")
 	check(m.fighters[0].damage_percent < 60.0, "the harvest heals Nyx (%.1f %% left of 60)" % m.fighters[0].damage_percent)
+
+func test_bramble() -> void:
+	var m = duel("thorn_witch", DUMMY, 2.2)
+	m.queue_attack(0, true)
+	ticks(m, 20)
+	var bushes := 0
+	for pr in m.projectiles:
+		if pr.owner == 0 and bool(pr.spec.get("bush", false)): bushes += 1
+	check(bushes == 3, "a hedge of three thorn bushes grows ahead (%d)" % bushes)
+	var hits := 0
+	for n in range(150):
+		place(m.fighters[1], m.fighters[0].x + 2.2, -1)
+		m.tick(idle_commands())
+		for e in m.events: if e.type == "hit" and e.actor == 0: hits += 1
+	check(hits >= 3, "standing in the thorns hurts again and again (%d hits)" % hits)
+
+func test_root_snare() -> void:
+	var m = duel("treant", DUMMY, 5.0)
+	m.queue_attack(0, true)
+	var first := -1
+	var frozen := false
+	for n in range(90):
+		place(m.fighters[1], m.fighters[0].x + 5.0, -1)
+		m.tick(idle_commands())
+		for e in m.events:
+			if e.type == "hit" and e.actor == 0 and first < 0: first = n
+			if e.type == "freeze_hit" and e.actor == 0: frozen = true
+	check(first > 30 and frozen, "the roots break out under the opponent 5 m away after a warning and hold them (tick %d)" % first)
+
+func test_stampede() -> void:
+	var m = duel("mossback", DUMMY, 5.0)
+	var x0: float = m.fighters[0].x
+	m.queue_attack(0, true)
+	var ev: Array = []
+	ticks(m, 70, ev)
+	check(m.fighters[0].x > x0 + 4.0, "the stampede carries Mossback far forward (%.1f m)" % (m.fighters[0].x - x0))
+	check(m.fighters[1].damage_percent > 0.0, "the stampede tramples the opponent 5 m away")
+	var m2 = duel("mossback", DUMMY, 5.0)
+	m2.queue_attack(0, true)
+	ticks(m2, 30)
+	check(m2.fighters[0].state == "Attack" and float(m2.fighters[0].armor_timer) > 0.0, "Mossback is armored while he charges (%.2f s)" % m2.fighters[0].armor_timer)
+
+func test_hex() -> void:
+	var m = duel("sorceress_medea", DUMMY, 4.0)
+	m.queue_attack(0, true)
+	var ev: Array = []
+	ticks(m, 90, ev)
+	check(has_event(ev, "hexed") and float(m.fighters[1].get("hex_t", 0.0)) > 2.0, "the homing curse orb hexes the opponent (%.1f s)" % float(m.fighters[1].get("hex_t", 0.0)))
+	var gain := {}
+	for cursed in [false, true]:
+		var m2 = duel("ninja", DUMMY, 1.2)
+		if cursed:
+			m2.fighters[1]["hex_t"] = 5.0
+			m2.fighters[1]["hex_mult"] = 1.3
+		m2.queue_attack(0, false)
+		ticks(m2, 20)
+		gain[cursed] = float(m2.fighters[1].damage_percent)
+	check(gain[true] > gain[false] * 1.2, "a hexed opponent takes more damage (%.1f vs %.1f)" % [gain[true], gain[false]])
+
+func test_bone_prison() -> void:
+	var m = duel("skeleton_reaper", DUMMY, 4.0)
+	m.queue_attack(0, true)
+	ticks(m, 25)
+	var cage_x := 0.0
+	var caged := false
+	for pr in m.projectiles:
+		if pr.owner == 0 and pr.spec.has("cage"):
+			caged = true
+			cage_x = pr.x
+	check(caged, "a bone cage closes around the opponent 4 m away")
+	var ev: Array = []
+	for n in range(130):
+		m.tick([cmd(), cmd({"move": 1.0})])
+		ev.append_array(m.events)
+		if n == 40: check(absf(m.fighters[1].x - cage_x) <= 0.85, "the caged opponent cannot walk out (%.2f m from the cage)" % absf(m.fighters[1].x - cage_x))
+	var burst := false
+	for e in ev: if e.type == "blast" and e.actor == 0: burst = true
+	check(burst and m.fighters[1].damage_percent > 0.0, "the cage bursts and hurts the prisoner")
+
+func test_toxic_cloud() -> void:
+	var m = duel("mutant_titan", DUMMY, 1.4)
+	m.queue_attack(0, true)
+	var hits := 0
+	for n in range(200):
+		if n == 100: place(m.fighters[0], -3.0, 1)
+		place(m.fighters[1], m.fighters[0].x + 1.4, -1)
+		m.tick(idle_commands())
+		for e in m.events: if e.type == "hit" and e.actor == 0: hits += 1
+	check(hits >= 5, "the poison cloud follows the mutant and eats at whoever stays close (%d hits)" % hits)
 
 func test_ai_plays_every_kit() -> void:
 	for fam in PROMPTS:

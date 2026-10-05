@@ -4,6 +4,22 @@ Format: neueste Einträge oben. Jeder Schritt nennt Spieler-Wirkung und technisc
 
 ## [Unreleased]
 
+### Schritt 13 – Kämpfer-Paket 6: Natur, Magie & Ungeheuer (2026-10-05)
+
+Sieben weitere Kämpfer mit eigenem Kit – jetzt 43 von 49.
+
+| Kämpfer | Archetyp | Signatur (neue Mechanik) | Finisher |
+|---|---|---|---|
+| Albion | Drachenzoner (3 Luftsprünge) | Sturmstrahl · ↓Spezial Sturmschuppen (wirft Geschosse zurück) | SILBERGEWITTER → → ↑ Spezial |
+| Thorn Witch | Fallenstellerin | **Dornenhecke**: drei Dornbüsche wachsen vor ihr und brennen 4 s lang jeden, der darin steht | ROSENGRAB ↓ ← ↓ Spezial |
+| Treant | Schwergewicht (Rüstung) | **Wurzelfessel**: nach kurzer Warnung brechen Wurzeln unter dem Gegner hervor und halten ihn fest | URWALD ↓ ↓ → Schlag |
+| Mossback | Bestie | **Stampede**: langer gepanzerter Ansturm, der sein Tempo hält und alles niederrennt | BERGRUTSCH → → ↓ Schlag |
+| Medea | Fluchwirkerin | **Astralfluch**: langsame, zielsuchende Kugel – Verfluchte nehmen 5 s lang 30 % mehr Schaden · →Tilt Sternensplitter | STERNENBANN ↑ ↓ ↑ Spezial |
+| Flayer | Kontrolle | **Knochenkerker**: ein Knochenkäfig schließt sich um den Gegner, hält ihn fest und platzt | KNOCHENTHRON ← ← ↓ Schlag |
+| Mutant | Koloss (Supertank) | **Giftwolke**: folgt ihm 4 s und zehrt an jedem in der Nähe | TOXISCHER KOLOSS ↓ ↓ ↓ Schlag |
+
+Neue Projektilformen Wurzeln und Knochenkäfig; die Wolke nimmt die Farbe der Signatur an. `tests/render_kits.gd` blendet den Live-Startbildschirm aus (er lag über den Kampfbildern) und nimmt mehrere Kämpfer per `--only=a,b,c`. Testgegner in `test_kits` ist jetzt Echo, weil Albion ein Kit hat.
+
 ### Schritt 12 – Kämpfer-Pakete 4 und 5 (2026-10-05)
 
 Vierzehn weitere Kämpfer spielen sich jetzt eigenständig: eigene Werte und Physik, eigenes Moveset (15 Angriffe mit Bildfolgen), eine Signatur-Mechanik, die es nur bei ihnen gibt, und ein eigener Finisher-Film. Damit haben 36 von 49 Kämpfern ein eigenes Kit.

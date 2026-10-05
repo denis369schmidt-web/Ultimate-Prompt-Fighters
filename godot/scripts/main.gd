@@ -826,6 +826,18 @@ func update_projectiles() -> void:
             node.rotation.y += get_process_delta_time() * 0.8
         elif shape == "flame_wall":
             node.scale = Vector3(1.0 + sin(Time.get_ticks_msec() * 0.02) * 0.06, 1.0 + sin(Time.get_ticks_msec() * 0.013) * 0.08, 1.0)
+        elif shape == "roots":
+            # Roots wait underground, then break out once.
+            var sprung: bool = float(pr.get("age", 0.0)) >= float(spec.get("delay", 0.0))
+            node.visible = sprung
+            if sprung and not node.has_meta("sprung"):
+                node.set_meta("sprung", true)
+                erupt_pillar(Vector3(pr.x, pr.y - 0.5, 0.2), col, false)
+                shock_ring(Vector3(pr.x, pr.y - 0.45, 0.3), col, 1.4)
+            elif not sprung and randf() < 0.3:
+                spark_burst(Vector3(pr.x + randf_range(-0.5, 0.5), pr.y - 0.45, 0.3), col.darkened(0.3), 2, 1.5, 0.05)
+        elif shape == "bone_cage":
+            node.scale = Vector3.ONE * clampf(float(pr.get("age", 0.0)) * 6.0, 0.2, 1.0)
         elif shape == "cloud":
             # Hail falls from the snow cloud.
             if randf() < 0.35:
@@ -1881,6 +1893,29 @@ func signature_effect(index: int, mech: String, color: Color) -> void:
             _fade_free(_beam(center + Vector3(fx * 0.2, 1.0, 0), center + Vector3(fx * 3.2, -0.6, 0), color, 0.35), 0.3)
             spark_burst(center + Vector3(fx * 1.6, 0, 0), color, 30, 6.0, 0.1)
             sound("slash")
+        "bramble":
+            for k in range(3):
+                erupt_pillar(Vector3(f.x + fx * (1.2 + k), f.y, 0.3), color, false)
+            announce("DORNENHECKE!", color, 0.3)
+            sound("slash")
+        "root_snare":
+            spark_burst(center, color, 14, 3.0, 0.08)
+            sound("block")
+        "stampede":
+            announce("STAMPEDE!", color, 0.3)
+            shock_ring(Vector3(f.x, f.y + 0.1, 0.3), color, 2.0)
+            camera_shake = 0.4
+            sound("hit")
+        "hex":
+            spark_burst(center + Vector3(fx * 0.6, 0, 0), color, 20, 3.0, 0.1)
+            sound("electric")
+        "bone_prison":
+            announce("KNOCHENKERKER!", color, 0.35)
+            sound("block")
+        "toxic_cloud":
+            announce("GIFTWOLKE!", color, 0.3)
+            spark_burst(center, color, 40, 5.0, 0.14)
+            sound("lava")
         "flame_wall":
             shock_ring(Vector3(f.x + fx * 1.5, f.y + 0.1, 0.3), color, 2.0)
             spark_burst(Vector3(f.x + fx * 1.5, f.y + 0.5, 0.3), color, 40, 6.0, 0.1)
@@ -3272,6 +3307,186 @@ func _finisher_variant(variant: String, winner: int, loser: int, center: Vector3
                 await _wait(0.06)
             lv.visible = false
             spark_burst(Vector3(wf.x, wf.y + 1.2, 0.35), Color("a855f7"), 60, 5.0, 0.1)
+            wf.pose = "Victory"
+            await _wait(0.6)
+            return true
+        "albion":
+            # Silver thunderstorm: the wyrm rises into the clouds, the storm answers his roar.
+            wf.pose = "Rise"
+            _tween_dict(wf, "y", floor_y + 4.5, 0.5)
+            announce("SILBERGEWITTER", Color("e0f2fe"), 0.45)
+            flash_screen(Color(0.05, 0.07, 0.12), 0.6)
+            await _wait(0.55)
+            wf.pose = "Roar"
+            sound("electric")
+            for k in range(6):
+                var bx3: float = float(lf.x) + randf_range(-0.8, 0.8)
+                _fade_free(_beam(Vector3(bx3 + randf_range(-1.0, 1.0), floor_y + 12.0, 0.3), Vector3(bx3, floor_y, 0.3), Color("e0f2fe"), 0.25), 0.25)
+                flash_screen(Color("e0f2fe"), 0.25)
+                lf.pose = "HitReact"
+                camera_shake = 0.6 + k * 0.15
+                sound("electric")
+                await _wait(0.12)
+            wf.pose = "Beam"
+            _fade_free(_beam(Vector3(wf.x + side * 0.8, wf.y + 1.3, 0.35), center, Color("bae6fd"), 0.9), 0.6)
+            await _wait(0.3)
+            if gore_on:
+                blood_spray(center, Vector3(0, 1, 0), 60, 8.0)
+                screen_blood(0.4)
+            lv.visible = false
+            spark_burst(center, Color("e0f2fe"), 120, 11.0, 0.12)
+            _tween_dict(wf, "y", floor_y, 0.4)
+            await _wait(0.5)
+            wf.pose = "Victory"
+            await _wait(0.3)
+            return true
+        "thorn_witch":
+            # Rose grave: thorns grow around the opponent, a rose blooms on top.
+            wf.pose = "Summon"
+            announce("ROSENGRAB", Color("4ade80"), 0.45)
+            sound("slash")
+            for k in range(8):
+                erupt_pillar(Vector3(lf.x + (k - 3.5) * 0.25, floor_y, 0.3), Color("4ade80"), false)
+                lf.pose = "HitReact"
+                if gore_on and k % 2 == 0: blood_spray(center, Vector3(randf_range(-1, 1), 0.5, 0), 12, 4.0)
+                await _wait(0.08)
+            lf.pose = "Dazed"
+            await _wait(0.4)
+            camera_shake = 0.8
+            if gore_on:
+                blood_pool(lf.x, floor_y, 1.8)
+                screen_blood(0.3)
+            lv.visible = false
+            spark_burst(center, Color("4ade80"), 70, 5.0, 0.12)
+            spark_burst(Vector3(lf.x, floor_y + 2.4, 0.35), Color("f43f5e"), 40, 2.5, 0.14)
+            wf.pose = "Idle"
+            await _wait(0.7)
+            return true
+        "treant":
+            # Primeval forest: the ancient tree plants its feet, roots seize the opponent and a whole forest grows over them.
+            wf.pose = "Slam"
+            announce("URWALD", Color("65a30d"), 0.45)
+            camera_shake = 0.8
+            sound("hit")
+            shock_ring(Vector3(wf.x, floor_y + 0.1, 0.3), Color("65a30d"), 4.0)
+            await _wait(0.3)
+            lf.pose = "Dazed"
+            for k in range(10):
+                erupt_pillar(Vector3(lf.x + randf_range(-1.5, 1.5), floor_y, 0.3), Color("4d7c0f"), false)
+                sound("block")
+                await _wait(0.07)
+            _tween_dict(lf, "y", floor_y - 2.5, 0.8)
+            await _wait(0.8)
+            if gore_on: blood_pool(lf.x, floor_y, 2.0)
+            lv.visible = false
+            spark_burst(Vector3(lf.x, floor_y + 1.0, 0.35), Color("84cc16"), 90, 6.0, 0.14)
+            wf.pose = "Roar"
+            await _wait(0.6)
+            return true
+        "mossback":
+            # Rockslide: the beast charges three times, the last ram buries the opponent under rubble.
+            announce("BERGRUTSCH", Color("84cc16"), 0.45)
+            for k in range(3):
+                wf.pose = "Dash"
+                wf.x = lf.x - side * 4.0 if k % 2 == 0 else lf.x + side * 4.0
+                wf.facing = int(side) if k % 2 == 0 else -int(side)
+                _tween_dict(wf, "x", lf.x + (side * 3.0 if k % 2 == 0 else -side * 3.0), 0.22)
+                await _wait(0.12)
+                lf.pose = "HitReact"
+                camera_shake = 0.5 + k * 0.3
+                sound("hit")
+                spark_burst(center, Color("a8a29e"), 30, 6.0, 0.1)
+                if gore_on: blood_spray(center, Vector3(side, 0.5, 0), 20, 6.0)
+                await _wait(0.2)
+            flash_screen(Color("d6d3d1"), 0.6)
+            for k in range(8):
+                erupt_pillar(Vector3(lf.x + (k - 3.5) * 0.35, floor_y, 0.3), Color("78716c"), false)
+            camera_shake = 1.5
+            if gore_on:
+                blood_pool(lf.x, floor_y, 2.2)
+                screen_blood(0.3)
+            lv.visible = false
+            spark_burst(center, Color("a8a29e"), 100, 9.0, 0.14)
+            wf.pose = "Roar"
+            await _wait(0.6)
+            return true
+        "sorceress_medea":
+            # Star spell: the opponent is lifted into a constellation and goes out like a star.
+            wf.pose = "Summon"
+            announce("STERNENBANN", Color("c084fc"), 0.45)
+            flash_screen(Color(0.03, 0.0, 0.08), 0.8)
+            lf.pose = "Dazed"
+            _tween_dict(lf, "y", floor_y + 2.5, 0.8)
+            for k in range(7):
+                var sa: float = TAU * k / 7.0
+                var sp1 := Vector3(lf.x + cos(sa) * 2.0, floor_y + 3.6 + sin(sa) * 1.6, 0.3)
+                var sa2: float = TAU * (k + 2) / 7.0
+                var sp2 := Vector3(lf.x + cos(sa2) * 2.0, floor_y + 3.6 + sin(sa2) * 1.6, 0.3)
+                spark_burst(sp1, Color("e9d5ff"), 8, 1.0, 0.1)
+                _fade_free(_beam(sp1, sp2, Color("c084fc"), 0.04), 1.2)
+                sound("electric")
+                await _wait(0.1)
+            await _wait(0.3)
+            flash_screen(Color("f5f3ff"), 0.9)
+            camera_shake = 1.0
+            if gore_on:
+                blood_spray(Vector3(lf.x, floor_y + 3.6, 0.35), Vector3(0, -1, 0), 50, 5.0)
+                screen_blood(0.3)
+            lv.visible = false
+            spark_burst(Vector3(lf.x, floor_y + 3.6, 0.35), Color("c084fc"), 120, 8.0, 0.12)
+            wf.pose = "Victory"
+            await _wait(0.6)
+            return true
+        "skeleton_reaper":
+            # Bone throne: bones rise from the floor, lock the opponent into a throne and the scythe falls.
+            wf.pose = "Summon"
+            announce("KNOCHENTHRON", Color("a78bfa"), 0.45)
+            sound("block")
+            for k in range(6):
+                erupt_pillar(Vector3(lf.x + (k - 2.5) * 0.35, floor_y, 0.3), Color("e7e5e4"), true)
+                await _wait(0.07)
+            lf.pose = "Dazed"
+            await _wait(0.3)
+            wf.x = lf.x - side * 1.3
+            wf.pose = "Spin"
+            _fade_free(_beam(center + Vector3(-side * 1.6, 1.6, 0.1), center + Vector3(side * 1.4, -1.2, 0.1), Color("a78bfa"), 0.3), 0.4)
+            sound("slash")
+            flash_screen(Color("ede9fe"), 0.5)
+            camera_shake = 1.1
+            if gore_on:
+                blood_spray(center, Vector3(side, 0.5, 0), 60, 7.0)
+                blood_pool(lf.x, floor_y, 2.0)
+                screen_blood(0.3)
+            lv.visible = false
+            spark_burst(center, Color("e7e5e4"), 90, 7.0, 0.12)
+            wf.pose = "Idle"
+            await _wait(0.7)
+            return true
+        "mutant_titan":
+            # Toxic colossus: he grabs the opponent, poisons the air and smashes them into the ground.
+            wf.pose = "Roar"
+            announce("TOXISCHER KOLOSS", Color("84cc16"), 0.45)
+            sound("lava")
+            for k in range(3):
+                shock_ring(Vector3(wf.x, floor_y + 1.2, 0.3), Color("84cc16"), 2.0 + k * 1.5)
+                spark_burst(Vector3(wf.x, floor_y + 1.4, 0.35), Color("a3e635"), 30, 4.0, 0.14)
+                await _wait(0.15)
+            wf.x = lf.x - side * 0.9
+            lf.pose = "HitReact"
+            _tween_dict(lf, "y", floor_y + 3.0, 0.3)
+            await _wait(0.35)
+            wf.pose = "Slam"
+            _tween_dict(lf, "y", floor_y, 0.1)
+            await _wait(0.1)
+            flash_screen(Color("bef264"), 0.6)
+            camera_shake = 1.6
+            shock_ring(Vector3(lf.x, floor_y + 0.1, 0.3), Color("84cc16"), 6.0)
+            if gore_on:
+                blood_spray(center, Vector3(0, 1, 0), 70, 8.0)
+                blood_pool(lf.x, floor_y, 2.4)
+                screen_blood(0.4)
+            lv.visible = false
+            spark_burst(center, Color("84cc16"), 110, 10.0, 0.14)
             wf.pose = "Victory"
             await _wait(0.6)
             return true
@@ -5935,6 +6150,10 @@ func _physics_process(delta: float) -> void:
             elif event.type == "eagle_leave":
                 var lf2: Dictionary = sim.fighters[event.actor]
                 spark_burst(Vector3(lf2.x, lf2.y + 0.4, 0.3), Color(0.08, 0.02, 0.02), 30, 5.0, 0.08)
+            elif event.type == "hexed":
+                var hx: Dictionary = sim.fighters[event.target]
+                spark_burst(Vector3(hx.x, hx.y + 1.8, 0.35), Color("c084fc"), 24, 3.0, 0.1)
+                show_status("VERFLUCHT – +30 %% SCHADEN", 1.0)
             elif event.type == "soul_weigh":
                 var wt: Dictionary = sim.fighters[event.target]
                 spark_burst(Vector3(wt.x, wt.y + 1.2, 0.35), Color("c9a227"), 20, 4.0, 0.08)

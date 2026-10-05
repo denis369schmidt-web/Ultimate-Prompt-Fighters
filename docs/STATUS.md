@@ -6,15 +6,14 @@
 
 - **49 Kämpfer** (+ Fusionskammer), **19 Bosse**, 23 Arenen (Shop), bis zu 4 Spieler, Xbox-Pad und Touch, Android-Export.
 - **Kämpfer-Individualisierung** (`scripts/fighter_kits.gd`, `signatures.gd`, `combat.gd _sig_activate`, `main.gd _finisher_variant`):
-  **36 von 49 Kämpfern** mit eigenem Kit (Pakete 1–5 und Arbër). Offen: Paket 6 (Albion, Thorn Witch, Treant, Mossback,
-  Medea, Flayer, Mutant) und Paket 7 (SWAT-Agent, Vlad, Vanguard, Nekra, Grimbolt, Echo, Kettenwart).
+  **43 von 49 Kämpfern** mit eigenem Kit (Pakete 1–6 und Arbër). Offen: Paket 7 (SWAT-Agent, Vlad, Vanguard, Nekra, Grimbolt, Echo, Kettenwart).
   Neue Finisher-Codes haben vier Eingaben (alle 32 Drei-Tasten-Codes sind vergeben).
 - **Modi**: Versus, Team 2v2/3v1, Bosskampf und Boss-Rush, Storykampagnen „Göttliche Prüfung“ und Saga „Der Riss zwischen den Welten“,
   Legenden (50 handgeschriebene, je 4 Kapitel), Abenteuer, Tages-Herausforderung, Wochen-Events, Mutatoren.
 - **Fortschritt und Shop** eingebunden (Münzen, Truhen, Liga, Ruhmespfad, Meisterschaft, Skins, Waffen, Arenen).
 - **Audio**: Musik, SFX, Ansager, Ambience, Story-Stimmen (Lizenzen in `docs/AUDIO_LICENSES.md`).
-- Tests: 17 Suiten, 1289/1289 grün (Details in `docs/TEST_REPORT.md`).
-- Offen: Pakete 6–7, Sichtprüfung der Finisher-Filme von Paket 4/5, Balance-Läufe, Shop-Hintergründe noch KI-Bilder,
+- Tests: 17 Suiten, 1343/1343 grün (Details in `docs/TEST_REPORT.md`).
+- Offen: Paket 7 (danach braucht `test_kits` einen neuen Testgegner ohne Kit), Finisher-Standbilder zeitlich besser treffen, Balance-Läufe, Shop-Hintergründe noch KI-Bilder,
   FPS-Benchmark auf integrierter GPU.
 
 Die folgenden Abschnitte beschreiben den älteren Stand vom 2026-09-25.

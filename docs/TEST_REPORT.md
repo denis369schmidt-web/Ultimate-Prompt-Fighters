@@ -12,7 +12,7 @@ Befehl je Suite: `godot --headless --path godot -s tests/test_<suite>.gd`, Ergeb
 | divina | 55 | 0 |
 | fun | 24 | 0 |
 | game | 42 | 0 |
-| kits | 320 | 0 |
+| kits | 374 | 0 |
 | legends | 19 | 0 |
 | mechanics | 36 | 0 |
 | progression | 26 | 0 |
@@ -23,9 +23,9 @@ Befehl je Suite: `godot --headless --path godot -s tests/test_<suite>.gd`, Ergeb
 | store | 27 | 0 |
 | story | 41 | 0 |
 | touch | 30 | 0 |
-| **Summe** | **1289** | **0** |
+| **Summe** | **1343** | **0** |
 
-Stand nach Schritt 12 (Kämpfer-Pakete 4 und 5). `test_kits` prüft jetzt 36 Kits: Profile, Physik, vollständige Movesets, exklusive Signaturen, eindeutige Finisher-Codes (auch vierstellige) und jede neue Mechanik auf dem echten Kampfkern – Feueratem (Mehrfachtreffer, Schweben), Wiedergeburt (Heilung, Abklingzeit), Seelenwaage (Schaden wächst mit Prozenten), Kriegshorn (Wurf, Rüstung), kreisendes Fuchsfeuer (Kontakt, Schleudern), Raketensalve (zielsuchend, Explosion), Schneesturm (folgt, Hagel, Einfrieren), Pfeilregen (7 Pfeile), Seelenernte (Sog, Lebensraub); KI trifft mit jedem Kit.
+Stand nach Schritt 13 (Kämpfer-Pakete 4–6). `test_kits` prüft jetzt 43 Kits: Profile, Physik, vollständige Movesets, exklusive Signaturen, eindeutige Finisher-Codes (auch vierstellige) und jede neue Mechanik auf dem echten Kampfkern – Feueratem (Mehrfachtreffer, Schweben), Wiedergeburt (Heilung, Abklingzeit), Seelenwaage (Schaden wächst mit Prozenten), Kriegshorn (Wurf, Rüstung), kreisendes Fuchsfeuer (Kontakt, Schleudern), Raketensalve (zielsuchend, Explosion), Schneesturm (folgt, Hagel, Einfrieren), Pfeilregen (7 Pfeile), Seelenernte (Sog, Lebensraub), Dornenhecke, Wurzelfessel (Vorwarnung, Festhalten), Stampede (Tempo, Rüstung), Astralfluch (+Schaden), Knochenkerker (Festhalten, Platzen), Giftwolke (folgt); KI trifft mit jedem Kit. Sichtprüfung: `tests/render_kits.gd` für alle 21 Kämpfer der Pakete 4–6.
 
 ## Früherer Lauf (2026-09-30)
 
