@@ -60,6 +60,13 @@ extends RefCounted
 ##   hex         – slow homing curse orb: a cursed opponent takes more damage for a few seconds
 ##   bone_prison – a bone cage closes around the opponent, holds them inside and bursts
 ##   toxic_cloud – poison cloud that follows its owner and eats at everyone close by
+##   flashbang   – thrown stun grenade: bursts on landing or after its fuse, everyone in the blast is stunned
+##   orbital_strike – marks the opponent's spot; after a warning a beam from orbit hits the whole column
+##   bat_form    – turns into a bat swarm: flies forward untouchable, the bats bite all around and heal
+##   revenant    – raises a skeleton servant that walks to the nearest opponent and strikes again and again
+##   time_bomb   – sticky bomb: clings to whoever it hits (or lies ticking on the floor) and blows up
+##   phase_swap  – glitch shot: on hit Echo and the target swap places, Echo glitches out of reach for a moment
+##   chain_leash – soul chain: drags the opponent in and keeps them on a short chain for a few seconds
 
 const SIGS := {
 	"ninja": {"mech": "mark", "shape": "kunai", "color": Color("49def4"), "speed": 20.0, "life": 0.5, "size": 0.35, "push": 0.1, "mark": true, "dmg": 0.45},
@@ -99,21 +106,21 @@ const SIGS := {
 	"celestial_fox": {"mech": "fox_orbit", "shape": "foxfire", "color": Color("38bdf8"), "count": 3, "radius": 1.3, "spin": 4.0, "life": 5.0, "size": 0.35, "rehit": 0.5, "speed": 12.0, "homing": 6.0, "dmg": 0.45},
 	"mossback": {"mech": "stampede", "color": Color("84cc16"), "speed": 8.5, "time": 0.9, "dmg": 1.0, "windup": 0.25},
 	"steel_knight": {"mech": "bulwark", "color": Color("e2e8f0"), "time": 0.75, "dmg": 1.2},
-	"vanguard_soldier": {"mech": "projectile", "shape": "grenade", "color": Color("fbbf24"), "speed": 8.0, "life": 1.6, "size": 0.4, "gravity": 12.0, "rise": 6.0, "explode": 2.4, "dmg": 1.0},
+	"vanguard_soldier": {"mech": "orbital_strike", "shape": "strike_marker", "color": Color("fbbf24"), "delay": 1.0, "life": 1.3, "size": 0.9, "height": 9.0, "push": 1.0, "angle": 82.0, "dmg": 1.4, "windup": 0.25},
 	"sorceress_medea": {"mech": "hex", "shape": "orb", "color": Color("c084fc"), "speed": 6.0, "life": 2.4, "size": 0.5, "homing": 7.0, "hex": 5.0, "hex_mult": 1.3, "dmg": 0.6, "windup": 0.25},
 	"skeleton_reaper": {"mech": "bone_prison", "shape": "bone_cage", "color": Color("a78bfa"), "life": 1.8, "size": 0.9, "explode": 1.5, "push": 0.9, "angle": 70.0, "dmg": 1.2, "windup": 0.3},
 	"mutant_titan": {"mech": "toxic_cloud", "shape": "cloud", "color": Color("84cc16"), "life": 4.0, "size": 1.7, "rehit": 0.5, "push": 0.1, "angle": 60.0, "dmg": 0.22, "windup": 0.2},
-	"swat_specops": {"mech": "projectile", "shape": "bullet", "color": Color("fb923c"), "speed": 26.0, "life": 0.45, "size": 0.3, "count": 3, "spread": 0.12, "dmg": 0.35},
+	"swat_specops": {"mech": "flashbang", "shape": "grenade", "color": Color("fb923c"), "speed": 6.0, "rise": 5.0, "gravity": 14.0, "life": 1.6, "size": 0.35, "fuse": 0.01, "explode": 2.6, "freeze": 1.0, "flash": true, "push": 0.4, "angle": 60.0, "dmg": 0.5, "windup": 0.18},
 	"samurai_dreyar": {"mech": "iai", "color": Color("99f6e4"), "time": 0.9, "range": 3.8, "dmg": 1.5, "windup": 0.08},
 	"pirate_captain": {"mech": "board", "shape": "hook", "color": Color("d6d3d1"), "speed": 18.0, "life": 0.45, "size": 0.5, "push": 0.05, "yank": true, "dmg": 0.5},
-	"vampire_lord": {"mech": "projectile", "shape": "bat", "color": Color("dc2626"), "speed": 9.0, "life": 1.6, "size": 0.45, "count": 3, "homing": 7.0, "lifesteal": 0.5, "dmg": 0.4},
+	"vampire_lord": {"mech": "bat_form", "color": Color("dc2626"), "time": 1.0, "speed": 7.5, "radius": 1.3, "lifesteal": 0.4, "dmg": 1.0, "windup": 0.15},
 	"wizard_sorcerer": {"mech": "meteor", "color": Color("ff7a1a"), "size": 0.9, "explode": 2.2, "dmg": 1.2},
 	"warrok_brute": {"mech": "leap_slam", "color": Color("f97316"), "rise": 11.5, "radius": 6.0, "dmg": 1.1, "windup": 0.18},
 	# ── the five new fighters ──
-	"nekra": {"mech": "eruption", "color": Color("e7e5e4"), "shape": "bone", "count": 5, "speed": 11.0, "dmg": 0.6},
-	"grimbolt": {"mech": "mine", "color": Color("f59e0b"), "shape": "bomb", "fuse": 1.6, "explode": 3.0, "dmg": 1.3},
-	"echo": {"mech": "projectile", "shape": "glitch", "color": Color("5eead4"), "speed": 15.0, "life": 0.7, "size": 0.6, "swap": true, "dmg": 0.6},
-	"kettenwart": {"mech": "whirl", "color": Color("78716c"), "radius": 3.6, "time": 0.5, "pull": 18.0, "dmg": 0.7},
+	"nekra": {"mech": "revenant", "shape": "skeleton", "color": Color("e7e5e4"), "life": 5.0, "size": 0.55, "walk": 3.0, "rehit": 0.8, "push": 0.45, "angle": 45.0, "dmg": 0.35, "windup": 0.3},
+	"grimbolt": {"mech": "time_bomb", "shape": "bomb", "color": Color("f59e0b"), "speed": 8.0, "rise": 5.0, "gravity": 14.0, "life": 2.6, "size": 0.4, "sticky": true, "stick_fuse": 1.4, "fuse": 0.01, "explode": 2.4, "push": 0.95, "angle": 65.0, "dmg": 1.3, "windup": 0.2},
+	"echo": {"mech": "phase_swap", "shape": "glitch", "color": Color("5eead4"), "speed": 15.0, "life": 0.7, "size": 0.6, "swap": true, "dmg": 0.6},
+	"kettenwart": {"mech": "chain_leash", "shape": "hook", "color": Color("78716c"), "speed": 17.0, "life": 0.55, "size": 0.5, "pull": true, "leash": 3.0, "leash_len": 2.5, "dmg": 0.6},
 	"don_valente": {"mech": "turret", "color": Color("facc15"), "dmg": 0.35},
 }
 
@@ -131,6 +138,7 @@ const MECH_POSE := {
 	"soul_weigh": "Cast", "war_horn": "Roar", "fox_orbit": "Summon", "fox_release": "Cast", "missile_salvo": "Cast",
 	"blizzard": "Summon", "arrow_rain": "Cast", "reap": "Spin",
 	"bramble": "Slam", "root_snare": "Slam", "stampede": "Dash", "hex": "Cast", "bone_prison": "Summon", "toxic_cloud": "Roar",
+	"flashbang": "Cast", "orbital_strike": "Summon", "bat_form": "Dash", "revenant": "Summon", "time_bomb": "Cast", "phase_swap": "Cast", "chain_leash": "Cast",
 }
 
 static func for_family(family: String) -> Dictionary:

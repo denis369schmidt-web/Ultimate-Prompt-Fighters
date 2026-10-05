@@ -826,6 +826,20 @@ func update_projectiles() -> void:
             node.rotation.y += get_process_delta_time() * 0.8
         elif shape == "flame_wall":
             node.scale = Vector3(1.0 + sin(Time.get_ticks_msec() * 0.02) * 0.06, 1.0 + sin(Time.get_ticks_msec() * 0.013) * 0.08, 1.0)
+        elif shape == "strike_marker":
+            # The orbital beam falls once the warning is over.
+            var fired: bool = float(pr.get("age", 0.0)) >= float(spec.get("delay", 0.0))
+            node.scale = Vector3(1.0 + sin(Time.get_ticks_msec() * 0.03) * 0.1, 1.0, 1.0)
+            if fired and not node.has_meta("fired"):
+                node.set_meta("fired", true)
+                _fade_free(_beam(Vector3(pr.x, pr.y + 14.0, 0.3), Vector3(pr.x, pr.y, 0.3), col, 1.4), 0.5)
+                shock_ring(Vector3(pr.x, pr.y + 0.05, 0.3), col, 4.0)
+                spark_burst(Vector3(pr.x, pr.y + 0.4, 0.3), Color("fff7cc"), 60, 9.0, 0.12)
+                flash_screen(Color("fff7cc"), 0.4)
+                camera_shake = 1.0
+                sound("lava")
+        elif shape == "skeleton":
+            node.rotation = Vector3(0, 0 if pr.vx >= 0.0 else PI, sin(Time.get_ticks_msec() * 0.012) * 0.12)
         elif shape == "roots":
             # Roots wait underground, then break out once.
             var sprung: bool = float(pr.get("age", 0.0)) >= float(spec.get("delay", 0.0))
@@ -1916,6 +1930,28 @@ func signature_effect(index: int, mech: String, color: Color) -> void:
             announce("GIFTWOLKE!", color, 0.3)
             spark_burst(center, color, 40, 5.0, 0.14)
             sound("lava")
+        "flashbang":
+            spark_burst(center + Vector3(fx * 0.6, 0, 0), color, 10, 3.0, 0.06)
+            sound("slash")
+        "orbital_strike":
+            announce("ZIEL MARKIERT", color, 0.3)
+            sound("electric")
+        "bat_form":
+            announce("FLEDERMAUSGESTALT!", color, 0.3)
+            sound("electric")
+            for k in range(6):
+                if index >= sim.fighters.size(): return
+                var vf: Dictionary = sim.fighters[index]
+                spark_burst(Vector3(vf.x, vf.y + 1.1, 0.35), Color(0.12, 0.02, 0.04), 14, 4.0, 0.1)
+                spark_burst(Vector3(vf.x, vf.y + 1.1, 0.35), color, 6, 3.0, 0.07)
+                await get_tree().create_timer(0.16).timeout
+        "revenant":
+            erupt_pillar(Vector3(f.x + fx * 1.0, f.y, 0.3), color, true)
+            announce("ERHEBE DICH!", color, 0.3)
+            sound("block")
+        "time_bomb", "phase_swap", "chain_leash":
+            spark_burst(center + Vector3(fx * 0.6, 0, 0), color, 14, 4.0, 0.08)
+            sound("slash")
         "flame_wall":
             shock_ring(Vector3(f.x + fx * 1.5, f.y + 0.1, 0.3), color, 2.0)
             spark_burst(Vector3(f.x + fx * 1.5, f.y + 0.5, 0.3), color, 40, 6.0, 0.1)
@@ -3488,6 +3524,168 @@ func _finisher_variant(variant: String, winner: int, loser: int, center: Vector3
             lv.visible = false
             spark_burst(center, Color("84cc16"), 110, 10.0, 0.14)
             wf.pose = "Victory"
+            await _wait(0.6)
+            return true
+        "swat_specops":
+            # Breach: a flashbang, the room goes white, three shots in the light.
+            wf.pose = "Cast"
+            announce("ZUGRIFF!", Color("fb923c"), 0.4)
+            spark_burst(center, Color("fef3c7"), 20, 4.0, 0.08)
+            await _wait(0.4)
+            flash_screen(Color(1, 1, 1), 1.0)
+            sound("lava")
+            lf.pose = "Dazed"
+            await _wait(0.4)
+            wf.pose = "Attack"
+            for k in range(3):
+                _fade_free(_beam(Vector3(wf.x + side * 0.6, wf.y + 1.3, 0.35), center + Vector3(0, 0.3 - k * 0.3, 0.1), Color("fde68a"), 0.05), 0.12)
+                spark_burst(center, Color("fb923c"), 12, 5.0, 0.07)
+                lf.pose = "HitReact"
+                if gore_on: blood_spray(center, Vector3(side, 0.3, 0), 18, 6.0)
+                sound("hit")
+                await _wait(0.18)
+            camera_shake = 0.8
+            if gore_on:
+                blood_pool(lf.x, floor_y, 1.8)
+                lf.pose = "Defeat"
+            else:
+                lv.visible = false
+                spark_burst(center, Color("fb923c"), 70, 8.0, 0.1)
+            wf.pose = "Idle"
+            await _wait(0.6)
+            return true
+        "vampire_lord":
+            # Blood moon: the sky turns red, a swarm of bats lifts the opponent and drinks.
+            flash_screen(Color(0.25, 0.0, 0.02), 0.9)
+            announce("BLUTMOND", Color("dc2626"), 0.5)
+            wf.pose = "Summon"
+            await _wait(0.4)
+            lf.pose = "HitReact"
+            _tween_dict(lf, "y", floor_y + 2.0, 0.7)
+            for k in range(8):
+                spark_burst(center + Vector3(randf_range(-1.2, 1.2), randf_range(-0.6, 1.4), 0.1), Color(0.1, 0.02, 0.03), 10, 4.0, 0.1)
+                spark_burst(center, Color("dc2626"), 6, 3.0, 0.07)
+                sound("slash")
+                await _wait(0.1)
+            if gore_on:
+                blood_spray(Vector3(lf.x, floor_y + 2.5, 0.35), Vector3(0, -1, 0), 60, 5.0)
+                screen_blood(0.4)
+            for k in range(5):
+                spark_burst(Vector3(lf.x, floor_y + 2.5, 0.35).lerp(Vector3(wf.x, wf.y + 1.3, 0.35), k / 4.0), Color("dc2626"), 8, 1.0, 0.08)
+                await _wait(0.06)
+            lv.visible = false
+            spark_burst(Vector3(lf.x, floor_y + 2.5, 0.35), Color(0.1, 0.02, 0.03), 80, 7.0, 0.12)
+            wf.pose = "Victory"
+            await _wait(0.6)
+            return true
+        "vanguard_soldier":
+            # Photon strike: the target is painted, the satellite answers.
+            wf.pose = "Summon"
+            announce("PHOTONENSCHLAG", Color("fbbf24"), 0.45)
+            for k in range(3):
+                shock_ring(Vector3(lf.x, floor_y + 0.05, 0.3), Color("ef4444"), 2.5 - k * 0.7)
+                sound("electric")
+                await _wait(0.22)
+            _fade_free(_beam(Vector3(lf.x, floor_y + 16.0, 0.3), Vector3(lf.x, floor_y, 0.3), Color("fde68a"), 1.8), 0.9)
+            flash_screen(Color("fff7cc"), 1.0)
+            camera_shake = 1.8
+            lf.pose = "HitReact"
+            shock_ring(Vector3(lf.x, floor_y + 0.1, 0.3), Color("fbbf24"), 8.0)
+            sound("lava")
+            await _wait(0.3)
+            if gore_on:
+                blood_pool(lf.x, floor_y, 2.4)
+                screen_blood(0.4)
+            lv.visible = false
+            spark_burst(center, Color("fbbf24"), 120, 12.0, 0.14)
+            wf.pose = "Idle"
+            await _wait(0.6)
+            return true
+        "nekra":
+            # Bone garden: the dead rise around the opponent and pull them into the earth.
+            wf.pose = "Summon"
+            announce("KNOCHENGARTEN", Color("e7e5e4"), 0.45)
+            for k in range(8):
+                erupt_pillar(Vector3(lf.x + (k - 3.5) * 0.4, floor_y, 0.3), Color("e7e5e4"), true)
+                sound("block")
+                await _wait(0.07)
+            lf.pose = "Dazed"
+            await _wait(0.3)
+            _tween_dict(lf, "y", floor_y - 2.6, 0.9)
+            spark_burst(Vector3(lf.x, floor_y + 0.3, 0.35), Color("a8a29e"), 60, 3.0, 0.12)
+            await _wait(0.9)
+            if gore_on: blood_pool(lf.x, floor_y, 1.8)
+            lv.visible = false
+            spark_burst(Vector3(lf.x, floor_y + 1.0, 0.35), Color("c4b5fd"), 50, 4.0, 0.1)
+            wf.pose = "Idle"
+            await _wait(0.6)
+            return true
+        "grimbolt":
+            # Chain reaction: one bomb, then another, then all of them.
+            wf.pose = "Cast"
+            announce("KETTENREAKTION", Color("f59e0b"), 0.45)
+            sound("slash")
+            await _wait(0.4)
+            for k in range(6):
+                var bx4: float = float(lf.x) + randf_range(-1.4, 1.4)
+                shock_ring(Vector3(bx4, floor_y + 0.3, 0.3), Color("f59e0b"), 1.6 + k * 0.3)
+                spark_burst(Vector3(bx4, floor_y + 0.6, 0.3), Color("fb923c"), 30, 7.0, 0.1)
+                lf.pose = "HitReact"
+                camera_shake = 0.5 + k * 0.2
+                sound("lava")
+                await _wait(0.12)
+            flash_screen(Color("fde68a"), 0.8)
+            if gore_on:
+                blood_spray(center, Vector3(0, 1, 0), 70, 9.0)
+                screen_blood(0.4)
+            lv.visible = false
+            spark_burst(center, Color(0.15, 0.12, 0.1), 90, 7.0, 0.14)
+            spark_burst(center, Color("f59e0b"), 90, 12.0, 0.12)
+            wf.pose = "Victory"
+            await _wait(0.6)
+            return true
+        "echo":
+            # Memory error: the opponent glitches, flickers between places and is deleted.
+            announce("SPEICHERFEHLER", Color("5eead4"), 0.45)
+            sound("electric")
+            lf.pose = "Dazed"
+            var home: float = float(lf.x)
+            for k in range(8):
+                lf.x = home + randf_range(-1.0, 1.0)
+                lv.visible = k % 2 == 0
+                spark_burst(Vector3(lf.x, floor_y + 1.0, 0.35), Color("5eead4"), 10, 3.0, 0.06)
+                await _wait(0.08)
+            lf.x = home
+            lv.visible = true
+            flash_screen(Color("ccfbf1"), 0.6)
+            camera_shake = 0.8
+            if gore_on: blood_spray(center, Vector3(0, 0.5, 0), 30, 5.0)
+            lv.visible = false
+            for k in range(4):
+                spark_burst(center + Vector3(0, -0.8 + k * 0.5, 0), Color("5eead4"), 30, 4.0, 0.08)
+            wf.pose = "Idle"
+            await _wait(0.6)
+            return true
+        "kettenwart":
+            # Eternal custody: chains from all sides, the cell door slams shut.
+            wf.pose = "Cast"
+            announce("EWIGE VERWAHRUNG", Color("a8a29e"), 0.45)
+            for k in range(6):
+                var ca: float = TAU * k / 6.0
+                _fade_free(_beam(center + Vector3(cos(ca) * 4.0, sin(ca) * 2.5, 0.1), center, Color("a8a29e"), 0.06), 1.2)
+                sound("block")
+                await _wait(0.1)
+            lf.pose = "Dazed"
+            await _wait(0.3)
+            for k in range(5):
+                _fade_free(_beam(Vector3(lf.x - 1.0 + k * 0.5, floor_y + 3.0, 0.3), Vector3(lf.x - 1.0 + k * 0.5, floor_y, 0.3), Color("57534e"), 0.08), 1.0)
+            camera_shake = 1.0
+            sound("hit")
+            await _wait(0.4)
+            if gore_on: blood_pool(lf.x, floor_y, 1.6)
+            lv.visible = false
+            spark_burst(center, Color("78716c"), 70, 5.0, 0.12)
+            wf.pose = "Idle"
             await _wait(0.6)
             return true
         "arber":
@@ -6150,6 +6348,18 @@ func _physics_process(delta: float) -> void:
             elif event.type == "eagle_leave":
                 var lf2: Dictionary = sim.fighters[event.actor]
                 spark_burst(Vector3(lf2.x, lf2.y + 0.4, 0.3), Color(0.08, 0.02, 0.02), 30, 5.0, 0.08)
+            elif event.type == "flashbang":
+                flash_screen(Color(1, 1, 1), 0.55)
+                shock_ring(Vector3(event.x, event.y, 0.35), Color("fef3c7"), 3.0)
+            elif event.type == "bomb_stuck":
+                var bt: Dictionary = sim.fighters[event.target]
+                spark_burst(Vector3(bt.x, bt.y + 1.2, 0.35), Color("f59e0b"), 16, 3.0, 0.08)
+                show_status("ZEITBOMBE KLEBT!", 1.0)
+            elif event.type == "leashed":
+                var lt: Dictionary = sim.fighters[event.target]
+                var la: Dictionary = sim.fighters[event.actor]
+                _fade_free(_beam(Vector3(la.x, la.y + 1.1, 0.35), Vector3(lt.x, lt.y + 1.1, 0.35), Color("a8a29e"), 0.06), 0.8)
+                show_status("GEFESSELT", 1.0)
             elif event.type == "hexed":
                 var hx: Dictionary = sim.fighters[event.target]
                 spark_burst(Vector3(hx.x, hx.y + 1.8, 0.35), Color("c084fc"), 24, 3.0, 0.1)

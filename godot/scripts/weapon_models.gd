@@ -215,6 +215,24 @@ static func projectile(kind: String, color: Color) -> Node3D:
 			_ball(root, 0.22, Vector3.ZERO, core_m)
 			for side in [-1, 1]:
 				_box(root, Vector3(0.5, 0.05, 0.35), Vector3(-0.1, 0.12, side * 0.3), glow_m, Vector3(side * 25, 0, 20))
+		"skeleton":
+			var bn := _mat(Color(0.9, 0.88, 0.8), 0.0, 0.6)
+			_ball(root, 0.17, Vector3(0, 0.75, 0), bn)
+			_ball(root, 0.04, Vector3(0.06, 0.78, 0.15), glow_m)
+			_ball(root, 0.04, Vector3(-0.06, 0.78, 0.15), glow_m)
+			_cyl(root, 0.04, 0.04, 0.7, Vector3(0, 0.25, 0), bn, 6)
+			for k in range(3):
+				_box(root, Vector3(0.36 - k * 0.04, 0.035, 0.18), Vector3(0, 0.45 - k * 0.11, 0), bn)
+			_cyl(root, 0.03, 0.03, 0.55, Vector3(0.2, 0.3, 0), bn, 6, Vector3(0, 0, 20))
+			_cyl(root, 0.03, 0.03, 0.55, Vector3(-0.2, 0.3, 0), bn, 6, Vector3(0, 0, -20))
+			_cyl(root, 0.035, 0.035, 0.75, Vector3(0.1, -0.5, 0), bn, 6)
+			_cyl(root, 0.035, 0.035, 0.75, Vector3(-0.1, -0.5, 0), bn, 6)
+		"strike_marker":
+			var mk := TorusMesh.new()
+			mk.inner_radius = 0.75
+			mk.outer_radius = 0.9
+			_part(root, mk, Vector3.ZERO, glow_m)
+			_cyl(root, 0.03, 0.03, 9.0, Vector3(0, 4.5, 0), glow_m, 6)
 		"roots":
 			var rm := _mat(Color(0.36, 0.25, 0.14), 0.0, 0.85)
 			for k in range(5):

@@ -49,9 +49,18 @@ const PROMPTS := {
 	"sorceress_medea": "Sorceress Medea Erzmagierin mit astraler Dunkelmagie",
 	"skeleton_reaper": "Skeleton Reaper Untoter Seelenernter mit Knochensense",
 	"mutant_titan": "Mutant Titan kolossaler Koloss mit Giftschlag",
+	"swat_specops": "SWAT SpecOps Taktischer Agent mit Schockgranaten",
+	"vampire_lord": "Vampirfürst Vlad Gothic Lord mit Blut-Magie und Fledermaus-Schwarm",
+	"vanguard_soldier": "Vanguard Soldat mit Cyber-Rüstung und Photonenkanone",
+	"nekra": "Nekra die Seelenhirtin mit Knochengarten",
+	"grimbolt": "Grimbolt der Goblin-Tüftler mit Zeitbombe",
+	"echo": "Echo das Hologramm mit Phasentausch",
+	"kettenwart": "Kettenwart der Kerkermeister mit Seelenketten",
 }
-# A fighter without a kit yet (generic prompts fall back to the ninja, who has one).
-const DUMMY := "Echo das Hologramm mit Phasentausch"
+# Stand-in opponent: every roster fighter has a kit now (generic prompts fall back to the ninja),
+# so opponent() strips this profile of its family to get a fighter without one.
+const DUMMY := "Kahler Testkämpfer ohne Kit"
+const DUMMY_BASE := "Echo das Hologramm mit Phasentausch"
 const KIT_MOVES := ["jab", "ftilt", "utilt", "dtilt", "fsmash", "usmash", "dsmash", "dash_attack",
 	"nair", "fair", "bair", "uair", "dair", "uspecial", "dspecial"]
 
@@ -101,16 +110,30 @@ func run() -> void:
 	test_hex()
 	test_bone_prison()
 	test_toxic_cloud()
+	test_flashbang()
+	test_orbital_strike()
+	test_bat_form()
+	test_revenant()
+	test_time_bomb()
+	test_phase_swap()
+	test_chain_leash()
 	test_ai_plays_every_kit()
 	finish("kits")
 
 func duel(fam: String, other: String = DUMMY, gap: float = 3.0):
 	var m = Combat.new()
-	m.start([Prompt.interpret(PROMPTS.get(fam, fam), 0), Prompt.interpret(other, 1)], null, "manual", 3)
+	m.start([Prompt.interpret(PROMPTS.get(fam, fam), 0), opponent(other)], null, "manual", 3)
 	m.countdown = 0.0
 	place(m.fighters[0], -gap * 0.5, 1)
 	place(m.fighters[1], gap * 0.5, -1)
 	return m
+
+## Profile for a duel opponent; DUMMY is a fighter without kit or signature.
+func opponent(prompt: String) -> Dictionary:
+	if prompt != DUMMY: return Prompt.interpret(PROMPTS.get(prompt, prompt), 1)
+	var p: Dictionary = Prompt.interpret(DUMMY_BASE, 1)
+	p["family"] = "dummy"
+	return p
 
 func place(f: Dictionary, x: float, facing: int, y: float = 0.0) -> void:
 	f.x = x
@@ -143,7 +166,7 @@ func test_profiles_and_physics() -> void:
 	var ninja: Dictionary = FighterKits.physics(Prompt.interpret(PROMPTS.ninja, 0))
 	var golem: Dictionary = FighterKits.physics(Prompt.interpret(PROMPTS.golem, 0))
 	var valk: Dictionary = FighterKits.physics(Prompt.interpret(PROMPTS.valkyrie, 0))
-	var plain: Dictionary = FighterKits.physics(Prompt.interpret(DUMMY, 0))
+	var plain: Dictionary = FighterKits.physics(opponent(DUMMY))
 	check(plain == FighterKits.DEFAULT_PHYS, "fighters without a kit keep the default physics")
 	check(ninja.jump > golem.jump and ninja.gravity < golem.gravity + 1.0 and ninja.air > golem.air, "the ninja is more agile than the golem")
 	check(valk.air_jumps == 3 and golem.air_jumps == 1, "wings give Boltar a third air jump, the golem has one")
@@ -176,7 +199,7 @@ func test_movesets() -> void:
 		names[mv.jab.name] = true
 		check(mv.nspecial.has("name") and mv.uspecial.special and mv.dspecial.special, "%s: three specials" % fam)
 	check(names.size() == PROMPTS.size(), "every package-1 fighter has a different jab (%d)" % names.size())
-	var plain: Dictionary = Combat.build_moveset(Prompt.interpret(DUMMY, 0))
+	var plain: Dictionary = Combat.build_moveset(opponent(DUMMY))
 	check(plain.dtilt.name == "Fußfeger", "fighters without a kit keep the generated moveset")
 	var golem: Dictionary = Combat.build_moveset(Prompt.interpret(PROMPTS.golem, 0))
 	var ninja: Dictionary = Combat.build_moveset(Prompt.interpret(PROMPTS.ninja, 0))
@@ -197,7 +220,7 @@ func test_unique_signatures_and_finishers() -> void:
 		fin_names[fin.name] = true
 		codes[str(fin.code)] = true
 		check(fin.get("variant", "") != "", "%s has its own finisher %s (%s)" % [fam, fin.name, Combat.code_text(fin.code)])
-	check(mechs.size() == PROMPTS.size(), "packages 1-6 have %d different, exclusive signature mechanics" % mechs.size())
+	check(mechs.size() == PROMPTS.size(), "packages 1-7 have %d different, exclusive signature mechanics" % mechs.size())
 	check(fin_names.size() == PROMPTS.size() and codes.size() == PROMPTS.size(), "finisher names and codes are all different")
 
 func test_finisher_codes() -> void:
@@ -908,6 +931,107 @@ func test_toxic_cloud() -> void:
 		m.tick(idle_commands())
 		for e in m.events: if e.type == "hit" and e.actor == 0: hits += 1
 	check(hits >= 5, "the poison cloud follows the mutant and eats at whoever stays close (%d hits)" % hits)
+
+func test_flashbang() -> void:
+	var m = duel("swat_specops", DUMMY, 3.5)
+	m.queue_attack(0, true)
+	var ev: Array = []
+	for n in range(100):
+		place(m.fighters[1], m.fighters[0].x + 3.5, -1)
+		m.tick(idle_commands())
+		ev.append_array(m.events)
+	var stunned := false
+	for e in ev: if e.type == "freeze_hit" and e.actor == 0: stunned = true
+	check(has_event(ev, "flashbang") and stunned, "the flashbang bursts and stuns the opponent 3.5 m away")
+
+func test_orbital_strike() -> void:
+	var m = duel("vanguard_soldier", DUMMY, 5.0)
+	m.queue_attack(0, true)
+	var first := -1
+	for n in range(120):
+		place(m.fighters[1], m.fighters[0].x + 5.0, -1)
+		m.tick(idle_commands())
+		for e in m.events: if e.type == "hit" and e.actor == 0 and first < 0: first = n
+	check(first > 60 and m.fighters[1].damage_percent > 0.0, "the orbital beam strikes the marked spot after its warning (tick %d)" % first)
+	var m2 = duel("vanguard_soldier", DUMMY, 5.0)
+	m2.queue_attack(0, true)
+	for n in range(120):
+		place(m2.fighters[1], m2.fighters[0].x + (5.0 if n < 25 else 8.0), -1)
+		m2.tick(idle_commands())
+	check(m2.fighters[1].damage_percent == 0.0, "stepping out of the marked spot dodges the beam")
+
+func test_bat_form() -> void:
+	var m = duel("vampire_lord", DUMMY, 2.0)
+	m.fighters[0].damage_percent = 50.0
+	var x0: float = m.fighters[0].x
+	m.queue_attack(0, true)
+	var ghost := false
+	for n in range(70):
+		m.tick(idle_commands())
+		if float(m.fighters[0].intangible) > 0.3: ghost = true
+	check(ghost and m.fighters[0].x > x0 + 2.5, "as a bat swarm Vlad flies forward untouchable (%.1f m)" % (m.fighters[0].x - x0))
+	check(m.fighters[1].damage_percent > 0.0 and m.fighters[0].damage_percent < 50.0, "the bats bite and heal him (%.1f %% left of 50)" % m.fighters[0].damage_percent)
+
+func test_revenant() -> void:
+	var m = duel("nekra", DUMMY, 4.5)
+	m.queue_attack(0, true)
+	ticks(m, 25)
+	var servant = null
+	for pr in m.projectiles:
+		if pr.owner == 0 and bool(pr.spec.get("minion", false)): servant = pr
+	check(servant != null, "Nekra raises a skeleton servant")
+	var sx: float = servant.x if servant != null else 0.0
+	var hits := 0
+	for n in range(240):
+		place(m.fighters[1], m.fighters[0].x + 4.5, -1)
+		m.tick(idle_commands())
+		for e in m.events: if e.type == "hit" and e.actor == 0: hits += 1
+	check(hits >= 3, "the servant walks over and strikes again and again (%d hits)" % hits)
+	check(servant != null and absf(m.fighters[1].x - servant.x) < absf(m.fighters[1].x - sx) or hits >= 3, "the servant walked toward the opponent")
+
+func test_time_bomb() -> void:
+	var m = duel("grimbolt", DUMMY, 2.0)
+	m.queue_attack(0, true)
+	var ev: Array = []
+	var stuck_at := -1
+	for n in range(200):
+		if stuck_at >= 0 and n < stuck_at + 40: m.tick([cmd(), cmd({"move": 1.0})])
+		else: m.tick(idle_commands())
+		for e in m.events:
+			if e.type == "bomb_stuck" and stuck_at < 0: stuck_at = n
+		ev.append_array(m.events)
+	check(stuck_at >= 0, "the bomb sticks to the opponent")
+	check(has_event(ev, "blast") and m.fighters[1].damage_percent > 0.0, "running away does not help: the bomb rides along and blows up")
+	var m2 = duel("grimbolt", DUMMY, 9.0)
+	m2.queue_attack(0, true)
+	var ev2: Array = []
+	ticks(m2, 220, ev2)
+	check(has_event(ev2, "blast") and not has_event(ev2, "bomb_stuck"), "a bomb that hits nobody lies ticking on the floor and explodes")
+
+func test_phase_swap() -> void:
+	var m = duel("echo", DUMMY, 3.0)
+	var x0: float = m.fighters[0].x
+	m.queue_attack(0, true)
+	var swapped := -1
+	var ghost := false
+	for n in range(60):
+		m.tick(idle_commands())
+		for e in m.events: if e.type == "swap" and swapped < 0: swapped = n
+		if swapped >= 0 and float(m.fighters[0].intangible) > 0.2: ghost = true
+	check(swapped >= 0 and m.fighters[0].x > x0 + 2.0, "the glitch shot swaps Echo with the opponent")
+	check(ghost, "after the swap Echo glitches out of reach for a moment")
+
+func test_chain_leash() -> void:
+	var m = duel("kettenwart", DUMMY, 3.0)
+	m.queue_attack(0, true)
+	var ev: Array = []
+	ticks(m, 40, ev)
+	check(has_event(ev, "leashed"), "the soul chain binds the opponent")
+	var far := 0.0
+	for n in range(90):
+		m.tick([cmd(), cmd({"move": 1.0})])
+		far = maxf(far, absf(m.fighters[1].x - m.fighters[0].x))
+	check(far <= 2.5 + 0.35, "on the chain the opponent cannot run away (%.2f m)" % far)
 
 func test_ai_plays_every_kit() -> void:
 	for fam in PROMPTS:

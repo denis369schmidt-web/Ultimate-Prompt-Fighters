@@ -4,6 +4,22 @@ Format: neueste Einträge oben. Jeder Schritt nennt Spieler-Wirkung und technisc
 
 ## [Unreleased]
 
+### Schritt 14 – Kämpfer-Paket 7: Agenten, Unterwelt & Tüftler – alle 49 Kämpfer individuell (2026-10-05)
+
+Mit dem letzten Paket hat **jeder der 49 Kämpfer** ein eigenes Kit: eigene Werte und Physik, 15 eigene Angriffe, eine exklusive Signatur-Mechanik und einen eigenen Finisher-Film.
+
+| Kämpfer | Archetyp | Signatur (neue Mechanik) | Finisher |
+|---|---|---|---|
+| SWAT-Agent | Taktiker | **Blendgranate**: platzt bei Landung oder nach der Zündzeit, alle im Blitz sind kurz betäubt · →Tilt Feuerstoß | ZUGRIFF → ← → Schlag |
+| Vlad | Lebensräuber | **Fledermausgestalt**: fliegt 1 s unberührbar vorwärts, die Fledermäuse beißen rundum und heilen ihn | BLUTMOND ← ↑ ← Spezial |
+| Vanguard | Artillerie | **Orbitalschlag**: markiert die Stelle des Gegners, nach 1 s schlägt ein Strahl aus dem Orbit ein – wer ausweicht, entkommt · →Tilt Photonenschuss | PHOTONENSCHLAG ↑ → ↑ Schlag |
+| Nekra | Beschwörerin | **Wiedergänger**: ein Knochendiener läuft zum Gegner und schlägt 5 s lang immer wieder zu | KNOCHENGARTEN ↓ ← ↑ Spezial |
+| Grimbolt | Tüftler | **Haft-Zeitbombe**: klebt am Getroffenen (Weglaufen hilft nicht) oder liegt tickend am Boden und explodiert | KETTENREAKTION ← → ↓ Schlag |
+| Echo | Trickser | **Phasentausch**: Glitch-Schuss tauscht die Plätze, danach ist Echo kurz unberührbar | SPEICHERFEHLER → ↑ ← Spezial |
+| Kettenwart | Kerkermeister | **Seelenfessel**: zieht heran und hält den Gegner 3 s an einer 2,5-m-Kette | EWIGE VERWAHRUNG ← ← → Spezial |
+
+Neue Projektilformen Knochendiener und Zielmarkierung. `test_kits` nutzt als Gegner jetzt einen Kämpfer ohne Familie (alle Roster-Kämpfer haben ein Kit; allgemeine Prompts landen beim Ninja).
+
 ### Schritt 13 – Kämpfer-Paket 6: Natur, Magie & Ungeheuer (2026-10-05)
 
 Sieben weitere Kämpfer mit eigenem Kit – jetzt 43 von 49.

@@ -802,6 +802,7 @@ func _explode_projectile(pr: Dictionary, contacts: Array) -> void:
 	var radius: float = float(pr.spec.get("explode", 0.0))
 	if pr.has("size_now"): radius *= float(pr.size_now) / float(pr.spec.get("size", 1.0)) # grown orbs blow up bigger
 	events.append({"type": "blast", "actor": pr.owner, "x": pr.x, "y": pr.y, "radius": radius, "color": pr.spec.get("color", Color.ORANGE)})
+	if bool(pr.spec.get("flash", false)): events.append({"type": "flashbang", "actor": pr.owner, "x": pr.x, "y": pr.y})
 	for ti in range(fighters.size()):
 		if ti == pr.owner or is_ally(pr.owner, ti): continue
 		var t: Dictionary = fighters[ti]
@@ -909,6 +910,17 @@ func _update_projectiles(dt: float, contacts: Array) -> void:
 		pr.y += pr.vy * dt
 		if float(d.get("wave", 0.0)) > 0.0:
 			pr.y = pr.base_y + sin(pr.age * 9.0) * 0.5 * float(d.wave)
+		if bool(d.get("minion", false)):
+			# Skeleton servant: walks to the nearest opponent.
+			var mo2: int = get_nearest_opponent(pr.owner)
+			pr.vx = 0.0
+			if mo2 >= 0 and absf(fighters[mo2].x - pr.x) > 0.5: pr.vx = signf(fighters[mo2].x - pr.x) * float(d.get("walk", 3.0))
+			pr.x = clampf(pr.x, STAGE_LEFT, STAGE_RIGHT)
+		if pr.has("stuck_to"):
+			# Time bomb: rides along on its victim.
+			var sb: Dictionary = fighters[int(pr.stuck_to)]
+			pr.x = sb.x
+			pr.y = sb.y + 1.2
 		if bool(d.get("follow_owner", false)):
 			# Poison cloud: stays around its owner.
 			var fo: Dictionary = fighters[pr.owner]
@@ -965,6 +977,9 @@ func _update_projectiles(dt: float, contacts: Array) -> void:
 				pr.ability.angle = 80.0
 				pr.ability.hitstun = 0.2
 				events.append({"type": "pool", "actor": pr.owner, "id": pr.id, "x": pr.x})
+			elif bool(d.get("sticky", false)):
+				pr.vx = 0.0 # the time bomb lies ticking on the floor
+				pr.vy = 0.0
 			elif float(d.get("explode", 0.0)) > 0.0:
 				_explode_projectile(pr, contacts)
 				gone = true
@@ -989,10 +1004,22 @@ func _update_projectiles(dt: float, contacts: Array) -> void:
 			var t: Dictionary = fighters[ti]
 			if t.state == "Defeated" or t.state == "Dazed": continue
 			var touch: bool = absf(t.x - pr.x) <= size + float(t.body_w) and pr.y >= t.y - 0.3 - size * 0.5 and pr.y <= t.y + float(t.body_h) + size * 0.5
+			if bool(d.get("column", false)):
+				# Orbital strike: the beam hits everything standing in its column.
+				touch = absf(t.x - pr.x) <= size + float(t.body_w) and t.y >= pr.y - 0.6 and t.y <= pr.y + float(d.get("height", 9.0))
 			if bool(d.get("storm", false)):
 				# The hail falls in a column below the cloud.
 				touch = absf(t.x - pr.x) <= size + float(t.body_w) and t.y <= pr.y and t.y >= pr.y - float(d.get("height", 3.2)) - 0.6
 			if touch:
+				if bool(d.get("sticky", false)) and not pr.has("stuck_to"):
+					# Time bomb: clings to whoever it hits and keeps ticking.
+					pr.stuck_to = ti
+					pr.spec = d.merged({"gravity": 0.0, "nohit": true}, true)
+					pr.life = float(d.get("stick_fuse", 1.4))
+					pr.vx = 0.0
+					pr.vy = 0.0
+					events.append({"type": "bomb_stuck", "actor": pr.owner, "target": ti})
+					break
 				if float(t.bulwark) > 0.0 and signf(pr.x - t.x) == float(t.facing) and not pr.get("pooled", false) and not pr.get("stuck", false):
 					# Shield wall: the shot flies back and now belongs to the defender.
 					pr.owner = ti
@@ -1018,6 +1045,7 @@ func _update_projectiles(dt: float, contacts: Array) -> void:
 					c["attack"] = {"ability": wab, "special": false}
 					events.append({"type": "soul_weigh", "actor": pr.owner, "target": ti, "mult": wmult})
 				if float(d.get("hex", 0.0)) > 0.0: c["hex"] = [float(d.hex), float(d.get("hex_mult", 1.3))]
+				if float(d.get("leash", 0.0)) > 0.0: c["leash"] = [float(d.leash), float(d.get("leash_len", 2.5))]
 				if bool(d.get("pull", false)): c["pull"] = true
 				if bool(d.get("mark", false)): c["mark"] = true
 				if bool(d.get("yank", false)): c["yank"] = true
@@ -1049,7 +1077,7 @@ func signature_ability(i: int, a: Dictionary, sig: Dictionary) -> Dictionary:
 	match str(sig.mech):
 		"projectile", "meteor", "mine", "turret", "clone", "eruption", "rage", "mark", "javelin", "magma", "board", "cannon", "nova", "shadow_clone", "singularity", \
 				"star_seal", "ice_decoy", "turbo", "flame_wall", "eagle", "soul_weigh", "fox_orbit", "missile_salvo", "blizzard", "arrow_rain", \
-					"bramble", "root_snare", "hex", "bone_prison", "toxic_cloud":
+					"bramble", "root_snare", "hex", "bone_prison", "toxic_cloud", "flashbang", "orbital_strike", "revenant", "time_bomb", "phase_swap", "chain_leash":
 			b["no_hit"] = true
 			b["active"] = 0.1
 		"tri_slash":
@@ -1083,6 +1111,13 @@ func signature_ability(i: int, a: Dictionary, sig: Dictionary) -> Dictionary:
 			# Stampede: a long armored charge that keeps its speed (the armor is set in _sig_activate).
 			b.merge({"x_min": -0.3, "range": 1.5, "y_min": -0.2, "y_max": 1.9, "active": float(sig.get("time", 0.9)), "angle": 48.0,
 				"rehit": 0.3, "recovery": 0.3, "sustain_vx": float(sig.get("speed", 8.5))}, true)
+		"bat_form":
+			# Bat swarm: flies forward untouchable while the bats bite all around and feed him.
+			var br: float = float(sig.get("radius", 1.3))
+			b.merge({"x_min": -br, "range": br, "y_min": -0.4, "y_max": 2.4, "all_around": true, "active": float(sig.get("time", 1.0)),
+				"rehit": 0.25, "angle": 45.0, "recovery": 0.25, "sustain_vx": float(sig.get("speed", 6.5)), "intangible": float(sig.get("time", 1.0)) * 0.8,
+				"lifesteal": float(sig.get("lifesteal", 0.6))}, true)
+			b["damage"] = dmg * 0.4
 		"sling_fist":
 			b.merge({"x_min": 0.3, "range": float(sig.get("length", 2.6)), "y_min": 0.7, "y_max": 1.7, "angle": 36.0, "active": 0.14,
 				"recovery": 0.42, "charge": true}, true)
@@ -1162,7 +1197,7 @@ func _sig_activate(i: int, ab: Dictionary) -> void:
 		return
 	events.append({"type": "signature", "actor": i, "mech": sig.mech, "color": col, "name": ab.get("name", "")})
 	match str(sig.mech):
-		"projectile", "mark", "javelin", "magma", "board", "soul_weigh", "hex":
+		"projectile", "mark", "javelin", "magma", "board", "soul_weigh", "hex", "flashbang", "time_bomb", "phase_swap", "chain_leash":
 			var count: int = int(sig.get("count", 1))
 			var spread: float = float(sig.get("spread", 0.18))
 			for k in range(count):
@@ -1389,6 +1424,25 @@ func _sig_activate(i: int, ab: Dictionary) -> void:
 				if pr.owner == i and bool(pr.spec.get("follow_owner", false)): pr.life = 0.0
 			spec.merge({"follow_owner": true, "pierce": true}, true)
 			spawn_projectile_spec(i, spec, dmg, f.x, f.y + 1.0, 0.0, 0.0)
+		"bat_form":
+			f["hover_t"] = float(sig.get("time", 1.0))
+			if not f.is_grounded: f.vy = maxf(f.vy, 1.5)
+		"orbital_strike":
+			var sx2: float = f.x + fx * 4.0
+			var sy2: float = f.y
+			var so3: int = get_nearest_opponent(i)
+			if so3 >= 0 and absf(fighters[so3].x - f.x) < 10.0:
+				sx2 = fighters[so3].x
+				sy2 = fighters[so3].y
+			spec.merge({"column": true, "pierce": true}, true)
+			spawn_projectile_spec(i, spec, dmg, sx2, sy2 + 0.1, 0.0, 0.0)
+		"revenant":
+			for pr in projectiles:
+				if pr.owner == i and bool(pr.spec.get("minion", false)): pr.life = 0.0 # one servant at a time
+			spec.merge({"minion": true, "pierce": true}, true)
+			var rvx: float = f.x + fx * 1.0
+			if f.is_grounded and absf(f.y) < 0.01: rvx = clampf(rvx, STAGE_LEFT, STAGE_RIGHT)
+			spawn_projectile_spec(i, spec, dmg, rvx, f.y + 0.9, 0.0, 0.0)
 		"flame_wall":
 			for pr in projectiles:
 				if pr.owner == i and bool(pr.spec.get("wall", false)): pr.life = 0.0
@@ -2662,6 +2716,14 @@ func tick(commands: Array, dt: float = STEP) -> void:
 		if f.rage_timer > 0: f.rage_timer = maxf(0.0, f.rage_timer - dt)
 		if f.armor_timer > 0: f.armor_timer = maxf(0.0, f.armor_timer - dt)
 		if float(f.get("hex_t", 0.0)) > 0.0: f.hex_t = maxf(0.0, float(f.hex_t) - dt)
+		if float(f.get("leash_t", 0.0)) > 0.0:
+			# Soul chain: the prisoner cannot get further away than the chain allows.
+			f.leash_t = maxf(0.0, float(f.leash_t) - dt)
+			var lw: Dictionary = fighters[int(f.leash_by)]
+			var llen: float = float(f.get("leash_len", 2.5))
+			if lw.state != "Defeated" and absf(f.x - lw.x) > llen:
+				f.x = lw.x + signf(f.x - lw.x) * llen
+				f.vx = 0.0
 		if f.bulwark > 0: f.bulwark = maxf(0.0, f.bulwark - dt)
 		if f.turbo > 0: f.turbo = maxf(0.0, f.turbo - dt)
 		if f.turbo_hit_t > 0: f.turbo_hit_t = maxf(0.0, f.turbo_hit_t - dt)
@@ -3469,6 +3531,11 @@ func tick(commands: Array, dt: float = STEP) -> void:
 				target["hex_t"] = float(contact.hex[0])
 				target["hex_mult"] = float(contact.hex[1])
 				events.append({"type": "hexed", "actor": contact.from, "target": contact.to, "duration": float(contact.hex[0])})
+			if contact.has("leash"):
+				target["leash_by"] = contact.from
+				target["leash_t"] = float(contact.leash[0])
+				target["leash_len"] = float(contact.leash[1])
+				events.append({"type": "leashed", "actor": contact.from, "target": contact.to, "duration": float(contact.leash[0])})
 			if contact.has("swap"):
 				var sx: float = attacker.x
 				var sy: float = attacker.y
@@ -3477,6 +3544,7 @@ func tick(commands: Array, dt: float = STEP) -> void:
 				target.x = sx
 				target.y = sy
 				events.append({"type": "swap", "actor": contact.from, "target": contact.to})
+				attacker.intangible = maxf(float(attacker.intangible), 0.4) # Echo glitches out of reach
 			if contact.has("lifesteal"):
 				attacker.damage_percent = maxf(0.0, attacker.damage_percent - damage * float(contact.lifesteal))
 			if contact.has("mark"):
