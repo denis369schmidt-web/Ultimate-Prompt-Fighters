@@ -59,6 +59,10 @@ func test_data(app) -> void:
 	for p in app.mk_presets:
 		if p.id != "fusionskammer" and not StoryLegends.has_legend(str(p.id)): missing.append(p.id)
 	check(missing.is_empty(), "every fighter has a legend %s" % [missing])
+	var generic: Array = []
+	for p in app.mk_presets:
+		if p.id != "fusionskammer" and StoryLegends.individual(str(p.id)) == null: generic.append(p.id)
+	check(generic.is_empty(), "every fighter has a hand-written legend (scripts/legends) %s" % [generic])
 	var ok := true
 	var lines := 0
 	var ids: Array = app.mk_presets.map(func(p): return str(p.id))

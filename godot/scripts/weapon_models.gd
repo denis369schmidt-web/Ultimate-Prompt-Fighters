@@ -215,6 +215,18 @@ static func projectile(kind: String, color: Color) -> Node3D:
 			_ball(root, 0.22, Vector3.ZERO, core_m)
 			for side in [-1, 1]:
 				_box(root, Vector3(0.5, 0.05, 0.35), Vector3(-0.1, 0.12, side * 0.3), glow_m, Vector3(side * 25, 0, 20))
+		"missile":
+			_cyl(root, 0.06, 0.06, 0.45, Vector3.ZERO, _mat(Color(0.86, 0.88, 0.9), 0.7, 0.3), 8, Vector3(0, 0, 90))
+			_cyl(root, 0.0, 0.06, 0.14, Vector3(0.29, 0, 0), glow_m, 8, Vector3(0, 0, -90))
+			_ball(root, 0.08, Vector3(-0.28, 0, 0), core_m)
+		"cloud":
+			var cm := _mat(Color(0.86, 0.92, 0.98), 0.0, 0.9, 0.3)
+			cm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			cm.albedo_color.a = 0.85
+			for k in range(5):
+				_ball(root, 0.45 + 0.12 * (k % 2), Vector3(-1.0 + k * 0.5, 0.1 * (k % 3), 0.0), cm)
+			var dark := _mat(Color(0.55, 0.62, 0.72), 0.0, 0.9, 0.0)
+			_ball(root, 0.5, Vector3(0, -0.15, 0.1), dark)
 		"arrow":
 			_cyl(root, 0.015, 0.015, 0.9, Vector3.ZERO, _mat(Color(0.5, 0.35, 0.2), 0.0, 0.7), 6, Vector3(0, 0, 90))
 			_cyl(root, 0.0, 0.05, 0.14, Vector3(0.5, 0, 0), glow_m, 6, Vector3(0, 0, -90))

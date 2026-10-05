@@ -896,7 +896,7 @@ func _update_projectiles(dt: float, contacts: Array) -> void:
 			pr.vy = v.y
 			pr.hit = [] if not pr.returning else pr.hit
 			pr.returning = true
-		if float(d.get("homing", 0.0)) > 0.0:
+		if float(d.get("homing", 0.0)) > 0.0 and pr.age >= float(d.get("home_delay", 0.0)):
 			var target_i: int = get_nearest_opponent(pr.owner)
 			if target_i >= 0:
 				var tg: Dictionary = fighters[target_i]
@@ -909,6 +909,18 @@ func _update_projectiles(dt: float, contacts: Array) -> void:
 		pr.y += pr.vy * dt
 		if float(d.get("wave", 0.0)) > 0.0:
 			pr.y = pr.base_y + sin(pr.age * 9.0) * 0.5 * float(d.wave)
+		if bool(d.get("orbit", false)) and not pr.get("released", false):
+			# Foxfire ring: circles its owner until it is hurled.
+			var oo: Dictionary = fighters[pr.owner]
+			var oang: float = float(d.get("phase", 0.0)) + pr.age * float(d.get("spin", 4.0))
+			pr.x = oo.x + cos(oang) * float(d.get("radius", 1.3))
+			pr.y = oo.y + 1.1 + sin(oang) * float(d.get("radius", 1.3)) * 0.8
+			pr.vx = 0.0
+			pr.vy = 0.0
+		if bool(d.get("storm", false)):
+			# Blizzard: the snow cloud drifts after the nearest opponent.
+			var so2: int = get_nearest_opponent(pr.owner)
+			if so2 >= 0: pr.x = move_toward(pr.x, float(fighters[so2].x), float(d.get("follow", 2.2)) * dt)
 		if float(d.get("emit", 0.0)) > 0.0:
 			# Turret: fires bolts at the nearest opponent.
 			pr.emit_t += dt
@@ -963,7 +975,11 @@ func _update_projectiles(dt: float, contacts: Array) -> void:
 			if ti == pr.owner or is_ally(pr.owner, ti) or ti in pr.hit: continue
 			var t: Dictionary = fighters[ti]
 			if t.state == "Defeated" or t.state == "Dazed": continue
-			if absf(t.x - pr.x) <= size + float(t.body_w) and pr.y >= t.y - 0.3 - size * 0.5 and pr.y <= t.y + float(t.body_h) + size * 0.5:
+			var touch: bool = absf(t.x - pr.x) <= size + float(t.body_w) and pr.y >= t.y - 0.3 - size * 0.5 and pr.y <= t.y + float(t.body_h) + size * 0.5
+			if bool(d.get("storm", false)):
+				# The hail falls in a column below the cloud.
+				touch = absf(t.x - pr.x) <= size + float(t.body_w) and t.y <= pr.y and t.y >= pr.y - float(d.get("height", 3.2)) - 0.6
+			if touch:
 				if float(t.bulwark) > 0.0 and signf(pr.x - t.x) == float(t.facing) and not pr.get("pooled", false) and not pr.get("stuck", false):
 					# Shield wall: the shot flies back and now belongs to the defender.
 					pr.owner = ti
@@ -981,6 +997,13 @@ func _update_projectiles(dt: float, contacts: Array) -> void:
 					break
 				var c := {"from": pr.owner, "to": ti, "attack": {"ability": pr.ability, "special": false}, "push_dir": signf(pr.vx) if absf(pr.vx) > 0.1 else 1.0,
 					"src_x": pr.x}
+				if float(d.get("weigh", 0.0)) > 0.0:
+					# Weighing of the heart: the heavier the opponent's damage, the harder the verdict.
+					var wab: Dictionary = pr.ability.duplicate()
+					var wmult: float = 1.0 + float(t.damage_percent) / float(d.weigh)
+					wab.damage = float(wab.damage) * wmult
+					c["attack"] = {"ability": wab, "special": false}
+					events.append({"type": "soul_weigh", "actor": pr.owner, "target": ti, "mult": wmult})
 				if bool(d.get("pull", false)): c["pull"] = true
 				if bool(d.get("mark", false)): c["mark"] = true
 				if bool(d.get("yank", false)): c["yank"] = true
@@ -1011,7 +1034,7 @@ func signature_ability(i: int, a: Dictionary, sig: Dictionary) -> Dictionary:
 	b.erase("type") # the signature replaces the old all-around type
 	match str(sig.mech):
 		"projectile", "meteor", "mine", "turret", "clone", "eruption", "rage", "mark", "javelin", "magma", "board", "cannon", "nova", "shadow_clone", "singularity", \
-				"star_seal", "ice_decoy", "turbo", "flame_wall", "eagle":
+				"star_seal", "ice_decoy", "turbo", "flame_wall", "eagle", "soul_weigh", "fox_orbit", "missile_salvo", "blizzard", "arrow_rain":
 			b["no_hit"] = true
 			b["active"] = 0.1
 		"tri_slash":
@@ -1021,6 +1044,26 @@ func signature_ability(i: int, a: Dictionary, sig: Dictionary) -> Dictionary:
 			b.merge({"x_min": -wr, "range": wr, "y_min": -0.4, "y_max": 2.2, "all_around": true, "active": float(sig.get("time", 0.55)),
 				"rehit": 0.11, "angle": 55.0, "motion_vx": float(sig.get("speed", 7.5)), "motion_vy": float(sig.get("rise", 6.5)), "recovery": 0.24}, true)
 			b["damage"] = dmg * 0.3
+		"breath":
+			# Fire breath: a long cone in front that burns many times over.
+			b.merge({"x_min": 0.4, "range": float(sig.get("length", 3.4)), "y_min": 0.3, "y_max": 1.9, "active": float(sig.get("time", 0.9)),
+				"rehit": float(sig.get("rehit", 0.12)), "angle": 28.0, "recovery": 0.26}, true)
+			b["push"] = float(a.push) * 0.45
+		"rebirth":
+			# Phoenix rebirth: a burst of fire all around (the heal happens in _sig_activate).
+			var rr: float = float(sig.get("radius", 2.4))
+			b.merge({"x_min": -rr, "range": rr, "y_min": -0.4, "y_max": 2.6, "all_around": true, "active": 0.16, "angle": 70.0,
+				"recovery": 0.3, "cooldown": float(sig.get("cooldown", 10.0))}, true)
+			b["push"] = float(a.push) * 1.4
+		"war_horn":
+			# Horn of Valhalla: a wide wave in front that throws opponents far away.
+			b.merge({"x_min": 0.2, "range": float(sig.get("length", 4.2)), "y_min": -0.3, "y_max": 2.8, "active": 0.24, "angle": 32.0,
+				"recovery": 0.3}, true)
+			b["push"] = float(a.push) * 1.9
+		"reap":
+			# Soul harvest: a wide sweep of the scythe that drags opponents in and feeds on them.
+			b.merge({"x_min": -0.2, "range": float(sig.get("length", 3.2)), "y_min": -0.3, "y_max": 2.6, "active": 0.22, "angle": 40.0,
+				"recovery": 0.28, "pull_force": float(sig.get("pull", 7.0)), "lifesteal": float(sig.get("lifesteal", 0.5))}, true)
 		"sling_fist":
 			b.merge({"x_min": 0.3, "range": float(sig.get("length", 2.6)), "y_min": 0.7, "y_max": 1.7, "angle": 36.0, "active": 0.14,
 				"recovery": 0.42, "charge": true}, true)
@@ -1100,7 +1143,7 @@ func _sig_activate(i: int, ab: Dictionary) -> void:
 		return
 	events.append({"type": "signature", "actor": i, "mech": sig.mech, "color": col, "name": ab.get("name", "")})
 	match str(sig.mech):
-		"projectile", "mark", "javelin", "magma", "board":
+		"projectile", "mark", "javelin", "magma", "board", "soul_weigh":
 			var count: int = int(sig.get("count", 1))
 			var spread: float = float(sig.get("spread", 0.18))
 			for k in range(count):
@@ -1226,6 +1269,78 @@ func _sig_activate(i: int, ab: Dictionary) -> void:
 				f.y += 0.05
 			f.air_jumps = int(f.phys.air_jumps)
 			events.append({"type": "eagle_summon", "actor": i})
+		"breath":
+			# In the air she hovers while breathing: a small lift, then her fall is held back.
+			if not f.is_grounded: f.vy = maxf(f.vy, float(sig.get("hover", 2.5)))
+			f["hover_t"] = float(sig.get("time", 0.9))
+		"rebirth":
+			var heal: float = float(sig.get("heal", 12.0)) + float(f.damage_percent) * float(sig.get("heal_share", 0.15))
+			heal = minf(heal, float(f.damage_percent))
+			f.damage_percent = float(f.damage_percent) - heal
+			events.append({"type": "rebirth_heal", "actor": i, "amount": heal})
+			f.cooldowns[1] = maxf(float(f.cooldowns[1]), float(sig.get("cooldown", 10.0)))
+		"war_horn":
+			f.armor_timer = maxf(f.armor_timer, float(sig.get("armor", 3.0)))
+			events.append({"type": "war_horn", "actor": i})
+		"fox_orbit":
+			for pr in projectiles:
+				if pr.owner == i and bool(pr.spec.get("orbit", false)): pr.life = 0.0 # one ring at a time
+			var cnt: int = int(sig.get("count", 3))
+			for k in range(cnt):
+				var orb_spec: Dictionary = spec.duplicate()
+				orb_spec.merge({"orbit": true, "phase": TAU * k / cnt, "pierce": true, "homing": 0.0, "push": 0.35, "angle": 50.0}, true)
+				spawn_projectile_spec(i, orb_spec, dmg * 0.6, f.x, f.y + 1.1, 0.0, 0.0)
+		"fox_release":
+			var fsig: Dictionary = Signatures.for_family(str(f.profile.get("family", "")))
+			for pr in projectiles:
+				if pr.owner != i or not bool(pr.spec.get("orbit", false)) or pr.get("released", false): continue
+				pr.released = true
+				pr.spec = pr.spec.duplicate()
+				pr.spec.homing = float(fsig.get("homing", 6.0))
+				pr.spec.pierce = false
+				pr.spec.rehit = 0.0
+				var nt: int = get_nearest_opponent(i)
+				var aim := Vector2(fx, 0.0)
+				if nt >= 0: aim = Vector2(fighters[nt].x - pr.x, fighters[nt].y + 1.0 - pr.y)
+				aim = aim.normalized() * float(fsig.get("speed", 12.0))
+				pr.vx = aim.x
+				pr.vy = aim.y
+				pr.life = 1.6
+				pr.hit = []
+				pr.ability = pr.ability.duplicate()
+				pr.ability.damage = float(pr.ability.damage) * 1.6
+				pr.ability.push = 0.6
+		"missile_salvo":
+			var mc: int = int(sig.get("count", 4))
+			for k in range(mc):
+				spawn_projectile_spec(i, spec, dmg, f.x - fx * 0.2, f.y + 1.9, fx * (1.0 + k * 0.9), 9.0 - k * 0.7)
+		"blizzard":
+			for pr in projectiles:
+				if pr.owner == i and bool(pr.spec.get("storm", false)): pr.life = 0.0
+			var bx: float = f.x + fx * 3.0
+			var by: float = f.y
+			var bo: int = get_nearest_opponent(i)
+			if bo >= 0 and absf(fighters[bo].x - f.x) < 9.0:
+				bx = fighters[bo].x
+				by = fighters[bo].y
+			spec.merge({"storm": true, "pierce": true}, true)
+			spawn_projectile_spec(i, spec, dmg, bx, by + float(sig.get("height", 3.2)), 0.0, 0.0)
+		"arrow_rain":
+			var ax: float = f.x + fx * 4.0
+			var ay: float = f.y
+			var ao: int = get_nearest_opponent(i)
+			if ao >= 0 and absf(fighters[ao].x - f.x) < 10.0:
+				ax = fighters[ao].x
+				ay = fighters[ao].y
+			var ac: int = int(sig.get("count", 7))
+			var aw: float = float(sig.get("width", 2.1))
+			var asp: float = float(sig.get("speed", 16.0))
+			for k in range(ac):
+				var px: float = ax - aw * 0.5 + aw * k / maxf(1.0, ac - 1)
+				var py: float = ay + float(sig.get("height", 7.0)) + (k % 3) * 1.2 + k * 0.25
+				var aspec: Dictionary = spec.duplicate()
+				aspec["life"] = (py - ay) / asp # the arrow ends where it hits the floor
+				spawn_projectile_spec(i, aspec, dmg, px, py, 0.0, -asp)
 		"flame_wall":
 			for pr in projectiles:
 				if pr.owner == i and bool(pr.spec.get("wall", false)): pr.life = 0.0
@@ -1281,6 +1396,12 @@ func _sig_followup(i: int) -> Dictionary:
 					return {"name": "Speer-Rückruf", "damage": float(sp.damage) * 0.8, "windup": 0.05, "active": 0.1, "recovery": 0.16,
 						"range": 0.0, "push": float(sp.push), "angle": 40.0, "hitstun": 0.3, "no_hit": true, "cooldown": 0.3, "special": true,
 						"sig": {"mech": "recall", "color": col}}
+		"fox_orbit":
+			for pr in projectiles:
+				if pr.owner == i and bool(pr.spec.get("orbit", false)) and not pr.get("released", false):
+					return {"name": "Fuchsfeuer-Flug", "damage": float(sp.damage), "windup": 0.05, "active": 0.1, "recovery": 0.16,
+						"range": 0.0, "push": float(sp.push), "angle": 40.0, "hitstun": 0.3, "no_hit": true, "cooldown": float(sp.cooldown), "special": true,
+						"sig": {"mech": "fox_release", "color": col}}
 		"magma":
 			if float(f.heat) >= HEAT_MAX:
 				return {"name": "KERNSCHMELZE", "damage": float(sp.damage) * 1.7, "windup": 0.3, "active": 0.2, "recovery": 0.4,
@@ -2784,6 +2905,9 @@ func tick(commands: Array, dt: float = STEP) -> void:
 		var prev_y: float = f.y
 		if not f.is_grounded and f.state != "Grabbed":
 			f.vy -= float(f.phys.gravity) * dt * (float(Signatures.for_family(str(f.profile.get("family", ""))).get("lift", 0.12)) if f.eagle > 0.0 else 1.0)
+			if float(f.get("hover_t", 0.0)) > 0.0:
+				f.hover_t = float(f.hover_t) - dt
+				f.vy = maxf(f.vy, -0.8)
 			var next_y: float = f.y + f.vy * dt
 			var landed := false
 
@@ -3096,7 +3220,9 @@ func tick(commands: Array, dt: float = STEP) -> void:
 					else in_attack_reach(f, tx, ty, attack_range, 1.5, all_around)
 				if touches:
 					hit_list.append(ti)
-					contacts.append({"from": i, "to": ti, "attack": attack})
+					var mc2 := {"from": i, "to": ti, "attack": attack}
+					if attack.ability.has("lifesteal"): mc2["lifesteal"] = float(attack.ability.lifesteal)
+					contacts.append(mc2)
 			attack["hit_list"] = hit_list
 			if not f.pending.hit_done:
 				f.pending.hit_done = true

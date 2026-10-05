@@ -1,16 +1,21 @@
 # Prompt Fighter Ultimate — Projektstatus
 
-> Letztes Update: 2026-09-30
+> Letztes Update: 2026-10-05
 
-## Aktueller Stand (2026-09-30)
+## Aktueller Stand (2026-10-05)
 
-- **49 Kämpfer** (+ Fusionskammer), 8 Arenen, Storymodus, bis zu 4 Spieler, Gamepads mit Xbox-Standardbelegung.
-- **Kämpfer-Individualisierung** nach `docs/ROSTER_INVENTORY.md`: Kit-System fertig (`scripts/fighter_kits.gd`);
-  **Paket 1 fertig** (Volt Ninja, Boltar, Magmor, Seraphine, Cardinal, Kommandant, Warrok): eigene Physik, eigenes Moveset,
-  exklusive Signatur-Mechanik, eigener Finisher-Film. **Paket 2 fertig** (Kairo, Varakh, Xylar, Ren, Amethya, Oryn, Bruno). Offen: Pakete 3–7 (35 Kämpfer).
-- **Team-Modi** 2 gegen 2 und 3 gegen 1; **Bosskampf** gegen drei Engel-Bosse (Keruvim, Ophaniel, Seraphael) mit eigenen Boss-Arenen und Boss-Rush.
-- Fortschrittssystem (`scripts/progression.gd`) getestet, aber noch nicht im Spiel eingebunden.
-- Tests: 569/569 (Suiten game, mechanics, combat_plus, roster, story, progression, kits, bosses). Details in `docs/CHANGELOG.md`.
+- **49 Kämpfer** (+ Fusionskammer), **19 Bosse**, 23 Arenen (Shop), bis zu 4 Spieler, Xbox-Pad und Touch, Android-Export.
+- **Kämpfer-Individualisierung** (`scripts/fighter_kits.gd`, `signatures.gd`, `combat.gd _sig_activate`, `main.gd _finisher_variant`):
+  **36 von 49 Kämpfern** mit eigenem Kit (Pakete 1–5 und Arbër). Offen: Paket 6 (Albion, Thorn Witch, Treant, Mossback,
+  Medea, Flayer, Mutant) und Paket 7 (SWAT-Agent, Vlad, Vanguard, Nekra, Grimbolt, Echo, Kettenwart).
+  Neue Finisher-Codes haben vier Eingaben (alle 32 Drei-Tasten-Codes sind vergeben).
+- **Modi**: Versus, Team 2v2/3v1, Bosskampf und Boss-Rush, Storykampagnen „Göttliche Prüfung“ und Saga „Der Riss zwischen den Welten“,
+  Legenden (50 handgeschriebene, je 4 Kapitel), Abenteuer, Tages-Herausforderung, Wochen-Events, Mutatoren.
+- **Fortschritt und Shop** eingebunden (Münzen, Truhen, Liga, Ruhmespfad, Meisterschaft, Skins, Waffen, Arenen).
+- **Audio**: Musik, SFX, Ansager, Ambience, Story-Stimmen (Lizenzen in `docs/AUDIO_LICENSES.md`).
+- Tests: 17 Suiten, 1289/1289 grün (Details in `docs/TEST_REPORT.md`).
+- Offen: Pakete 6–7, Sichtprüfung der Finisher-Filme von Paket 4/5, Balance-Läufe, Shop-Hintergründe noch KI-Bilder,
+  FPS-Benchmark auf integrierter GPU.
 
 Die folgenden Abschnitte beschreiben den älteren Stand vom 2026-09-25.
 

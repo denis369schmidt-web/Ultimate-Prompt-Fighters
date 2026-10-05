@@ -28,6 +28,20 @@ const PROMPTS := {
 	"glaciem": "Glaciem die Frostassassine mit Eissplitter",
 	"zip": "Zip der Blitzkurier mit Turbo-Sprint",
 	"dragon": "Mächtiger Cyber Drachenritter mit flammendem Drachen-Großschwert",
+	"pyrax": "Pyrax die Glutwyvern mit Glutsturm",
+	"phoenix": "Phoenix Empress with feather armor and phoenix glaive",
+	"wizard_sorcerer": "Erzmagier Pyrus Feuerzauberer mit Meteorschlag und Flammenstab",
+	"don_valente": "Don Valente der Unterweltpate mit Leibwächter-Geschütz",
+	"specter": "Void Specter crystal phantom warrior with void lance",
+	"shira": "Cat Girl Kitsune Warrior blade",
+	"reaper_hound": "Reaper Skeleton Hound nether beast",
+	"anubis": "Jackal God Anubis wielding dual Khopesh",
+	"brunhild": "Brunhild golden axe valkyrie giantess",
+	"celestial_fox": "Celestial Nine Tailed Fox Kyuubi spirit",
+	"cyborg_mech": "White Cyborg Android Mech warrior",
+	"frostwyrm": "Blue Wyrm Frost Dragon beast",
+	"lepora": "Lepora die Mondjägerin mit Mondbogen",
+	"nyx": "Nyx Harvester of Souls demon scythe reaper",
 }
 const DUMMY := "Albion der Silberwyrm mit Sturmstrahl"
 const KIT_MOVES := ["jab", "ftilt", "utilt", "dtilt", "fsmash", "usmash", "dsmash", "dash_attack",
@@ -64,6 +78,15 @@ func run() -> void:
 	test_turbo()
 	test_eagle()
 	test_flame_wall()
+	test_breath()
+	test_rebirth()
+	test_soul_weigh()
+	test_war_horn()
+	test_fox_orbit()
+	test_missile_salvo()
+	test_blizzard()
+	test_arrow_rain()
+	test_reap()
 	test_ai_plays_every_kit()
 	finish("kits")
 
@@ -160,7 +183,7 @@ func test_unique_signatures_and_finishers() -> void:
 		fin_names[fin.name] = true
 		codes[str(fin.code)] = true
 		check(fin.get("variant", "") != "", "%s has its own finisher %s (%s)" % [fam, fin.name, Combat.code_text(fin.code)])
-	check(mechs.size() == PROMPTS.size(), "packages 1-3 have %d different, exclusive signature mechanics" % mechs.size())
+	check(mechs.size() == PROMPTS.size(), "packages 1-5 have %d different, exclusive signature mechanics" % mechs.size())
 	check(fin_names.size() == PROMPTS.size() and codes.size() == PROMPTS.size(), "finisher names and codes are all different")
 
 func test_finisher_codes() -> void:
@@ -653,6 +676,135 @@ func test_flame_wall() -> void:
 		m.tick(idle_commands())
 		for e in m.events: if e.type == "hit" and e.actor == 0: hits += 1
 	check(hits >= 2, "standing in the wall burns repeatedly (%d)" % hits)
+
+func test_breath() -> void:
+	var m = duel("pyrax", DUMMY, 2.4)
+	m.queue_attack(0, true)
+	var hits := 0
+	for n in range(90):
+		place(m.fighters[1], m.fighters[0].x + 2.4, -1)
+		m.tick(idle_commands())
+		for e in m.events: if e.type == "hit" and e.actor == 0: hits += 1
+	check(hits >= 3, "Pyrax's fire breath burns several times over its length (%d hits at 2.4 m)" % hits)
+	var fall := {}
+	for breathe in [true, false]:
+		m = duel("pyrax", DUMMY, 4.0)
+		place(m.fighters[0], -5.0, 1) # over open floor, no platform below
+		m.fighters[0].y = 4.5
+		m.fighters[0].is_grounded = false
+		m.fighters[0].vy = -2.0
+		if breathe: m.queue_attack(0, true)
+		ticks(m, 40)
+		fall[breathe] = 4.5 - float(m.fighters[0].y)
+	check(fall[true] < fall[false] - 0.8, "breathing in the air makes Pyrax hover (fell %.2f m vs %.2f m)" % [fall[true], fall[false]])
+
+func test_rebirth() -> void:
+	var m = duel("phoenix", DUMMY, 1.6)
+	m.fighters[0].damage_percent = 100.0
+	m.queue_attack(0, true)
+	var ev: Array = []
+	ticks(m, 40, ev)
+	check(has_event(ev, "rebirth_heal") and m.fighters[0].damage_percent < 80.0, "rebirth heals Scarlet (%.0f %% left of 100)" % m.fighters[0].damage_percent)
+	check(m.fighters[1].damage_percent > 0.0, "the burst of the rebirth hits whoever stands next to her")
+	check(m.fighters[0].cooldowns[1] > 5.0, "rebirth has a long cooldown (%.1f s)" % m.fighters[0].cooldowns[1])
+	var m2 = duel("phoenix", DUMMY, 1.6)
+	m2.fighters[0].damage_percent = 5.0
+	m2.queue_attack(0, true)
+	ticks(m2, 40)
+	check(m2.fighters[0].damage_percent >= 0.0, "rebirth never heals below 0 %")
+
+func test_soul_weigh() -> void:
+	var gain := {}
+	for pct in [0.0, 120.0]:
+		var m = duel("anubis", DUMMY, 3.0)
+		m.fighters[1].damage_percent = pct
+		m.queue_attack(0, true)
+		var ev: Array = []
+		ticks(m, 40, ev)
+		gain[pct] = float(m.fighters[1].damage_percent) - pct
+		if pct > 0.0: check(has_event(ev, "soul_weigh"), "the hook weighs the opponent's heart")
+	check(gain[0.0] > 0.0 and gain[120.0] > gain[0.0] * 1.6, "the weighing hits harder the more damage the opponent has (%.1f vs %.1f)" % [gain[0.0], gain[120.0]])
+
+func test_war_horn() -> void:
+	var m = duel("brunhild", DUMMY, 2.6)
+	var x0: float = m.fighters[1].x
+	m.queue_attack(0, true)
+	var ev: Array = []
+	ticks(m, 30, ev)
+	check(has_event(ev, "war_horn") and m.fighters[1].damage_percent > 0.0, "the horn blast hits at 2.6 m")
+	check(float(m.fighters[0].armor_timer) > 1.5, "after the horn Brunhild has armor (%.1f s)" % m.fighters[0].armor_timer)
+	ticks(m, 20)
+	check(m.fighters[1].x > x0 + 1.0, "the horn throws the opponent far away (%.1f m)" % (m.fighters[1].x - x0))
+
+func test_fox_orbit() -> void:
+	var m = duel("celestial_fox", DUMMY, 1.3)
+	m.queue_attack(0, true)
+	ticks(m, 20)
+	var orbs := 0
+	for pr in m.projectiles:
+		if pr.owner == 0 and bool(pr.spec.get("orbit", false)): orbs += 1
+	check(orbs == 3, "three foxfires circle the fox (%d)" % orbs)
+	var hits := 0
+	for n in range(120):
+		place(m.fighters[1], m.fighters[0].x + 1.3, -1)
+		m.tick(idle_commands())
+		for e in m.events: if e.type == "hit" and e.actor == 0: hits += 1
+	check(hits >= 2, "the circling foxfire burns whoever stands close (%d hits)" % hits)
+	var m2 = duel("celestial_fox", DUMMY, 6.0)
+	m2.queue_attack(0, true)
+	ticks(m2, 40)
+	var ok: bool = m2.queue_attack(0, true)
+	var ev: Array = []
+	ticks(m2, 90, ev)
+	var released := false
+	for e in ev: if e.type == "signature" and e.mech == "fox_release": released = true
+	check(ok and released and m2.fighters[1].damage_percent > 0.0, "special again hurls the foxfires at the opponent 6 m away (%.0f %%)" % m2.fighters[1].damage_percent)
+
+func test_missile_salvo() -> void:
+	var m = duel("cyborg_mech", DUMMY, 5.0)
+	m.queue_attack(0, true)
+	var ev: Array = []
+	for n in range(150):
+		place(m.fighters[1], m.fighters[0].x + 5.0, -1)
+		m.tick(idle_commands())
+		ev.append_array(m.events)
+	var blasts := 0
+	for e in ev: if e.type == "blast" and e.actor == 0: blasts += 1
+	check(blasts >= 2 and m.fighters[1].damage_percent > 0.0, "the rockets home in and explode on the opponent (%d blasts)" % blasts)
+
+func test_blizzard() -> void:
+	var m = duel("frostwyrm", DUMMY, 4.0)
+	m.queue_attack(0, true)
+	var hits := 0
+	var frozen := false
+	for n in range(200):
+		place(m.fighters[1], 3.0 if n < 100 else 4.5, -1)
+		m.tick(idle_commands())
+		for e in m.events:
+			if e.type == "hit" and e.actor == 0: hits += 1
+			if e.type == "freeze_hit" and e.actor == 0: frozen = true
+	check(hits >= 3 and frozen, "the snow storm follows the opponent and hails on them (%d hits, freeze %s)" % [hits, frozen])
+
+func test_arrow_rain() -> void:
+	var m = duel("lepora", DUMMY, 5.0)
+	m.queue_attack(0, true)
+	var arrows := 0
+	var hits := 0
+	for n in range(90):
+		place(m.fighters[1], m.fighters[0].x + 5.0, -1)
+		m.tick(idle_commands())
+		for e in m.events:
+			if e.type == "projectile" and e.actor == 0: arrows += 1
+			if e.type == "hit" and e.actor == 0: hits += 1
+	check(arrows == 7 and hits >= 2, "seven arrows rain on the opponent 5 m away (%d arrows, %d hits)" % [arrows, hits])
+
+func test_reap() -> void:
+	var m = duel("nyx", DUMMY, 2.8)
+	m.fighters[0].damage_percent = 60.0
+	m.queue_attack(0, true)
+	ticks(m, 40)
+	check(m.fighters[1].damage_percent > 0.0, "the scythe sweep reaches 2.8 m")
+	check(m.fighters[0].damage_percent < 60.0, "the harvest heals Nyx (%.1f %% left of 60)" % m.fighters[0].damage_percent)
 
 func test_ai_plays_every_kit() -> void:
 	for fam in PROMPTS:

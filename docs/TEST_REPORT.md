@@ -1,6 +1,33 @@
 # Testbericht – Godot-Migration
 
-## Aktueller Lauf (2026-09-30)
+## Aktueller Lauf (2026-10-05)
+
+Befehl je Suite: `godot --headless --path godot -s tests/test_<suite>.gd`, Ergebnis in `PFU_TEST_SUMMARY`.
+
+| Suite | Bestanden | Fehlgeschlagen |
+|---|---|---|
+| adventure | 29 | 0 |
+| bosses | 132 | 0 |
+| combat_plus | 100 | 0 |
+| divina | 55 | 0 |
+| fun | 24 | 0 |
+| game | 42 | 0 |
+| kits | 320 | 0 |
+| legends | 19 | 0 |
+| mechanics | 36 | 0 |
+| progression | 26 | 0 |
+| rewards | 58 | 0 |
+| roster | 266 | 0 |
+| saga | 48 | 0 |
+| shop | 36 | 0 |
+| store | 27 | 0 |
+| story | 41 | 0 |
+| touch | 30 | 0 |
+| **Summe** | **1289** | **0** |
+
+Stand nach Schritt 12 (Kämpfer-Pakete 4 und 5). `test_kits` prüft jetzt 36 Kits: Profile, Physik, vollständige Movesets, exklusive Signaturen, eindeutige Finisher-Codes (auch vierstellige) und jede neue Mechanik auf dem echten Kampfkern – Feueratem (Mehrfachtreffer, Schweben), Wiedergeburt (Heilung, Abklingzeit), Seelenwaage (Schaden wächst mit Prozenten), Kriegshorn (Wurf, Rüstung), kreisendes Fuchsfeuer (Kontakt, Schleudern), Raketensalve (zielsuchend, Explosion), Schneesturm (folgt, Hagel, Einfrieren), Pfeilregen (7 Pfeile), Seelenernte (Sog, Lebensraub); KI trifft mit jedem Kit.
+
+## Früherer Lauf (2026-09-30)
 
 Befehl je Suite: `godot --headless --path godot -s tests/test_<suite>.gd`, Ergebnis in `PFU_TEST_SUMMARY`.
 

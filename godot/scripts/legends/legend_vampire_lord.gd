@@ -119,6 +119,11 @@ static func chapters() -> Array:
 			S._music("hope"),
 			{"t": "fx", "kind": "burst", "who": 0},
 			S._narr("Der Ballsaal zerfällt zu Rosenblättern. Lilith bleibt zurück, allein auf ihrem Thron. Zum ersten Mal hat einer ihrer Söhne Nein gesagt."),
+			S._say("lilith", "Du wirst zurückkommen, Vlad. Wenn das Mädchen tot ist. Wenn du wieder allein am Grab stehst. Dann kommst du."),
+			S._say("hero", "Vielleicht. Aber bis dahin habe ich Jahre. Mit ihr. Das sind mehr als in den letzten sechshundert zusammen."),
+			S._say("lilith", "Jahre. Was sind schon Jahre für einen wie dich?"),
+			S._say("hero", "Alles. Ich habe es nur vergessen, weil ich zu viele davon hatte."),
+			S._narr("Vlad dreht sich um und geht. Er sieht nicht zurück. Das hat er von den Sterblichen gelernt: Man sieht nach vorne, weil man nicht ewig Zeit hat."),
 		]},
 		{"id": "vampire_lord_4", "title": "Der Morgen", "arena": "bg_moon_temple", "stars": 3, "steps": [
 			S._stage([["hero", -1.5, 1], ["nacht", 2.0, -1], ["elena", -3.5, 1]]),

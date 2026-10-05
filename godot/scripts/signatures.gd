@@ -44,6 +44,16 @@ extends RefCounted
 ##                 faster in the air, the eagle dives at opponents in reach every `rehit` seconds
 ##   turbo       – turbo boots: faster running, full-speed body hits knock opponents away
 ##   flame_wall  – sword plunged into the floor: a fire wall that burns and stops enemy shots
+##   breath      – fire breath: a long cone in front that hits many times; in the air Pyrax hovers while breathing
+##   rebirth     – burst of phoenix fire all around; heals damage (more the more hurt), long cooldown
+##   soul_weigh  – jackal hook that drags the opponent in; damage grows with the opponent's percent
+##   war_horn    – horn blast: a wide wave in front that throws opponents far, then armor for a few seconds
+##   fox_orbit   – three foxfires circle the fighter and burn whoever touches them;
+##                 special again hurls them at the nearest opponent (homing)
+##   missile_salvo – rockets launch upward, then home in on the nearest opponent and explode
+##   blizzard    – snow cloud above the opponent that follows them, hail hits and freezes briefly
+##   arrow_rain  – arrows rain down in a row over the opponent's position, one after another
+##   reap        – wide scythe sweep that drags opponents in and heals by part of the damage
 
 const SIGS := {
 	"ninja": {"mech": "mark", "shape": "kunai", "color": Color("49def4"), "speed": 20.0, "life": 0.5, "size": 0.35, "push": 0.1, "mark": true, "dmg": 0.45},
@@ -67,20 +77,20 @@ const SIGS := {
 	"zip": {"mech": "turbo", "color": Color("3b82f6"), "time": 4.0, "boost": 1.6, "min_speed": 4.5, "rehit": 0.6, "dmg": 0.45},
 	"raiga": {"mech": "star_seal", "shape": "star_seal", "color": Color("00e5ff"), "life": 5.0, "size": 1.7, "rehit": 0.7, "dmg": 0.25},
 	"albion": {"mech": "beam", "color": Color("e0f2fe"), "length": 8.0, "thick": 1.4, "dmg": 1.15, "windup": 0.45},
-	"pyrax": {"mech": "projectile", "shape": "fireball", "color": Color("ff6610"), "speed": 9.0, "life": 1.4, "size": 0.6, "gravity": 9.0, "rise": 5.0, "explode": 2.0, "dmg": 1.0},
-	"anubis": {"mech": "projectile", "shape": "hook", "color": Color("c9a227"), "speed": 16.0, "life": 0.5, "size": 0.5, "pull": true, "dmg": 0.6},
-	"phoenix": {"mech": "projectile", "shape": "firebird", "color": Color("ff8a1f"), "speed": 11.0, "life": 1.2, "size": 0.7, "wave": 1.0, "pierce": true, "dmg": 0.9},
+	"pyrax": {"mech": "breath", "color": Color("ff6610"), "length": 3.4, "time": 0.9, "rehit": 0.12, "hover": 2.5, "dmg": 0.24, "windup": 0.12},
+	"anubis": {"mech": "soul_weigh", "shape": "hook", "color": Color("c9a227"), "speed": 16.0, "life": 0.5, "size": 0.5, "pull": true, "weigh": 120.0, "dmg": 0.7},
+	"phoenix": {"mech": "rebirth", "color": Color("ff8a1f"), "radius": 2.4, "heal": 12.0, "heal_share": 0.15, "cooldown": 10.0, "dmg": 1.1, "windup": 0.3},
 	"specter": {"mech": "teleport", "color": Color("9b30ff"), "dmg": 1.1},
-	"brunhild": {"mech": "eruption", "color": Color("ffd24a"), "count": 4, "speed": 7.0, "dmg": 0.8},
-	"lepora": {"mech": "projectile", "shape": "arrow", "color": Color("86efac"), "speed": 24.0, "life": 0.8, "size": 0.4, "gravity": 3.0, "pierce": true, "dmg": 0.8},
+	"brunhild": {"mech": "war_horn", "color": Color("ffd24a"), "length": 4.2, "armor": 3.0, "dmg": 0.5, "windup": 0.35},
+	"lepora": {"mech": "arrow_rain", "shape": "arrow", "color": Color("86efac"), "count": 7, "width": 2.1, "height": 7.0, "speed": 16.0, "size": 0.4, "push": 0.25, "angle": 70.0, "dmg": 0.3, "windup": 0.22},
 	"thorn_witch": {"mech": "mine", "color": Color("4ade80"), "shape": "thorns", "dmg": 1.0},
-	"nyx": {"mech": "projectile", "shape": "scythe", "color": Color("a855f7"), "speed": 13.0, "life": 1.4, "size": 0.7, "turn": 0.5, "pierce": true, "dmg": 0.8},
+	"nyx": {"mech": "reap", "color": Color("a855f7"), "length": 3.2, "pull": 7.0, "lifesteal": 0.5, "dmg": 1.0, "windup": 0.25},
 	"shira": {"mech": "barrage", "color": Color("f472b6"), "hits": 5, "range": 1.9, "dmg": 1.0},
-	"frostwyrm": {"mech": "beam", "color": Color("7dd3fc"), "length": 5.5, "thick": 1.1, "freeze": 0.8, "dmg": 0.9},
-	"cyborg_mech": {"mech": "beam", "color": Color("22d3ee"), "length": 10.0, "thick": 0.3, "dmg": 0.8, "windup": 0.2},
+	"frostwyrm": {"mech": "blizzard", "shape": "cloud", "color": Color("bae6fd"), "life": 3.2, "size": 1.1, "height": 3.2, "follow": 2.2, "rehit": 0.5, "freeze": 0.25, "push": 0.1, "angle": 80.0, "dmg": 0.3, "windup": 0.3},
+	"cyborg_mech": {"mech": "missile_salvo", "shape": "missile", "color": Color("22d3ee"), "count": 4, "speed": 11.0, "life": 2.2, "size": 0.3, "home_delay": 0.35, "homing": 5.0, "explode": 1.1, "dmg": 0.4, "windup": 0.2},
 	"reaper_hound": {"mech": "dash", "color": Color("d6d3d1"), "speed": 12.0, "multi": 2, "dmg": 1.0},
 	"treant": {"mech": "eruption", "color": Color("65a30d"), "count": 3, "speed": 6.0, "dmg": 0.9},
-	"celestial_fox": {"mech": "projectile", "shape": "foxfire", "color": Color("38bdf8"), "speed": 8.0, "life": 1.5, "size": 0.45, "count": 3, "homing": 6.0, "dmg": 0.45},
+	"celestial_fox": {"mech": "fox_orbit", "shape": "foxfire", "color": Color("38bdf8"), "count": 3, "radius": 1.3, "spin": 4.0, "life": 5.0, "size": 0.35, "rehit": 0.5, "speed": 12.0, "homing": 6.0, "dmg": 0.45},
 	"mossback": {"mech": "rage", "color": Color("84cc16"), "time": 6.0},
 	"steel_knight": {"mech": "bulwark", "color": Color("e2e8f0"), "time": 0.75, "dmg": 1.2},
 	"vanguard_soldier": {"mech": "projectile", "shape": "grenade", "color": Color("fbbf24"), "speed": 8.0, "life": 1.6, "size": 0.4, "gravity": 12.0, "rise": 6.0, "explode": 2.4, "dmg": 1.0},
@@ -111,7 +121,9 @@ const MECH_POSE := {
 	"charge_beam": "Beam", "volley": "Barrage", "nova": "Summon", "shadow_clone": "SpecialAttack", "trail_dash": "Dash",
 	"singularity": "Cast", "one_punch": "HeavyPunch",
 	"tri_slash": "Dash", "tri_slash_2": "Dash", "tri_slash_3": "Rise", "sun_wheel": "Spin", "sling_fist": "HeavyPunch",
-	"star_seal": "Slam", "ice_decoy": "Dodge", "turbo": "Dash", "flame_wall": "Slam", "eagle": "Summon",
+	"star_seal": "Slam", "ice_decoy": "Dodge", "turbo": "Dash", "flame_wall": "Slam", "eagle": "Summon", "breath": "Beam", "rebirth": "Rise",
+	"soul_weigh": "Cast", "war_horn": "Roar", "fox_orbit": "Summon", "fox_release": "Cast", "missile_salvo": "Cast",
+	"blizzard": "Summon", "arrow_rain": "Cast", "reap": "Spin",
 }
 
 static func for_family(family: String) -> Dictionary:

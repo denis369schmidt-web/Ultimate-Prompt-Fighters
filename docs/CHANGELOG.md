@@ -4,6 +4,36 @@ Format: neueste Einträge oben. Jeder Schritt nennt Spieler-Wirkung und technisc
 
 ## [Unreleased]
 
+### Schritt 12 – Kämpfer-Pakete 4 und 5 (2026-10-05)
+
+Vierzehn weitere Kämpfer spielen sich jetzt eigenständig: eigene Werte und Physik, eigenes Moveset (15 Angriffe mit Bildfolgen), eine Signatur-Mechanik, die es nur bei ihnen gibt, und ein eigener Finisher-Film. Damit haben 36 von 49 Kämpfern ein eigenes Kit.
+
+**Paket 4 – Feuer, Schatten & Unterwelt**
+
+| Kämpfer | Archetyp | Signatur | Finisher |
+|---|---|---|---|
+| Pyrax | Luftkämpferin (Flügel) | **Feueratem**: langer Flammenkegel mit vielen Treffern, in der Luft schwebt sie dabei | GLUTSTURZ ↓ ↓ Schlag |
+| Scarlet (Phoenix) | Luftkämpferin (Gleve) | **Asche zu Asche**: Feuerstoß rundum, heilt Schaden (mehr, je verletzter), lange Abklingzeit | NEUNTE ASCHE ↑ ← Schlag |
+| Pyrus | Zoner (Glaskanone) | Meteorschlag auf den Gegner · →Tilt Flammenstoß-Geschoss | STERNENFALL VON PYRUS ↑ ↓ Spezial |
+| Don Valente | Beschwörer, Schwergewicht | Leibwächter-Geschütz · Rüstung auf Smashes | DAS LETZTE ANGEBOT → ← Schlag |
+| Ravenna (Specter) | Trickserin | Phantomschritt hinter den Gegner · ↓Spezial Leerenspiegel (Blink) | KEIN SPIEGELBILD ← ↓ Schlag |
+| Shira | Rushdown | Krallensturm · ↓Spezial Katzenreflex (Konter) | NEUN LEBEN → ↑ Spezial |
+| Höllenhund | Rushdown (Vierbeiner) | Grabsprint · ↓Spezial Grabgeheul (Wut) | DER LETZTE HEIMWEG ↓ → Spezial |
+
+**Paket 5 – Götter, Bestien & Maschinen**
+
+| Kämpfer | Archetyp | Signatur (neue Mechanik) | Finisher |
+|---|---|---|---|
+| Aurum (Anubis) | Konter-Duellant | **Waage der Seelen**: Haken zieht heran, Schaden wächst mit den Prozenten des Gegners · ↓Spezial Totengericht (Konter) | WÄGUNG DES HERZENS ← ↑ Schlag |
+| Brunhild | Schwergewicht | **Walhalls Horn**: breite Druckwelle, wirft weit weg, danach 3 s Rüstung | WALHALLS RUF → ↓ Spezial |
+| Himmelsfuchs | Geisterzonerin | **Kreisendes Fuchsfeuer**: drei Flammen umkreisen sie und brennen bei Berührung; Spezial erneut schleudert sie zielsuchend | NEUN SCHWEIFE ↑ → Schlag |
+| Cyborg Mech | Artillerie | **Raketensalve**: vier Raketen steigen auf und stürzen zielsuchend auf den Gegner · →Tilt Plasmaschuss | PROTOKOLL OMEGA ↓ ↓ ↑ Spezial |
+| Frostwyrm | Bestie | **Schneesturm**: Wolke über dem Gegner folgt ihm, Hagel trifft und friert kurz ein · Frost auf Smashes | EWIGER WINTER ↓ ↑ ↓ Schlag |
+| Lepora | Schützin | **Mondpfeilregen**: sieben Pfeile fallen nacheinander auf den Gegner · →Tilt Schnellschuss | MONDFINSTERNIS ↑ ↑ → Schlag |
+| Nyx | Luftjägerin (3 Luftsprünge) | **Seelenernte**: weiter Sensenbogen mit Sog, heilt um die Hälfte des Schadens | LETZTE ERNTE ← ↓ ← Spezial |
+
+Weil die 32 Drei-Tasten-Codes aufgebraucht sind, haben neue Finisher vier Eingaben. Neue Projektilformen Rakete und Schneewolke (`weapon_models.gd`). Tests: `test_kits` prüft alle 36 Kits und jede neue Mechanik auf dem echten Kampfkern.
+
 ### Schritt 11 – Eigene Kämpfer statt Tripo-Scans, Arbër, echter Startbildschirm, Arena-Ambience (2026-10-02)
 
 **Lizenz-Bereinigung**: Die zehn Kämpfer auf Tripo-Community-Modellen fremder Urheber (Brunhild, Thorn Witch, Nyx, Shira, Frostwyrm, Cyborg Mech, Reaper Hound, Treant, Celestial Fox, Mossback) sind neu und eigenständig gebaut: Mixamo-Körper plus eigene Ausrüstung im Code (Flügelhelm und Bartaxt, Dornenkrone und Rankenpeitschen, Seelensense, Katzenohren, Eisschwanz, Mech-Panzerung mit Schulterkanone, Schädelhelm, Rindenpanzer mit Geweih, neun Fuchsschwänze mit Fuchsfeuer, Felsrücken mit Widderhörnern). Neue IDs ohne „tripo“, alte Spielstände werden umgeschrieben. Leviathan ist der prozedurale Seedrache. Alle Tripo-Dateien liegen in `_quarantine_ip/tripo/`.
@@ -15,6 +45,8 @@ Format: neueste Einträge oben. Jeder Schritt nennt Spieler-Wirkung und technisc
 **Abenteuer-Modus** (`scripts/adventure.gd`, Hauptmenü ABENTEUER): ein Kämpfer gegen endlos viele Gegner. Jede Welle härter (KI-Stufe, Schaden, Gewicht), jede 5. ein Boss (Himmel und Hölle im Wechsel), Schaden bleibt und heilt nur zu 35 %. Punkte für Wellen, Tempo, Restgesundheit, Combos und Bosse; Rekorde pro Kämpfer, bester Lauf und Bestenliste. Kurze Kinosequenzen vor Bossen, an Meilensteinen (alle 10 Wellen: Münzen und Truhe) und am Ende eines Laufs.
 
 **Legenden** (`scripts/story_legends.gd`, Story → 📜 LEGENDEN): für alle 49 Kämpfer eine eigene Hintergrundgeschichte in vier Kapiteln (Herkunft, Rivale, Abgrund, Legende) mit Kamerafahrten, Dialogen und je einem Kampf; die Kapitel öffnen sich mit den Meisterschafts-Sternen des Kämpfers. Die vollendete Legende gibt sein Relikt: 400 Münzen, eine Glückstruhe, Goldrahmen und +15 % Heilung im Abenteuer.
+
+**Alle 50 Legenden handgeschrieben** (`scripts/legends/legend_<id>.gd`): Jede Legende hat jetzt eine eigene Geschichte mit eigenem Ensemble aus echten Kämpfern statt der generischen Vorlage – je 50+ Dialog- und Erzählzeilen, eine Entscheidung im zweiten Kapitel, die bestimmt, wer im dritten Kapitel an der Seite des Helden kämpft und wie das Ende klingt, QTE-Einstiege, Boss im Abgrund und ein persönliches Relikt (z. B. Templars kalter Schwertknauf, Zips zerknitterter Umschlag, Warroks bemalter Kieselstein). Die Geschichten greifen ineinander: Pyrax ist die Tochter der Drachin, die Templar erschlug; Grimbolt sprengt Arbërs Mauer; der SWAT-Agent jagt Don Valente; Vanguard und der Agent spiegeln sich gegenseitig. Neu in dieser Runde: Templar, Pyrax, Glaciem, Xylar, Jubei, Ren, Zip, Aurum, Scarlet, Brunhild, Lepora, Shira, Frostwyrm, Treant, Himmelsfuchs, Vanguard, Medea, SWAT-Agent, Kommandant, Seraphine, Vlad, Pyrus, Warrok, Nekra, Grimbolt, Echo, Kettenwart, Don Valente. `test_legends` prüft, dass kein Kämpfer mehr auf die Vorlage zurückfällt; jede Legende einzeln mit `tests/check_legend.gd -- --fam=<id>`.
 
 **Spaß & Wiederkommen** (`scripts/fun_modes.gd`): 8 **Mutatoren** für Versus-Kämpfe, frei kombinierbar unter OPTIONEN (Mondsprung, Turbo, Glaskanonen, Schwergewichte, Riesen, Winzlinge, Sudden Death, Volle Kraft). **Tages-Herausforderung** unter EXTRAS: jeden Tag ein fester Kampf (Kämpfer, Gegner, Mutatoren, Ziel wie „in unter 60 s“, „makellos“, „allein gegen zwei“), Serie über Tage mit steigender Belohnung und Truhe am 7. Tag. **Wochen-Events** im Wechsel (Doppel-XP, Goldrausch, Mutatoren-Festival, Woche der Herausforderer, Legenden-Woche). **Herausforderer**: Nach gewonnenen Solokämpfen taucht manchmal ein Überraschungsgegner mit Mutator auf – Sieg gibt Münzen und vielleicht eine Truhe. **Willkommen zurück**: nach 3+ Tagen Pause ein Geschenk. Alles als Hinweis auf dem Startbildschirm.
 
