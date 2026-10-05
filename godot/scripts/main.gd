@@ -1598,6 +1598,10 @@ func announce(text: String, color: Color = Color("f7c844"), hold: float = 0.45) 
     if big_label == null: return
     big_label.text = text
     big_label.add_theme_color_override("font_color", color)
+    # Long names (finishers like KNOCHENGARTEN) shrink to fit the screen instead of running off its edges.
+    var font: Font = big_label.get_theme_font("font")
+    var width: float = font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 120).x + 44.0
+    big_label.add_theme_font_size_override("font_size", int(120.0 * minf(1.0, 1180.0 / maxf(1.0, width))))
     big_label.scale = Vector2.ONE * 1.8
     big_label.modulate.a = 1.0
     var tw := create_tween().set_ignore_time_scale(true)
