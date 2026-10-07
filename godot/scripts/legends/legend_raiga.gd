@@ -218,6 +218,6 @@ static func chapters() -> Array:
 			S._narr("Raiga geht los. Sie weiß nicht genau, wohin. Aber zum ersten Mal ist vorne da, wo sie hinschaut."),
 			S._pose(0, "Victory", 1.4),
 			{"t": "title", "text": "LEGENDE VOLLENDET", "sub": "Raiga · Wo vorne ist"},
-			S._narr("Relikt erhalten: Torus Magnetstein  ·  +400 Münzen  ·  Glückstruhe  ·  Goldrahmen  ·  +15 % Heilung im Abenteuer"),
+			S._narr("Relikt erhalten: Torus Magnetstein  ·  +400 Münzen  ·  Legenden-Truhe  ·  Goldrahmen  ·  +15 % Heilung im Abenteuer"),
 		]},
 	]

@@ -200,6 +200,6 @@ static func chapters() -> Array:
 			S._narr("Über dem Stadion geht die Sonne unter, grün und golden. Auf der Anzeigetafel steht: »Forschungsstation Hangar 7 – jetzt mit Besuchszeiten.«"),
 			S._pose(0, "Victory", 1.4),
 			{"t": "title", "text": "LEGENDE VOLLENDET", "sub": "Theo · Mein bestes Ergebnis"},
-			S._narr("Relikt erhalten: Die Tasse mit dem Kaffeefleck  ·  +400 Münzen  ·  Glückstruhe  ·  Goldrahmen  ·  +15 % Heilung im Abenteuer"),
+			S._narr("Relikt erhalten: Die Tasse mit dem Kaffeefleck  ·  +400 Münzen  ·  Legenden-Truhe  ·  Goldrahmen  ·  +15 % Heilung im Abenteuer"),
 		]},
 	]

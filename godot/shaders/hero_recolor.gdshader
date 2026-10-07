@@ -14,6 +14,9 @@ uniform vec3 secondary : source_color = vec3(0.1, 0.15, 0.2);
 uniform vec3 accent : source_color = vec3(1.0, 0.9, 0.5);
 uniform float recolor : hint_range(0.0, 1.0) = 0.85;
 uniform float keep_skin : hint_range(0.0, 1.0) = 1.0;
+// Optional skin color (blue or crystal skinned heroes); 0 keeps the model's own skin.
+uniform vec3 skin_tint : source_color = vec3(0.45, 0.5, 0.7);
+uniform float skin_tint_amount : hint_range(0.0, 1.0) = 0.0;
 uniform sampler2D normal_tex : hint_normal, filter_linear_mipmap_anisotropic, repeat_enable;
 uniform bool has_normal = false;
 uniform float roughness_v : hint_range(0.0, 1.0) = 0.55;
@@ -47,6 +50,7 @@ void fragment() {
 	tone = mix(tone, accent, smoothstep(0.62, 0.85, lum) * (1.0 - hsv.y));
 	vec3 recol = tone * (0.45 + lum * 1.15);
 	ALBEDO = mix(src, recol, recolor * (1.0 - skin));
+	ALBEDO = mix(ALBEDO, skin_tint * (0.35 + lum * 1.3), skin * skin_tint_amount);
 	ROUGHNESS = mix(roughness_v, 0.5, skin);
 	METALLIC = mix(metallic_v, 0.0, skin);
 	if (has_normal) {

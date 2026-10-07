@@ -1,0 +1,15 @@
+"AppBuild"
+{
+	// APPID und DEPOTID aus Steamworks eintragen (App-Admin → SteamPipe → Depots).
+	"AppID" "APPID"
+	"Desc" "Prompt Fighters Ultimate 0.9.0"
+	"ContentRoot" "..\..\builds\steam\"
+	"BuildOutput" "..\..\builds\steampipe_output\"
+	// Nach dem Upload in Steamworks → SteamPipe → Builds auf den Zweig "default" setzen.
+	// Zum Testen erst einen privaten Zweig nutzen: "SetLive" "beta"
+	"SetLive" ""
+	"Depots"
+	{
+		"DEPOTID" "depot_windows.vdf"
+	}
+}

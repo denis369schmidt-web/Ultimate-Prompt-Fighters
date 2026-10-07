@@ -238,6 +238,6 @@ static func chapters() -> Array:
 			S._say("hero", "Rot zuerst. Dann Gold, dann Grün. Und ganz am Ende, ganz schmal … ein bisschen Violett. Das bin wohl ich."),
 			S._pose(0, "Victory", 1.4),
 			{"t": "title", "text": "LEGENDE VOLLENDET", "sub": "Ravenna · Kein Spiegelbild"},
-			S._narr("Relikt erhalten: Die erloschene Grubenlaterne  ·  +400 Münzen  ·  Glückstruhe  ·  Goldrahmen  ·  +15 % Heilung im Abenteuer"),
+			S._narr("Relikt erhalten: Die erloschene Grubenlaterne  ·  +400 Münzen  ·  Legenden-Truhe  ·  Goldrahmen  ·  +15 % Heilung im Abenteuer"),
 		]},
 	]

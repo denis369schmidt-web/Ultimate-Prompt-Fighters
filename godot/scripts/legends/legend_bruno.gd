@@ -208,6 +208,6 @@ static func chapters() -> Array:
 			S._say("warrok", "Und danach ich. Revanche. Diesmal mit Hunger auf beiden Seiten."),
 			S._cam("sky", 0, 3.0),
 			{"t": "title", "text": "LEGENDE VOLLENDET", "sub": "Bruno · Hunger"},
-			S._narr("Relikt erhalten: Milas Joker  ·  +400 Münzen  ·  Glückstruhe  ·  Goldrahmen  ·  +15 % Heilung im Abenteuer"),
+			S._narr("Relikt erhalten: Milas Joker  ·  +400 Münzen  ·  Legenden-Truhe  ·  Goldrahmen  ·  +15 % Heilung im Abenteuer"),
 		]},
 	]

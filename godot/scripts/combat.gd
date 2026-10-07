@@ -23,6 +23,11 @@ const BODY_PUSH_RATE := 0.9
 
 var fighters: Array = []
 var items: Array = []
+var hazards: Array = []
+var destructibles: Array = []
+var active_arena_id: String = ""
+## Platforms of the current arena (LAYOUTS); same fields as PLATFORMS.
+var platforms: Array = PLATFORMS
 ## Flying attacks (sword beams, laser bolts, boomerangs …).
 var projectiles: Array = []
 var projectile_serial := 0
@@ -72,6 +77,10 @@ var events: Array = []
 var serial := 0
 var profiles: Array = []
 var item_spawn_timer := 8.0
+## Party rules switched on by mutators (fun_modes.gd): bomb_rain, vampire, swap, escalation, item_rain.
+var rules := {}
+var rule_timers := {}
+var bombs: Array = []
 ## Match-owned random streams, seeded from the fighters' prompts: the same match with the
 ## same inputs always plays out identically (replays, tests). The AI has its own stream so
 ## computer decisions never shift item spawns.
@@ -157,6 +166,59 @@ const PLATFORMS: Array = [
 	{"name": "plat_perch_left",  "x1": -9.2, "x2": -7.2, "y": 3.40, "width": 2.0},
 	{"name": "plat_perch_right", "x1":  7.2, "x2":  9.2, "y": 3.40, "width": 2.0},
 ]
+
+## Platform layouts per arena. Every layout keeps the same eight roles in the same order as
+## PLATFORMS (wing, mid, center, apex, perch), so items and breakables that sit on a platform
+## move with it (_seat_on_platforms). Gaps stay below one jump of the heaviest fighters (~1.1 m)
+## or one jump plus an air jump. Story and boss arenas keep "classic" (their cutscenes use it).
+const LAYOUTS := {
+	"classic": PLATFORMS,
+	# Two stacked towers at the sides, an open middle with a low step and a small crown.
+	"towers": [
+		{"name": "plat_wing_left",   "x1": -8.6, "x2": -6.0, "y": 1.30, "width": 2.6},
+		{"name": "plat_wing_right",  "x1":  6.0, "x2":  8.6, "y": 1.30, "width": 2.6},
+		{"name": "plat_mid_left",    "x1": -7.4, "x2": -5.0, "y": 2.50, "width": 2.4},
+		{"name": "plat_mid_right",   "x1":  5.0, "x2":  7.4, "y": 2.50, "width": 2.4},
+		{"name": "plat_center",      "x1": -1.6, "x2":  1.6, "y": 1.90, "width": 3.2},
+		{"name": "plat_apex",        "x1": -1.1, "x2":  1.1, "y": 3.20, "width": 2.2},
+		{"name": "plat_perch_left",  "x1": -8.8, "x2": -6.6, "y": 3.70, "width": 2.2},
+		{"name": "plat_perch_right", "x1":  6.6, "x2":  8.8, "y": 3.70, "width": 2.2},
+	],
+	# A long high bridge across the middle, stairs up from both sides.
+	"bridge": [
+		{"name": "plat_wing_left",   "x1": -8.8, "x2": -6.4, "y": 1.20, "width": 2.4},
+		{"name": "plat_wing_right",  "x1":  6.4, "x2":  8.8, "y": 1.20, "width": 2.4},
+		{"name": "plat_mid_left",    "x1": -5.6, "x2": -3.4, "y": 2.30, "width": 2.2},
+		{"name": "plat_mid_right",   "x1":  3.4, "x2":  5.6, "y": 2.30, "width": 2.2},
+		{"name": "plat_center",      "x1": -3.0, "x2":  3.0, "y": 3.40, "width": 6.0},
+		{"name": "plat_apex",        "x1": -0.8, "x2":  0.8, "y": 4.60, "width": 1.6},
+		{"name": "plat_perch_left",  "x1": -9.2, "x2": -7.6, "y": 2.40, "width": 1.6},
+		{"name": "plat_perch_right", "x1":  7.6, "x2":  9.2, "y": 2.40, "width": 1.6},
+	],
+	# Everything low and wide: fast fights close to the ground (rooftops, streets).
+	"low": [
+		{"name": "plat_wing_left",   "x1": -7.0, "x2": -4.0, "y": 1.50, "width": 3.0},
+		{"name": "plat_wing_right",  "x1":  4.0, "x2":  7.0, "y": 1.50, "width": 3.0},
+		{"name": "plat_mid_left",    "x1": -9.0, "x2": -7.2, "y": 2.60, "width": 1.8},
+		{"name": "plat_mid_right",   "x1":  7.2, "x2":  9.0, "y": 2.60, "width": 1.8},
+		{"name": "plat_center",      "x1": -1.3, "x2":  1.3, "y": 1.50, "width": 2.6},
+		{"name": "plat_apex",        "x1": -2.0, "x2":  2.0, "y": 2.70, "width": 4.0},
+		{"name": "plat_perch_left",  "x1": -5.6, "x2": -3.8, "y": 2.80, "width": 1.8},
+		{"name": "plat_perch_right", "x1":  3.8, "x2":  5.6, "y": 2.80, "width": 1.8},
+	],
+}
+## Shop arenas (backgrounds.gd) and their layout; every other arena plays "classic".
+const ARENA_LAYOUT := {
+	"bg_colosseum_dusk": "towers", "bg_arena_sun": "towers", "bg_sunset_stadium": "towers",
+	"bg_cyber_stadium": "towers", "bg_warehouse": "towers", "bg_foundry": "towers",
+	"bg_aurora_peaks": "bridge", "bg_orbital_ring": "bridge", "bg_space_hangar": "bridge",
+	"bg_frozen_works": "bridge", "bg_molten_forge": "bridge", "bg_no_mans_land": "bridge",
+	"bg_neon_skyline": "low", "bg_graffiti_alley": "low", "bg_rain_rooftop": "low",
+	"bg_storm_roof": "low", "bg_ruined_city": "low",
+}
+
+static func platforms_for(arena_id: String) -> Array:
+	return LAYOUTS.get(ARENA_LAYOUT.get(arena_id, "classic"), PLATFORMS)
 
 # Combo multiplier: 1.0 → 1.08 → 1.18 → 1.30 → 1.45
 const COMBO_MULT: Array = [1.0, 1.08, 1.18, 1.30, 1.45]
@@ -344,6 +406,13 @@ func start(a, b = null, control: String = "manual", lives_count: int = 3) -> voi
 	items.clear()
 	for def in DEFAULT_ITEMS:
 		items.append(def.duplicate(true))
+	if not active_arena_id.is_empty():
+		setup_arena_hazards(active_arena_id)
+		setup_arena_destructibles(active_arena_id)
+	else:
+		hazards.clear()
+		destructibles.clear()
+	_seat_on_platforms()
 
 	var match_seed: int = 7919
 	for p in prof_list:
@@ -371,6 +440,9 @@ func start(a, b = null, control: String = "manual", lives_count: int = 3) -> voi
 	mode = control
 	serial = 0
 	item_spawn_timer = 8.0
+	rules = {}
+	rule_timers = {}
+	bombs.clear()
 	events.clear()
 
 func restart() -> void:
@@ -620,6 +692,214 @@ func explode_item(it_idx: int) -> void:
 				"launch_impulse": impulse, "damage_percent": f.damage_percent
 			})
 
+
+func set_arena(id: String) -> void:
+	active_arena_id = id
+	platforms = platforms_for(id)
+	setup_arena_hazards(id)
+	setup_arena_destructibles(id)
+	_seat_on_platforms()
+
+## Moves resting items and breakables that stand on a classic platform onto the same platform
+## role of the current layout, keeping their relative spot on it.
+func _seat_on_platforms() -> void:
+	var things: Array = []
+	for it in items:
+		var def: Dictionary = {}
+		for d in DEFAULT_ITEMS:
+			if int(d.id) == int(it.id): def = d
+		if def.is_empty() or str(it.state) != "resting": continue
+		things.append([it, float(def.start_x), float(def.start_y), true])
+	for d in destructibles:
+		things.append([d, float(d.x), float(d.y), false])
+	for t in things:
+		var ox: float = t[1]
+		var oy: float = t[2]
+		for k in range(PLATFORMS.size()):
+			var c: Dictionary = PLATFORMS[k]
+			if ox < c.x1 - 0.1 or ox > c.x2 + 0.1 or absf(oy - c.y) > 0.3: continue
+			var p: Dictionary = platforms[k]
+			var nx: float = p.x1 + (ox - c.x1) / (c.x2 - c.x1) * (p.x2 - p.x1)
+			var ny: float = p.y + (oy - c.y)
+			var obj: Dictionary = t[0]
+			obj.x = nx
+			obj.y = ny
+			if t[3]:
+				obj.start_x = nx
+				obj.start_y = ny
+			break
+
+func setup_arena_hazards(id: String) -> void:
+	hazards.clear()
+	if id.is_empty(): return
+	var h_type := "spikes"
+	var color := Color("e2e8f0")
+	var dmg := 14.0
+	var push := 0.65
+	if id in ["volcano_sanctum", "hell_flames", "empyrean", "hell_gate", "hell_city"]:
+		h_type = "fire_vent"
+		color = Color("ff6611")
+		dmg = 17.0
+		push = 0.85
+	elif id in ["neon_metropolis"]:
+		h_type = "tesla_shock"
+		color = Color("00e5ff")
+		dmg = 13.0
+		push = 0.55
+	elif id in ["frozen_summit", "cocytus"]:
+		h_type = "ice_stalactite"
+		color = Color("7dd3fc")
+		dmg = 14.0
+		push = 0.60
+	elif id in ["mystic_grove"]:
+		h_type = "thorn_roots"
+		color = Color("4ade80")
+		dmg = 12.0
+		push = 0.50
+	elif id in ["astral_nexus"]:
+		h_type = "quantum_rift"
+		color = Color("c084fc")
+		dmg = 16.0
+		push = 0.75
+
+	hazards.append({
+		"id": 0, "type": h_type, "color": color,
+		"x": -4.2, "y": 0.0, "w": 1.2, "h": 1.6,
+		"state": "idle", "timer": 2.0, "period": 6.0, "warning_time": 1.2, "active_dur": 0.9,
+		"damage": dmg, "push": push
+	})
+	hazards.append({
+		"id": 1, "type": h_type, "color": color,
+		"x": 4.2, "y": 0.0, "w": 1.2, "h": 1.6,
+		"state": "idle", "timer": 5.0, "period": 6.0, "warning_time": 1.2, "active_dur": 0.9,
+		"damage": dmg, "push": push
+	})
+
+func setup_arena_destructibles(id: String) -> void:
+	destructibles.clear()
+	if id.is_empty(): return
+	var p_type := "pillar"
+	var c_type := "crystal"
+	var drops := ["titan", "speed", "heal", "star", "hammer", "explosive_barrel"]
+	var d1_drop: String = drops[abs(hash(id + "_d1")) % drops.size()]
+	var d2_drop: String = drops[abs(hash(id + "_d2")) % drops.size()]
+	var d3_drop: String = drops[abs(hash(id + "_d3")) % drops.size()]
+
+	destructibles.append({
+		"id": 0, "type": p_type, "name": "Antike Runensäule",
+		"x": -6.2, "y": 0.0, "w": 0.9, "h": 2.2,
+		"hp": 40.0, "max_hp": 40.0, "state": "intact", "respawn_timer": 0.0,
+		"drop": d1_drop
+	})
+	destructibles.append({
+		"id": 1, "type": c_type, "name": "Mystischer Kristallschrein",
+		"x": 6.2, "y": 0.0, "w": 0.9, "h": 2.2,
+		"hp": 40.0, "max_hp": 40.0, "state": "intact", "respawn_timer": 0.0,
+		"drop": d2_drop
+	})
+	destructibles.append({
+		"id": 2, "type": "crate_stack", "name": "Gepanzerte Vorratskiste",
+		"x": 0.0, "y": 3.65, "w": 0.8, "h": 0.8,
+		"hp": 30.0, "max_hp": 30.0, "state": "intact", "respawn_timer": 0.0,
+		"drop": d3_drop
+	})
+
+func damage_destructible(d_idx: int, dmg: float, actor_idx: int = -1) -> void:
+	if d_idx < 0 or d_idx >= destructibles.size(): return
+	var d: Dictionary = destructibles[d_idx]
+	if d.state != "intact": return
+	d.hp = maxf(0.0, d.hp - dmg)
+	events.append({"type": "destructible_hit", "id": d.id, "x": d.x, "y": d.y, "hp": d.hp, "max_hp": d.max_hp, "actor": actor_idx})
+	if d.hp <= 0.0:
+		d.state = "destroyed"
+		d.respawn_timer = 22.0
+		events.append({"type": "destructible_destroyed", "id": d.id, "kind": d.type, "x": d.x, "y": d.y, "drop": d.drop, "actor": actor_idx})
+		_spawn_destructible_drop(d)
+
+func _spawn_destructible_drop(d: Dictionary) -> void:
+	var drop_type: String = str(d.get("drop", "heal"))
+	var spec_power := ""
+	var it_name := "Schatztruhe"
+	var weight := 0.6
+	var is_exp := false
+	if drop_type == "titan":
+		spec_power = "titan"
+		it_name = "Titan-Pilz"
+	elif drop_type == "star":
+		spec_power = "invulnerable"
+		it_name = "Stern der Unsterblichkeit"
+	elif drop_type == "speed":
+		spec_power = "speed"
+		it_name = "Turbostiefel"
+	elif drop_type == "hammer":
+		spec_power = "hammer"
+		it_name = "Smash-Hammer"
+	elif drop_type == "heal":
+		spec_power = "heal"
+		it_name = "Heilherz"
+	elif drop_type == "explosive_barrel":
+		is_exp = true
+		it_name = "Explosiv-Fass"
+	var new_it := {
+		"id": items.size(), "type": drop_type if not is_exp else "explosive_barrel", "name": it_name,
+		"start_x": d.x, "start_y": d.y + 0.5, "x": d.x, "y": d.y + 0.5,
+		"vx": rng.randf_range(-1.5, 1.5), "vy": 4.0, "weight": weight,
+		"state": "free", "carrier": -1, "thrower": -1, "respawn": 0.0,
+		"damage": 25.0 if is_exp else 10.0, "push": 0.6, "angle": 45.0, "fragile": true,
+		"explosive": is_exp, "explosion_radius": 3.0 if is_exp else 0.0, "special_power": spec_power,
+		"no_respawn": true
+	}
+	items.append(new_it)
+	events.append({"type": "item_spawn", "item_id": new_it.id, "item_name": new_it.name, "x": new_it.x, "y": new_it.y})
+
+func _update_hazards(dt: float) -> void:
+	for h in hazards:
+		h.timer += dt
+		if h.state == "idle":
+			if h.timer >= h.period - h.warning_time:
+				h.state = "warning"
+				events.append({"type": "hazard_warning", "id": h.id, "kind": h.type, "x": h.x, "y": h.y, "color": h.color})
+		elif h.state == "warning":
+			if h.timer >= h.period:
+				h.state = "active"
+				h.active_timer = float(h.active_dur)
+				events.append({"type": "hazard_active", "id": h.id, "kind": h.type, "x": h.x, "y": h.y, "color": h.color})
+		if h.state == "active":
+			h.active_timer -= dt
+			for fi in range(fighters.size()):
+				var f: Dictionary = fighters[fi]
+				if f.state == "Defeated" or f.invulnerable > 0: continue
+				if absf(f.x - h.x) <= (h.w * 0.5 + 0.3) and f.y >= h.y - 0.2 and f.y <= (h.y + h.h + 0.3):
+					var dmg: float = float(h.damage) * clampf(1.0 - f.profile.stats.defense * 0.008, 0.6, 0.95)
+					f.damage_percent = clampf(f.damage_percent + dmg, 0.0, 999.0)
+					f.hp = maxf(0.0, f.hp - dmg)
+					var p_ratio: float = f.damage_percent
+					var weight: float = clampf(float(f.profile.get("weight", 1.0)), 0.85, 1.35)
+					var impulse: float = (float(h.push) * 6.0 * (1.0 + p_ratio * 0.01)) / weight
+					f.vx = (1.0 if f.x >= h.x else -1.0) * impulse * 0.4
+					f.vy = impulse * 0.9
+					f.is_grounded = false
+					f.drop_through = 0.15
+					f.stun = 0.35 + (p_ratio * 0.001)
+					f.air_control_lock = f.stun * 0.5
+					f.state = "HitStun"
+					f.pose = "HitReact"
+					f.pose_time = f.stun
+					events.append({"type": "hazard_hit", "hazard_id": h.id, "kind": h.type, "target": fi, "damage": dmg, "impulse": impulse, "x": h.x, "y": h.y})
+			if h.active_timer <= 0.0:
+				h.state = "idle"
+				h.timer = 0.0
+				events.append({"type": "hazard_reset", "id": h.id})
+
+func _update_destructibles(dt: float) -> void:
+	for d in destructibles:
+		if d.state == "destroyed":
+			d.respawn_timer -= dt
+			if d.respawn_timer <= 0.0:
+				d.state = "intact"
+				d.hp = d.max_hp
+				events.append({"type": "destructible_respawn", "id": d.id, "x": d.x, "y": d.y})
+
 func execute_throw(attacker_idx: int, throw_type: String) -> void:
 	var attacker: Dictionary = fighters[attacker_idx]
 	var target_idx: int = attacker.grab_target
@@ -636,6 +916,7 @@ func execute_throw(attacker_idx: int, throw_type: String) -> void:
 	# Halved throw impulse
 	var launch_mult: float = 1.0 + (p_ratio * 0.008) + (pow(p_ratio, 1.38) * 0.0016)
 	if attacker.titan_timer > 0.0: launch_mult *= 1.6
+	launch_mult *= vitality_mult(target)
 
 	if throw_type == "forward":
 		var base_impulse := 2.9 * launch_mult / weight
@@ -679,7 +960,7 @@ func spawn_weapon(weapon_id: String, px: float = INF, py: float = INF) -> int:
 			px = rng.randf_range(STAGE_LEFT + 1.0, STAGE_RIGHT - 1.0)
 			py = 0.15
 		else:
-			var plat: Dictionary = PLATFORMS[rng.randi() % PLATFORMS.size()]
+			var plat: Dictionary = platforms[rng.randi() % platforms.size()]
 			px = rng.randf_range(plat.x1 + 0.3, plat.x2 - 0.3)
 			py = plat.y + 0.15
 	var w: Dictionary = WEAPONS[weapon_id]
@@ -910,6 +1191,14 @@ func _update_projectiles(dt: float, contacts: Array) -> void:
 		pr.y += pr.vy * dt
 		if float(d.get("wave", 0.0)) > 0.0:
 			pr.y = pr.base_y + sin(pr.age * 9.0) * 0.5 * float(d.wave)
+		if bool(d.get("hound", false)):
+			var ho: int = get_nearest_opponent(pr.owner)
+			pr.vx = 0.0
+			if ho >= 0:
+				var hg: Dictionary = fighters[ho]
+				if absf(hg.x - pr.x) > 0.3: pr.vx = signf(hg.x - pr.x) * float(d.get("walk", 7.5))
+				pr.y = move_toward(pr.y, float(hg.y) + 0.5, 7.0 * dt)
+			pr.x = clampf(pr.x, STAGE_LEFT, STAGE_RIGHT)
 		if bool(d.get("minion", false)):
 			# Skeleton servant: walks to the nearest opponent.
 			var mo2: int = get_nearest_opponent(pr.owner)
@@ -1047,12 +1336,25 @@ func _update_projectiles(dt: float, contacts: Array) -> void:
 				if float(d.get("hex", 0.0)) > 0.0: c["hex"] = [float(d.hex), float(d.get("hex_mult", 1.3))]
 				if float(d.get("leash", 0.0)) > 0.0: c["leash"] = [float(d.leash), float(d.get("leash_len", 2.5))]
 				if bool(d.get("pull", false)): c["pull"] = true
+				if bool(d.get("lasso", false)): c["lasso"] = true
 				if bool(d.get("mark", false)): c["mark"] = true
 				if bool(d.get("yank", false)): c["yank"] = true
 				if bool(d.get("swap", false)): c["swap"] = true
 				if float(d.get("lifesteal", 0.0)) > 0.0: c["lifesteal"] = float(d.lifesteal)
 				contacts.append(c)
 				if not bool(d.get("pierce", false)): gone = true
+		if not gone and pr.life <= 0.0 and bool(d.get("anchor", false)) and pr.hit.is_empty():
+			# Chain anchor: nothing caught – the anchor bites into the air and Neris zips to it.
+			var ao2: Dictionary = fighters[pr.owner]
+			if ao2.state != "Defeated":
+				var zip_dir := Vector2(pr.x - ao2.x, pr.y - (ao2.y + 1.0))
+				if zip_dir.length() > 0.3:
+					var zv: Vector2 = zip_dir.normalized() * float(d.get("zip", 15.0))
+					ao2.vx = zv.x
+					ao2.vy = maxf(zv.y, 4.0)
+					ao2.is_grounded = false
+					ao2.air_dash_used = false
+					events.append({"type": "anchor_zip", "actor": pr.owner, "x": pr.x, "y": pr.y})
 		if not gone and pr.life <= 0.0 and float(d.get("fuse", 0.0)) > 0.0:
 			_explode_projectile(pr, contacts)
 			gone = true
@@ -1077,7 +1379,8 @@ func signature_ability(i: int, a: Dictionary, sig: Dictionary) -> Dictionary:
 	match str(sig.mech):
 		"projectile", "meteor", "mine", "turret", "clone", "eruption", "rage", "mark", "javelin", "magma", "board", "cannon", "nova", "shadow_clone", "singularity", \
 				"star_seal", "ice_decoy", "turbo", "flame_wall", "eagle", "soul_weigh", "fox_orbit", "missile_salvo", "blizzard", "arrow_rain", \
-					"bramble", "root_snare", "hex", "bone_prison", "toxic_cloud", "flashbang", "orbital_strike", "revenant", "time_bomb", "phase_swap", "chain_leash":
+					"bramble", "root_snare", "hex", "bone_prison", "toxic_cloud", "flashbang", "orbital_strike", "revenant", "time_bomb", "phase_swap", "chain_leash", \
+						"anvil", "crescent", "lasso", "pack_hound", "anchor_chain":
 			b["no_hit"] = true
 			b["active"] = 0.1
 		"tri_slash":
@@ -1132,10 +1435,20 @@ func signature_ability(i: int, a: Dictionary, sig: Dictionary) -> Dictionary:
 		"charge_beam":
 			b.merge({"x_min": 0.3, "range": float(sig.get("length", 5.0)), "y_min": 1.2 - float(sig.get("thick", 0.8)) * 0.5,
 				"y_max": 1.2 + float(sig.get("thick", 0.8)) * 0.5, "angle": 30.0, "active": 0.3, "charge": true}, true)
-		"leap_slam":
+		"leap_slam", "bridge_dive":
 			b["no_hit"] = true
 			b["active"] = 1.6
 			b["recovery"] = 0.1
+		"crown_shift":
+			# Crown shift: the crystal crown flares all around while it changes its element.
+			var cr: float = float(sig.get("radius", 1.8))
+			b.merge({"x_min": -cr, "range": cr, "y_min": -0.4, "y_max": 2.6, "all_around": true, "active": 0.14, "angle": 55.0,
+				"recovery": 0.22, "cooldown": 1.2}, true)
+		"frost_roar":
+			# Winter roar: a wide cone of frost in front that freezes everyone it reaches.
+			b.merge({"x_min": 0.2, "range": float(sig.get("length", 3.6)), "y_min": -0.3, "y_max": 2.6, "active": 0.3, "angle": 35.0,
+				"recovery": 0.32, "freeze": float(sig.get("freeze", 0.8))}, true)
+			b["push"] = float(a.push) * 0.9
 		"bulwark":
 			b["windup"] = float(sig.get("time", 0.75))
 			b.merge({"x_min": 0.0, "range": 1.7, "y_min": -0.2, "y_max": 2.0, "active": 0.14, "recovery": 0.3, "angle": 40.0,
@@ -1197,7 +1510,7 @@ func _sig_activate(i: int, ab: Dictionary) -> void:
 		return
 	events.append({"type": "signature", "actor": i, "mech": sig.mech, "color": col, "name": ab.get("name", "")})
 	match str(sig.mech):
-		"projectile", "mark", "javelin", "magma", "board", "soul_weigh", "hex", "flashbang", "time_bomb", "phase_swap", "chain_leash":
+		"projectile", "mark", "javelin", "magma", "board", "soul_weigh", "hex", "flashbang", "time_bomb", "phase_swap", "chain_leash", "crescent", "lasso", "anchor_chain":
 			var count: int = int(sig.get("count", 1))
 			var spread: float = float(sig.get("spread", 0.18))
 			for k in range(count):
@@ -1223,7 +1536,7 @@ func _sig_activate(i: int, ab: Dictionary) -> void:
 				"explode": float(sig.get("explode", 2.0)), "push": 0.9, "angle": 70.0}, true)
 			spawn_projectile_spec(i, spec, dmg, f.x + fx * 1.0, f.y + 0.2, 0.0, 0.0)
 		"turret":
-			spec.merge({"shape": "turret", "life": 3.6, "size": 0.0, "emit": 0.45, "pierce": true}, true)
+			spec.merge({"shape": str(sig.get("shape", "turret")), "life": 3.6, "size": 0.0, "emit": 0.45, "pierce": true}, true)
 			spawn_projectile_spec(i, spec, dmg, f.x + fx * 1.0, f.y + 0.6, 0.0, 0.0)
 		"teleport":
 			var opp2: int = get_nearest_opponent(i)
@@ -1452,6 +1765,33 @@ func _sig_activate(i: int, ab: Dictionary) -> void:
 			spec.merge({"shape": "singularity", "life": float(sig.get("fuse", 1.6)), "fuse": 0.01, "size": 0.4, "nohit": true,
 				"push": 0.95, "angle": 50.0}, true)
 			spawn_projectile_spec(i, spec, dmg, f.x + fx * 2.5, f.y + 1.2, fx * 1.2, 0.0)
+		"crown_shift":
+			# Frost (blue): every hit freezes for a moment. Glut (red): every hit hurts more.
+			f["crown"] = "glut" if str(f.get("crown", "frost")) == "frost" else "frost"
+			events.append({"type": "crown_shift", "actor": i, "mode": f.crown})
+		"pack_hound":
+			# Zirra: the alien hound runs to the opponent and keeps biting; it leaps after airborne targets.
+			for pr in projectiles:
+				if pr.owner == i and bool(pr.spec.get("hound", false)): pr.life = 0.0
+			spec.merge({"hound": true, "pierce": true}, true)
+			spawn_projectile_spec(i, spec, dmg, clampf(f.x + fx * 1.0, STAGE_LEFT, STAGE_RIGHT), f.y + 0.5, 0.0, 0.0)
+		"anvil":
+			# Anvil: falls from the sky onto the opponent in front, stuns everyone near the impact.
+			var ax: float = f.x + fx * 3.0
+			var ao: int = get_nearest_opponent(i)
+			if ao >= 0 and absf(fighters[ao].x - f.x) < 7.0: ax = fighters[ao].x
+			spec.merge({"life": 2.2}, true)
+			spawn_projectile_spec(i, spec, dmg, ax, f.y + float(sig.get("height", 7.0)), 0.0, -2.0)
+		"bridge_dive":
+			# Mostar dive: straight up, then head first straight down; the splash throws everyone up.
+			f.vy = float(sig.get("rise", 13.0))
+			f.y += 0.05
+			f.is_grounded = false
+			f.slam = true
+			f.slam_vx = fx * 1.2
+			f.vx = f.slam_vx
+			f.slam_dmg = dmg
+			f["dive"] = float(sig.get("dive", 24.0))
 		"leap_slam":
 			var tx: float = f.x + fx * 3.0
 			var lo: int = get_nearest_opponent(i)
@@ -1852,6 +2192,11 @@ func _iai_target(i: int, reach: float) -> int:
 		if fwd > -0.2 and fwd <= reach and absf(t.y - f.y) < 1.4: return ti
 	return -1
 
+## Does this fighter's down special summon something (kit move with "use_sig")?
+static func has_summon(f: Dictionary) -> bool:
+	var ds = FighterKits.for_family(str(f.profile.get("family", ""))).get("moves", {}).get("dspecial", [])
+	return ds is Array and ds.size() > 11 and ds[11] is Dictionary and ds[11].has("use_sig")
+
 ## Leap slam landing: a quake that hits every grounded opponent in range, harder up close.
 func _slam_shockwave(i: int) -> void:
 	var f: Dictionary = fighters[i]
@@ -1886,6 +2231,95 @@ static func _armor_holds(t: Dictionary, damage: float) -> bool:
 	return damage < float(pend.ability.get("armor", 0.0))
 
 ## Heat gauge: fighters with phys.heat heat up when they hit and (more) when they get hit.
+## ── Party rules (mutators) ─────────────────────────────────────────────────────
+const BOMB_WARN := 1.1
+const BOMB_RADIUS := 2.2
+const BOMB_DAMAGE := 14.0
+const SWAP_PERIOD := 15.0
+const VAMPIRE_HEAL := 0.4
+
+## Escalation: every hit hurts more the longer the fight lasts (+1 % per second, at most triple).
+func escalation_mult() -> float:
+	return minf(3.0, 1.0 + elapsed * 0.01)
+
+func _update_rules(dt: float) -> void:
+	if rules.get("bomb_rain", false):
+		var bt: float = float(rule_timers.get("bomb", 3.0)) - dt
+		if bt <= 0.0:
+			bt = rng.randf_range(2.6, 4.2)
+			var alive: Array = []
+			for k in range(fighters.size()):
+				if fighters[k].state != "Defeated" and not fighters[k].get("is_boss", false): alive.append(k)
+			if not alive.is_empty():
+				var tf: Dictionary = fighters[alive[rng.randi() % alive.size()]]
+				var bx: float = clampf(float(tf.x) + rng.randf_range(-1.6, 1.6), STAGE_LEFT + 0.5, STAGE_RIGHT - 0.5)
+				var by: float = 0.0
+				for plat in platforms:
+					if bx >= plat.x1 and bx <= plat.x2 and plat.y <= float(tf.y) + 0.3: by = maxf(by, float(plat.y))
+				bombs.append({"x": bx, "y": by, "t": BOMB_WARN})
+				_telegraph(-1, "circle", bx, bx, by, by, BOMB_WARN, BOMB_RADIUS)
+				events.append({"type": "bomb_warning", "x": bx, "y": by, "time": BOMB_WARN})
+		rule_timers["bomb"] = bt
+	var keep: Array = []
+	for b in bombs:
+		b.t = float(b.t) - dt
+		if b.t > 0.0:
+			keep.append(b)
+			continue
+		events.append({"type": "blast", "actor": -1, "x": b.x, "y": float(b.y) + 0.5, "radius": BOMB_RADIUS, "color": Color("ff8a1f")})
+		for fi in range(fighters.size()):
+			var f: Dictionary = fighters[fi]
+			if f.state == "Defeated" or f.invulnerable > 0.0 or f.get("is_boss", false): continue
+			if Vector2(f.x - b.x, f.y + 0.9 - float(b.y)).length() > BOMB_RADIUS + 0.4: continue
+			var dmg: float = BOMB_DAMAGE * clampf(1.0 - f.profile.stats.defense * 0.008, 0.6, 0.95)
+			f.damage_percent = clampf(f.damage_percent + dmg, 0.0, 999.0)
+			var impulse: float = minf(17.0, 6.5 * (1.0 + f.damage_percent * 0.012) / clampf(float(f.profile.get("weight", 1.0)), 0.85, 1.35) * vitality_mult(f))
+			var side: float = signf(f.x - b.x) if absf(f.x - b.x) > 0.05 else 1.0
+			f.vx = side * impulse * 0.55
+			f.vy = impulse * 0.85
+			f.is_grounded = false
+			f.drop_through = 0.15
+			f.stun = 0.4
+			f.air_control_lock = 0.2
+			f.state = "HitStun"
+			f.pose = "HitReact"
+			f.pose_time = 0.4
+			if not f.pending.is_empty(): f.pending = {}
+			events.append({"type": "hazard_hit", "hazard_id": -1, "kind": "bombe", "target": fi, "damage": dmg, "impulse": impulse, "x": b.x, "y": b.y})
+	bombs = keep
+	if rules.get("swap", false):
+		var st: float = float(rule_timers.get("swap", SWAP_PERIOD)) - dt
+		if st <= 0.0:
+			st = SWAP_PERIOD
+			var ids: Array = []
+			for k in range(fighters.size()):
+				var f: Dictionary = fighters[k]
+				if f.state != "Defeated" and f.state != "Grabbed" and f.grab_target < 0 and not f.get("is_boss", false): ids.append(k)
+			if ids.size() >= 2:
+				var spots: Array = []
+				for k in ids: spots.append(Vector2(fighters[k].x, fighters[k].y))
+				for n in range(ids.size()):
+					var f: Dictionary = fighters[ids[n]]
+					var to: Vector2 = spots[(n + 1) % spots.size()]
+					events.append({"type": "teleport", "actor": ids[n], "from_x": f.x, "from_y": f.y})
+					f.x = to.x
+					f.y = to.y
+					f.vx = 0.0
+					f.vy = 0.0
+					f.is_grounded = false
+				events.append({"type": "rule_swap"})
+		elif st <= 2.0 and float(rule_timers.get("swap", SWAP_PERIOD)) > 2.0:
+			events.append({"type": "rule_swap_warning"})
+		rule_timers["swap"] = st
+
+## Vitality: tough fighters fly less far (20 is neutral, -0.8 % knockback per point).
+static func vitality_mult(f: Dictionary) -> float:
+	return clampf(1.0 - (float(f.profile.get("stats", {}).get("vitality", 20)) - 20.0) * 0.008, 0.85, 1.15)
+
+## Technique: clean hits deal more damage (15 is neutral, +1.2 % per point).
+static func technique_mult(f: Dictionary) -> float:
+	return 1.0 + (float(f.profile.get("stats", {}).get("technique", 15)) - 15.0) * 0.012
+
 func _gain_heat(ai: int, ti: int, damage: float) -> void:
 	for pair in [[ai, 1.2], [ti, 1.6]]:
 		var who: Dictionary = fighters[pair[0]]
@@ -2082,6 +2516,12 @@ func _ai_think(i: int, lvl: int) -> Dictionary:
 		p.special = true
 		return p
 
+	# Summoners (down special with a signature: Glimm, Fenn, the pirate's cannon) call their helper from range.
+	if adx > 1.8 and absf(dy) < 1.8 and has_summon(f) and ai_rng.randf() < 0.12 + lvl * 0.02:
+		p.special = true
+		p.down = true
+		return p
+
 	# Grounded.
 	if dy > 1.2 and adx < 1.4:
 		p.standard = true
@@ -2172,7 +2612,7 @@ func spawn_random_item() -> void:
 		spawn_weapon(pool[rng.randi() % pool.size()])
 		return
 	var chosen_type: String = special_types[rng.randi() % special_types.size()]
-	var target_plat: Dictionary = PLATFORMS[rng.randi() % PLATFORMS.size()]
+	var target_plat: Dictionary = platforms[rng.randi() % platforms.size()]
 	var px: float = rng.randf_range(target_plat.x1 + 0.3, target_plat.x2 - 0.3)
 	var py: float = target_plat.y + 0.20
 
@@ -2631,6 +3071,7 @@ func _on_land(i: int) -> void:
 	f.walk_v = 0.0
 	if f.slam:
 		f.slam = false
+		f.erase("dive")
 		f.vx = 0.0
 		_slam_shockwave(i)
 		f.pending = {}
@@ -2667,10 +3108,12 @@ func tick(commands: Array, dt: float = STEP) -> void:
 	if finish_phase:
 		finish_timer -= dt
 
+	if not rules.is_empty() and not finish_phase: _update_rules(dt)
+
 	# Dynamic Item Spawning
 	item_spawn_timer -= dt
 	if item_spawn_timer <= 0.0:
-		item_spawn_timer = rng.randf_range(13.0, 18.0)
+		item_spawn_timer = rng.randf_range(3.0, 5.0) if rules.get("item_rain", false) else rng.randf_range(13.0, 18.0)
 		var active_items_count := 0
 		for it in items:
 			if it.state != "destroyed": active_items_count += 1
@@ -3016,6 +3459,10 @@ func tick(commands: Array, dt: float = STEP) -> void:
 		var prev_y: float = f.y
 		if not f.is_grounded and f.state != "Grabbed":
 			f.vy -= float(f.phys.gravity) * dt * (float(Signatures.for_family(str(f.profile.get("family", ""))).get("lift", 0.12)) if f.eagle > 0.0 else 1.0)
+			if f.slam and float(f.get("dive", 0.0)) > 0.0 and f.vy < 0.0:
+				f.vy = -float(f.dive)
+				f.intangible = maxf(f.intangible, 0.1)
+				f.drop_through = 0.1 # head first through the platforms down to the water
 			if float(f.get("hover_t", 0.0)) > 0.0:
 				f.hover_t = float(f.hover_t) - dt
 				f.vy = maxf(f.vy, -0.8)
@@ -3024,7 +3471,7 @@ func tick(commands: Array, dt: float = STEP) -> void:
 
 			if f.vy <= 0.0:
 				if f.drop_through <= 0.0:
-					for plat in PLATFORMS:
+					for plat in platforms:
 						if f.x >= plat.x1 - 0.20 and f.x <= plat.x2 + 0.20:
 							if prev_y >= plat.y - 0.15 and next_y <= plat.y + 0.25:
 								f.y = plat.y
@@ -3051,7 +3498,7 @@ func tick(commands: Array, dt: float = STEP) -> void:
 			var on_ground := false
 			var target_plat_y := 0.0
 			if f.drop_through <= 0.0:
-				for plat in PLATFORMS:
+				for plat in platforms:
 					if f.x >= plat.x1 - 0.20 and f.x <= plat.x2 + 0.20 and abs(f.y - plat.y) < 0.35:
 						on_ground = true
 						target_plat_y = plat.y
@@ -3343,6 +3790,11 @@ func tick(commands: Array, dt: float = STEP) -> void:
 					if it_obj.state != "destroyed" and it_obj.get("explosive", false):
 						if in_attack_reach(f, it_obj.x, it_obj.y, attack.ability.range + 0.4, 1.4, all_around):
 							explode_item(it_k)
+				for di in range(destructibles.size()):
+					var d: Dictionary = destructibles[di]
+					if d.state == "intact":
+						if in_attack_reach(f, d.x, d.y + d.h * 0.5, attack.ability.range + 0.5, d.h * 0.6, all_around):
+							damage_destructible(di, float(attack.ability.damage), i)
 
 			if f.pending.remaining <= 0:
 				f.pending.stage = "recovery"
@@ -3449,7 +3901,12 @@ func tick(commands: Array, dt: float = STEP) -> void:
 
 			var titan_mult: float = 2.0 if attacker.titan_timer > 0.0 else 1.0
 			var rage: float = 1.35 if float(attacker.get("rage_timer", 0.0)) > 0.0 else 1.0
-			var damage: float = base_dmg * combo_mult * super_bonus * titan_mult * rage * float(attacker.get("power_mult", 1.0))
+			var damage: float = base_dmg * combo_mult * super_bonus * titan_mult * rage * float(attacker.get("power_mult", 1.0)) * technique_mult(attacker)
+			if rules.get("escalation", false): damage *= escalation_mult()
+			if str(attacker.profile.get("family", "")) == "kalyx" and str(attacker.get("crown", "frost")) == "glut":
+				damage *= float(Signatures.for_family("kalyx").get("glut_mult", 1.2))
+			if rules.get("vampire", false) and not attacker.get("is_boss", false):
+				attacker.damage_percent = maxf(0.0, float(attacker.damage_percent) - damage * VAMPIRE_HEAL)
 			if float(target.get("hex_t", 0.0)) > 0.0: damage *= float(target.get("hex_mult", 1.3)) # Medea's curse
 			target.damage_percent = clampf(target.damage_percent + damage, 0.0, 999.0)
 			if _armor_holds(target, damage):
@@ -3488,7 +3945,7 @@ func tick(commands: Array, dt: float = STEP) -> void:
 			var base_push: float = float(a.get("push", 0.32))
 			var total_impulse: float = ((base_push * 4.0 + smash_growth * 3.75) * (1.35 if super_bonus > 1.0 else (1.15 if is_special else 1.0))) / weight
 			if attacker.titan_timer > 0.0: total_impulse *= 1.6
-			total_impulse = clampf(total_impulse * float(target.get("kb_taken_mult", 1.0)), 0.9, 19.0)
+			total_impulse = clampf(total_impulse * float(target.get("kb_taken_mult", 1.0)) * vitality_mult(target), 0.9, 19.0)
 			if a.has("kb_scale"):
 				# One punch: knockback grows with the target's percent; past the threshold it is a sure KO.
 				total_impulse = minf(19.0, total_impulse * (1.0 + p_ratio / float(a.kb_scale)))
@@ -3527,6 +3984,14 @@ func tick(commands: Array, dt: float = STEP) -> void:
 				var toward: float = signf(attacker.x - target.x) if absf(attacker.x - target.x) > 0.05 else float(attacker.facing)
 				target.vx = toward * 9.0
 				target.vy = 3.5
+			if contact.has("lasso"):
+				# Lasso: roped in, swung over the head and thrown behind the cowboy.
+				var lside: float = float(attacker.facing)
+				target.x = attacker.x - lside * 1.1
+				target.y = attacker.y + 0.6
+				target.vx = -lside * 8.5
+				target.vy = 6.0
+				events.append({"type": "lasso", "actor": contact.from, "target": contact.to})
 			if contact.has("hex"):
 				target["hex_t"] = float(contact.hex[0])
 				target["hex_mult"] = float(contact.hex[1])
@@ -3566,6 +4031,8 @@ func tick(commands: Array, dt: float = STEP) -> void:
 				var kick := {"name": "Enterstiefel", "damage": float(a.damage) * 2.0, "push": 0.85, "angle": 42.0, "hitstun": 0.4, "range": 1.2}
 				contacts.append({"from": contact.from, "to": contact.to, "attack": {"ability": kick, "special": true}, "push_dir": -yside})
 				events.append({"type": "yank", "actor": contact.from, "target": contact.to, "from_x": yfrom})
+			if not a.has("freeze") and str(attacker.profile.get("family", "")) == "kalyx" and str(attacker.get("crown", "frost")) == "frost":
+				target.freeze_timer = maxf(float(target.freeze_timer), float(Signatures.for_family("kalyx").get("frost_freeze", 0.18)))
 			if a.has("freeze"):
 				target.freeze_timer = float(a.freeze)
 				events.append({"type": "freeze_hit", "actor": contact.from, "target": contact.to, "duration": float(a.freeze)})
@@ -3624,7 +4091,7 @@ func tick(commands: Array, dt: float = STEP) -> void:
 
 			var item_landed := false
 			if it.vy <= 0.0:
-				for plat in PLATFORMS:
+				for plat in platforms:
 					if it.x >= plat.x1 and it.x <= plat.x2 and it.y <= plat.y + 0.1 and it.y >= plat.y - 0.2:
 						it.y = plat.y + 0.1
 						it.vy = 0.0
@@ -3644,6 +4111,17 @@ func tick(commands: Array, dt: float = STEP) -> void:
 				continue
 
 			if it.state == "thrown":
+				for di in range(destructibles.size()):
+					var d: Dictionary = destructibles[di]
+					if d.state == "intact":
+						if absf(it.x - d.x) < (d.w * 0.5 + 0.4) and it.y >= d.y and it.y <= (d.y + d.h):
+							damage_destructible(di, it.damage, it.thrower)
+							if it.get("explosive", false):
+								explode_item(it_idx)
+								break
+							else:
+								it.vx = -it.vx * 0.4
+								it.vy = 2.5
 				for fi in range(fighters.size()):
 					if fi == it.thrower or (it.thrower >= 0 and is_ally(it.thrower, fi)): continue
 					var f_target: Dictionary = fighters[fi]
@@ -3694,6 +4172,9 @@ func tick(commands: Array, dt: float = STEP) -> void:
 			if it.y < BLAST_ZONE_BOTTOM or it.x < BLAST_ZONE_LEFT or it.x > BLAST_ZONE_RIGHT:
 				it.state = "destroyed"
 				it.respawn = 6.0
+
+	_update_hazards(dt)
+	_update_destructibles(dt)
 
 	# ── Check Active Players & Match Outcome ──────────────────────────────────
 	var alive_indices: Array = []

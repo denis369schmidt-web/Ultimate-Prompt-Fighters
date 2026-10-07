@@ -20,6 +20,14 @@ const STYLES := {
 	"stoic": {"tempo": 9.0, "sturdy": 0.7, "quotes": ["Hm.", "Ok.", "Ich hab Hunger."]},
 	"beast": {"tempo": 12.5, "sturdy": 0.55, "quotes": ["GRRRR!", "*schnaub*", "KRRAAH!"]},
 	"undead": {"tempo": 6.0, "sturdy": 0.5, "quotes": ["Knochen… knacken…", "Du gehörst mir…", "Hhhhh…"]},
+	"twin": {"tempo": 11.5, "sturdy": 0.45, "quotes": ["Frost oder Glut?", "Beides brennt.", "Meine Krone entscheidet.", "Kalt. Dann heiß."]},
+	"colossus": {"tempo": 6.5, "sturdy": 0.9, "quotes": ["Vorruk … stark.", "Zirra! Hol!", "Sterne … weit weg.", "Klein. Du. Sehr klein."]},
+	"chainhand": {"tempo": 13.0, "sturdy": 0.3, "quotes": ["Fang!", "Die Kette hält.", "Fenn, Deckung!", "Ich lasse nicht los."]},
+	"smith": {"tempo": 9.0, "sturdy": 0.7, "quotes": ["Wird gemacht!", "Ordnung muss sein!", "Qualität aus Meisterhand.", "Schmiede das Eisen, solange es heiß ist!"]},
+	"bogatyr": {"tempo": 7.5, "sturdy": 0.8, "quotes": ["Davai!", "Ura!", "Wie ein Bär im Winter!", "Spasibo für den Kampf."]},
+	"crescent": {"tempo": 12.0, "sturdy": 0.45, "quotes": ["Haydi!", "Aferin!", "Çok güzel!", "Der Mond schneidet scharf."]},
+	"diver": {"tempo": 13.5, "sturdy": 0.25, "quotes": ["Ajmo!", "Ajde, jarane!", "Bravo!", "Von der Alten Brücke – pravo dole!"]},
+	"rodeo": {"tempo": 11.0, "sturdy": 0.5, "quotes": ["Yeehaw!", "Howdy, Partner!", "Hold your horses!", "Die Stadt ist zu klein für uns zwei."]},
 	"artisan": {"tempo": 11.0, "sturdy": 0.6, "quotes": ["Hajde!", "Punë e mirë!", "Shqiponja fluturon!", "Noch ein Loch gefällig?", "Besa ist Besa."]},
 }
 
@@ -35,6 +43,8 @@ const FAMILY_STYLE := {
 	"swat_specops": "boxer", "samurai_dreyar": "swordsman", "pirate_captain": "cocky", "vampire_lord": "floaty",
 	"wizard_sorcerer": "mage", "warrok_brute": "brute", "nekra": "undead", "grimbolt": "trickster", "echo": "trickster",
 	"kettenwart": "brute", "don_valente": "cocky", "arber": "artisan",
+	"kalyx": "twin", "vorruk": "colossus", "neris": "chainhand",
+	"konrad": "smith", "bogdan": "bogatyr", "kaan": "crescent", "amra": "diver", "dusty": "rodeo",
 }
 
 static func style_of(family: String) -> String:

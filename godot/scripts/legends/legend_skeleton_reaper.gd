@@ -225,6 +225,6 @@ static func chapters() -> Array:
 			S._narr("Seither hat der Friedhof von Rabenstein einen Wächter. Er gräbt nicht, er richtet nicht. Er kennt nur alle Namen – und die Raben kennen ihn."),
 			S._pose(0, "Victory", 1.4),
 			{"t": "title", "text": "LEGENDE VOLLENDET", "sub": "Flayer · Das Buch der Hundertdreizehn"},
-			S._narr("Relikt erhalten: Das Buch der Hundertdreizehn  ·  +400 Münzen  ·  Glückstruhe  ·  Goldrahmen  ·  +15 % Heilung im Abenteuer"),
+			S._narr("Relikt erhalten: Das Buch der Hundertdreizehn  ·  +400 Münzen  ·  Legenden-Truhe  ·  Goldrahmen  ·  +15 % Heilung im Abenteuer"),
 		]},
 	]

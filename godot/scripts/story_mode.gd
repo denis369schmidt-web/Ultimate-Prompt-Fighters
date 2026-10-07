@@ -12,6 +12,8 @@ const MOODS := {"calm": "story_calm", "sad": "story_sad", "hope": "story_hope", 
 	"fight": "fight", "boss": "boss", "boss_final": "boss_final"}
 const Bosses = preload("res://scripts/bosses.gd")
 const StoryLegends = preload("res://scripts/story_legends.gd")
+const Rewards = preload("res://scripts/rewards.gd")
+const Backgrounds = preload("res://scripts/backgrounds.gd")
 const Prompt = preload("res://scripts/prompt_interpreter.gd")
 
 const SAVE_PATH := "user://story.cfg"
@@ -627,7 +629,7 @@ func _run_chapter(index: int, my_session: int) -> void:
 	if not _alive(my_session): return
 	if campaign == "divina" or campaign == "saga" or campaign == "legend": done_ids[str(chapters()[index].id)] = true
 	if campaign == "legend" and str(chapters()[index].id).ends_with("_4") and main.get("progression") != null:
-		main.progression.grant_legend(legend_family, StoryLegends.RELIC_COINS)
+		if main.progression.grant_legend(legend_family, StoryLegends.RELIC_COINS): await _legend_chest(my_session)
 	else: completed = maxi(completed, index + 1)
 	if main.get("progression") != null: main.progression.story_chapter_done(60) # a finished chapter pays coins
 	save_progress()
@@ -635,6 +637,14 @@ func _run_chapter(index: int, my_session: int) -> void:
 	_end_story_session()
 	if index + 1 < chapters().size():
 		open_menu()
+
+## First finished legend: the legend chest opens on screen and shows what it held.
+func _legend_chest(my_session: int) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.randomize()
+	var r: Dictionary = Rewards.open_legend_chest(main.progression, rng, Backgrounds.LIST)
+	main.sound("victory")
+	await _title({"text": "🎁 LEGENDEN-TRUHE", "sub": "GEWONNEN: " + Rewards.reward_text(r)}, my_session)
 
 ## Leaves the story and returns to fighter selection.
 func abort() -> void:

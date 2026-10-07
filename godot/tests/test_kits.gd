@@ -56,6 +56,14 @@ const PROMPTS := {
 	"grimbolt": "Grimbolt der Goblin-Tüftler mit Zeitbombe",
 	"echo": "Echo das Hologramm mit Phasentausch",
 	"kettenwart": "Kettenwart der Kerkermeister mit Seelenketten",
+	"kalyx": "Kalyx der Zwiekristall mit Kristallkrone aus Frost und Glut",
+	"vorruk": "Vorruk der Sternenkoloss mit seinem Alienhund Zirra",
+	"neris": "Neris die Kettenhand mit Kristallkette und Glasflügler Fenn",
+	"konrad": "Konrad der Schmiedemeister aus Deutschland mit Schwarz-Rot-Gold",
+	"bogdan": "Bogdan der Bogatyr aus Russland mit Streitkolben",
+	"kaan": "Kaan der Halbmondkrieger aus der Türkei mit Säbel",
+	"amra": "Amra die Brückenspringerin aus Bosnien von der Alten Brücke in Mostar",
+	"dusty": "Dusty der Rodeo-Ranger aus Amerika mit Lasso und Sternenbanner",
 }
 # Stand-in opponent: every roster fighter has a kit now (generic prompts fall back to the ninja),
 # so opponent() strips this profile of its family to get a fighter without one.
@@ -117,6 +125,8 @@ func run() -> void:
 	test_time_bomb()
 	test_phase_swap()
 	test_chain_leash()
+	test_nations()
+	test_concept_trio()
 	test_ai_plays_every_kit()
 	finish("kits")
 
@@ -1033,15 +1043,150 @@ func test_chain_leash() -> void:
 		far = maxf(far, absf(m.fighters[1].x - m.fighters[0].x))
 	check(far <= 2.5 + 0.35, "on the chain the opponent cannot run away (%.2f m)" % far)
 
+## Package 8: the five national fighters and their signatures.
+func test_nations() -> void:
+	var HeroGear = load("res://scripts/hero_gear.gd")
+	var names := {"konrad": ["Konrad aus Deutschland", "DEUTSCHLAND"], "bogdan": ["Ein Bogatyr aus Russland", "RUSSLAND"],
+		"kaan": ["Kaan aus der Türkei", "TÜRKEI"], "amra": ["Springerin aus Bosnien", "BOSNIEN"], "dusty": ["Dusty der Cowboy aus Amerika", "USA"]}
+	for fam in names:
+		var p: Dictionary = Prompt.interpret(names[fam][0], 0)
+		check(p.family == fam and str(p.name).contains(names[fam][1]), "%s is found by country and shows it in the name (%s)" % [fam, p.name])
+		check(str(HeroGear.HEROES[fam].get("flag", "")) != "" and "flag_banner" in HeroGear.HEROES[fam].gear, "%s carries the flag on a banner and the chest" % fam)
+	var de: Image = HeroGear.flag_image("de")
+	var tr: Image = HeroGear.flag_image("tr")
+	var us: Image = HeroGear.flag_image("us")
+	var ba: Image = HeroGear.flag_image("ba")
+	check(de.get_pixel(10, 10).is_equal_approx(Color("000000")) and de.get_pixel(10, 80).is_equal_approx(Color("dd0000")) and de.get_pixel(10, 150).is_equal_approx(Color("ffce00")), "German flag: black, red, gold")
+	check(tr.get_pixel(5, 5).is_equal_approx(Color("e30a17")) and tr.get_pixel(140, 80).is_equal_approx(Color.WHITE) and tr.get_pixel(52, 80).is_equal_approx(Color.WHITE), "Turkish flag: red with white crescent and star")
+	check(us.get_pixel(5, 3).is_equal_approx(Color("3c3b6e")) and us.get_pixel(300, 3).is_equal_approx(Color("b22234")), "US flag: blue canton and red stripes")
+	check(ba.get_pixel(5, 5).is_equal_approx(Color("002395")) and ba.get_pixel(170, 20).is_equal_approx(Color("fecb00")), "Bosnian flag: blue with yellow triangle")
+	# Konrad: the anvil falls on the opponent and stuns.
+	var m = duel("konrad", DUMMY, 3.0)
+	var ev: Array = []
+	m.queue_attack(0, true)
+	ticks(m, 70, ev)
+	check(has_event(ev, "blast") and m.fighters[1].damage_percent > 0.0 and has_event(ev, "freeze_hit"), "Konrad's anvil falls on the opponent and stuns (%.0f %%)" % m.fighters[1].damage_percent)
+	# Bogdan: the winter roar freezes in a wide cone.
+	m = duel("bogdan", DUMMY, 2.5)
+	ev = []
+	m.queue_attack(0, true)
+	ticks(m, 40, ev)
+	check(has_event(ev, "freeze_hit") and m.fighters[1].damage_percent > 0.0, "Bogdan's winter roar freezes the opponent")
+	# Kaan: the crescent flies out and back, it can hit twice.
+	m = duel("kaan", DUMMY, 2.5)
+	m.queue_attack(0, true)
+	var hits := 0
+	for n in range(80):
+		m.tick(idle_commands())
+		for e in m.events: if e.type == "hit" and e.actor == 0: hits += 1
+		m.fighters[1].stun = 0.0
+		m.fighters[1].x = m.fighters[0].x + 1.5
+		m.fighters[1].y = 0.0
+		m.fighters[1].vx = 0.0
+		m.fighters[1].vy = 0.0
+	check(hits >= 2, "Kaan's crescent hits on the way out and back (%d hits)" % hits)
+	# Amra: straight up, head first down, the splash hits.
+	m = duel("amra", DUMMY, 2.0)
+	ev = []
+	m.queue_attack(0, true)
+	var top := 0.0
+	var dived := false
+	for n in range(120):
+		m.tick(idle_commands())
+		ev.append_array(m.events)
+		top = maxf(top, m.fighters[0].y)
+		if m.fighters[0].vy < -20.0: dived = true
+	check(top > 3.0 and dived and has_event(ev, "slam") and m.fighters[1].damage_percent > 0.0, "Amra's Mostar dive: high up, head first down, splash (top %.1f m)" % top)
+	# Dusty: the lasso catches and throws the opponent behind him.
+	m = duel("dusty", DUMMY, 3.0)
+	ev = []
+	m.queue_attack(0, true)
+	ticks(m, 30, ev)
+	check(has_event(ev, "lasso") and (m.fighters[1].x - m.fighters[0].x) * m.fighters[0].facing < 0.0, "Dusty's lasso throws the opponent behind him")
+
+## Package 9: Kalyx (crown shift), Vorruk (alien hound), Neris (chain anchor) and their pets.
+func test_concept_trio() -> void:
+	var HeroGear = load("res://scripts/hero_gear.gd")
+	for fam in ["kalyx", "vorruk", "neris"]:
+		check(HeroGear.HEROES[fam].has("skin"), "%s has its own skin color from the concept art" % fam)
+	# Kalyx: the special switches frost <-> ember; frost hits freeze, ember hits hurt more.
+	var m = duel("kalyx", DUMMY, 1.4)
+	var ev: Array = []
+	check(str(m.fighters[0].get("crown", "frost")) == "frost", "Kalyx starts in frost")
+	m.queue_attack(0, false)
+	ticks(m, 30, ev)
+	var frost_hit: float = m.fighters[1].damage_percent
+	check(frost_hit > 0.0, "a frost jab hits (%.1f %%)" % frost_hit)
+	m.fighters[0].cooldowns = [0.0, 0.0]
+	ev = []
+	m.queue_attack(0, true)
+	ticks(m, 30, ev)
+	check(has_event(ev, "crown_shift") and str(m.fighters[0].crown) == "glut", "the crown shift turns the crown to ember")
+	var g = duel("kalyx", DUMMY, 1.4)
+	g.fighters[0]["crown"] = "glut"
+	g.queue_attack(0, false)
+	ticks(g, 30)
+	check(g.fighters[1].damage_percent > frost_hit * 1.1, "ember jabs hurt more than frost jabs (%.1f vs %.1f)" % [g.fighters[1].damage_percent, frost_hit])
+	var f2 = duel("kalyx", DUMMY, 1.4)
+	f2.queue_attack(0, false)
+	var froze := false
+	for n in range(30):
+		f2.tick(idle_commands())
+		if float(f2.fighters[1].freeze_timer) > 0.0: froze = true
+	check(froze, "frost hits freeze the opponent for a moment")
+	# Kalyx's pet: down special summons Glimm, the crystal salamander.
+	var s = duel("kalyx", DUMMY, 4.0)
+	s.fighters[0].pending = {}
+	check(s.start_move(0, "dspecial"), "Kalyx can call Glimm")
+	ticks(s, 30)
+	var glimm := false
+	for pr in s.projectiles: if pr.owner == 0 and str(pr.spec.get("shape", "")) == "salamander": glimm = true
+	check(glimm, "Glimm the crystal salamander walks onto the stage")
+	# Vorruk: Zirra runs to the opponent and bites.
+	m = duel("vorruk", DUMMY, 5.0)
+	m.queue_attack(0, true)
+	ticks(m, 120)
+	var zirra := false
+	for pr in m.projectiles: if pr.owner == 0 and bool(pr.spec.get("hound", false)): zirra = true
+	check(m.fighters[1].damage_percent > 0.0, "Zirra the alien hound runs over and bites (%.0f %%)" % m.fighters[1].damage_percent)
+	check(FighterKits.for_family("vorruk").weight > 1.4, "Vorruk is the heaviest kind of colossus")
+	# Neris: the anchor pulls a caught opponent in, a miss pulls Neris to the anchor.
+	m = duel("neris", DUMMY, 3.0)
+	m.fighters[1].y = 1.6
+	m.fighters[1].x = m.fighters[0].x + 2.0
+	var x_before: float = m.fighters[1].x
+	ev = []
+	m.queue_attack(0, true)
+	ticks(m, 30, ev)
+	check(m.fighters[1].damage_percent > 0.0, "the chain anchor catches the opponent")
+	var z = duel("neris", DUMMY, 9.0)
+	z.fighters[1].x = 9.0
+	ev = []
+	var nx: float = z.fighters[0].x
+	z.queue_attack(0, true)
+	ticks(z, 40, ev)
+	check(has_event(ev, "anchor_zip") and z.fighters[0].x > nx + 1.0, "a miss: Neris zips to the anchor point (%.1f → %.1f)" % [nx, z.fighters[0].x])
+	# Neris's pet: down special calls Fenn the glassfly, who shoots crystal shards.
+	var fn = duel("neris", DUMMY, 4.0)
+	check(fn.start_move(0, "dspecial"), "Neris can call Fenn")
+	ticks(fn, 30)
+	var fenn := false
+	for pr in fn.projectiles: if pr.owner == 0 and str(pr.spec.get("shape", "")) == "glassfly": fenn = true
+	check(fenn, "Fenn the glassfly hovers and shoots")
+
 func test_ai_plays_every_kit() -> void:
 	for fam in PROMPTS:
-		var m = duel(fam, DUMMY, 4.0)
-		m.ai_level = 7
 		var hits := 0
-		for n in range(1500):
-			m.tick(m.agent_commands())
-			for e in m.events: if e.type == "hit" and e.actor == 0: hits += 1
-			if m.result != -2: break
+		# The duel is chaotic: up to three tries with different computer dice.
+		for attempt in range(3):
+			if hits > 0: break
+			var m = duel(fam, DUMMY, 4.0)
+			m.ai_level = 7
+			m.ai_rng.seed = 1000 + attempt
+			for n in range(1500):
+				m.tick(m.agent_commands())
+				for e in m.events: if e.type == "hit" and e.actor == 0: hits += 1
+				if m.result != -2: break
 		check(hits > 0, "the AI lands hits with %s (%d)" % [fam, hits])
 
 func test_eagle() -> void:

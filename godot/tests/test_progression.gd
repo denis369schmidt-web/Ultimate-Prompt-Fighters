@@ -11,6 +11,7 @@ func _initialize() -> void:
 	test_daily_challenges()
 	test_streak()
 	test_achievements_and_save()
+	test_new_achievements()
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(TEST_SAVE))
 	finish("progression")
 
@@ -23,6 +24,32 @@ func play(p, family: String, result: int, events: Array, day: int = 20000) -> Di
 	p.begin_match(family, "pve", day)
 	for ev in events: p.track(ev)
 	return p.end_match(result)
+
+## Achievements of packages 8/9 and the mutators.
+func test_new_achievements() -> void:
+	var p = fresh()
+	p.persist = false
+	for fam in Progression.NATIONS: play(p, fam, 0, [])
+	check(p.achievements.has("nations5"), "winning with all five national fighters unlocks Weltreise")
+	for fam in Progression.TRIO: play(p, fam, 1, [])
+	check(p.achievements.has("trio3"), "playing Kalyx, Vorruk and Neris unlocks Neue Gesichter")
+	var shifts: Array = []
+	for k in range(50): shifts.append({"type": "crown_shift", "actor": 0})
+	play(p, "kalyx", 1, shifts)
+	check(p.achievements.has("crown50"), "50 crown shifts unlock Zwiegespalten")
+	var pets: Array = []
+	for k in range(20): pets.append({"type": "signature", "actor": 0, "mech": "pack_hound"})
+	play(p, "vorruk", 1, pets)
+	check(p.achievements.has("pets20"), "20 summoned pets unlock Rudelführer")
+	for k in range(10):
+		p.begin_match("ninja", "pve", 20000)
+		p.note_mutators(["turbo", "bomb_rain"])
+		p.end_match(0)
+	check(p.achievements.has("mutator_win10") and not p.achievements.has("mutators_all"), "10 wins with mutators unlock Chaos-Liebhaber")
+	p.begin_match("ninja", "pve", 20000)
+	p.note_mutators(load("res://scripts/fun_modes.gd").MUTATORS.keys())
+	p.end_match(1)
+	check(p.achievements.has("mutators_all"), "fighting with every mutator unlocks Regelbrecher")
 
 func test_curve() -> void:
 	check(Progression.level_for(0) == 1, "a new player is level 1")

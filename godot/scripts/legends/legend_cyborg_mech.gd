@@ -213,6 +213,6 @@ static func chapters() -> Array:
 			S._narr("Puls legt die Hand auf die Brust. Bumm. Bumm. Er speichert den Klang ab – als Lieblingslied. Ida bekommt ihre Pizza. Zwei sogar."),
 			S._cam("sky", 0, 3.0),
 			{"t": "title", "text": "LEGENDE VOLLENDET", "sub": "Puls · Fehler 0417"},
-			S._narr("Relikt erhalten: Idas Starthilfekabel  ·  +400 Münzen  ·  Glückstruhe  ·  Goldrahmen  ·  +15 % Heilung im Abenteuer"),
+			S._narr("Relikt erhalten: Idas Starthilfekabel  ·  +400 Münzen  ·  Legenden-Truhe  ·  Goldrahmen  ·  +15 % Heilung im Abenteuer"),
 		]},
 	]

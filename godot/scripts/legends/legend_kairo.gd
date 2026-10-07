@@ -225,6 +225,6 @@ static func chapters() -> Array:
 			S._cam("sky", 0, 3.0),
 			S._narr("Seitdem hört man im Norden manchmal ein Lachen im Wind. Dann sagen die Leute im Tal: Der Mönch und der Sturm streiten wieder. Und sie setzen Tee auf."),
 			{"t": "title", "text": "LEGENDE VOLLENDET", "sub": "Kairo · Das Gelächter des Sturms"},
-			S._narr("Relikt erhalten: Meister Dorns Teekessel  ·  +400 Münzen  ·  Glückstruhe  ·  Goldrahmen  ·  +15 % Heilung im Abenteuer"),
+			S._narr("Relikt erhalten: Meister Dorns Teekessel  ·  +400 Münzen  ·  Legenden-Truhe  ·  Goldrahmen  ·  +15 % Heilung im Abenteuer"),
 		]},
 	]

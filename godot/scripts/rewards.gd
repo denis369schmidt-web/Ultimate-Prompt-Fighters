@@ -67,7 +67,7 @@ static func reward_text(r: Dictionary) -> String:
 		"chest": return "🎁 GLÜCKSTRUHE"
 		"skin": return "SKIN %s" % skin(r.id).get("name", r.id)
 		"weapon": return "WAFFE %s" % weapon(r.id).get("name", r.id)
-		"background": return "HINTERGRUND %s" % str(r.id).to_upper()
+		"background": return ("ARENA %s" % r.name) if r.has("name") else ("HINTERGRUND %s" % str(r.id).to_upper())
 	return "?"
 
 static func path_tier(prog) -> int:
@@ -153,6 +153,22 @@ static func open_chest(prog, rng: RandomNumberGenerator, backgrounds: Array) -> 
 	else:
 		var bp: Array = backgrounds.filter(func(b): return int(b.price) > 0 and not prog.unlocked.has(b.id))
 		r = {"kind": "background", "id": bp[rng.randi_range(0, bp.size() - 1)].id} if not bp.is_empty() else {"kind": "coins", "amount": 400}
+	var got: Dictionary = grant(prog, r)
+	prog.save_progress()
+	return got
+
+## Legend chest: free, once per finished legend (story_mode.gd). Unlike the lucky chest it always
+## holds something you do not own yet – a skin, a weapon or an arena; only a full collection pays coins.
+const LEGEND_CHEST_COINS := 500
+static func open_legend_chest(prog, rng: RandomNumberGenerator, backgrounds: Array) -> Dictionary:
+	var pool: Array = []
+	for s in SKINS:
+		if not s.has("path") and not owns_skin(prog, s.id): pool.append({"kind": "skin", "id": s.id})
+	for w in WEAPONS:
+		if not owns_weapon(prog, w.id): pool.append({"kind": "weapon", "id": w.id})
+	for b in backgrounds:
+		if int(b.price) > 0 and not prog.unlocked.has(b.id): pool.append({"kind": "background", "id": b.id, "name": b.name})
+	var r: Dictionary = {"kind": "coins", "amount": LEGEND_CHEST_COINS} if pool.is_empty() else pool[rng.randi_range(0, pool.size() - 1)]
 	var got: Dictionary = grant(prog, r)
 	prog.save_progress()
 	return got

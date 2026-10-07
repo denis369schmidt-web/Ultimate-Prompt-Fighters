@@ -225,6 +225,6 @@ static func chapters() -> Array:
 			S._narr("Die Dornen sind nicht verschwunden. Aber sie haben jetzt ein Tor. Und das Tor steht offen – besonders mittwochs."),
 			S._pose(0, "Victory", 1.4),
 			{"t": "title", "text": "LEGENDE VOLLENDET", "sub": "Die Dornenhexe · Vierzig Frühlinge"},
-			S._narr("Relikt erhalten: Holms Honigglas  ·  +400 Münzen  ·  Glückstruhe  ·  Goldrahmen  ·  +15 % Heilung im Abenteuer"),
+			S._narr("Relikt erhalten: Holms Honigglas  ·  +400 Münzen  ·  Legenden-Truhe  ·  Goldrahmen  ·  +15 % Heilung im Abenteuer"),
 		]},
 	]

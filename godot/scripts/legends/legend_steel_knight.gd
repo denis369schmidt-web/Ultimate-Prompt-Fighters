@@ -214,6 +214,6 @@ static func chapters() -> Array:
 			S._narr("Im neuen Kloster am Stillen Brunnen bringen ihm die Kinder jeden Abend Tee. Er erzählt Geschichten. Die besten handeln von einem Mädchen mit einer Laterne."),
 			S._pose(0, "Victory", 1.4),
 			{"t": "title", "text": "LEGENDE VOLLENDET", "sub": "Cardinal · Das Gebet aus Eisen"},
-			S._narr("Relikt erhalten: Die Glockenzunge  ·  +400 Münzen  ·  Glückstruhe  ·  Goldrahmen  ·  +15 % Heilung im Abenteuer"),
+			S._narr("Relikt erhalten: Die Glockenzunge  ·  +400 Münzen  ·  Legenden-Truhe  ·  Goldrahmen  ·  +15 % Heilung im Abenteuer"),
 		]},
 	]

@@ -122,6 +122,20 @@ const SIGS := {
 	"echo": {"mech": "phase_swap", "shape": "glitch", "color": Color("5eead4"), "speed": 15.0, "life": 0.7, "size": 0.6, "swap": true, "dmg": 0.6},
 	"kettenwart": {"mech": "chain_leash", "shape": "hook", "color": Color("78716c"), "speed": 17.0, "life": 0.55, "size": 0.5, "pull": true, "leash": 3.0, "leash_len": 2.5, "dmg": 0.6},
 	"don_valente": {"mech": "turret", "color": Color("facc15"), "dmg": 0.35},
+	# ── Paket 9: Concept-Art-Trio ──
+	"kalyx": {"mech": "crown_shift", "color": Color("7dd3fc"), "glut_color": Color("ff5a1f"), "radius": 1.8, "glut_mult": 1.2, "frost_freeze": 0.18, "dmg": 0.7, "windup": 0.1},
+	"vorruk": {"mech": "pack_hound", "shape": "alien_hound", "color": Color("c084fc"), "life": 3.4, "size": 0.55, "walk": 7.5, "rehit": 0.45,
+		"push": 0.3, "angle": 50.0, "dmg": 0.35, "windup": 0.3},
+	"neris": {"mech": "anchor_chain", "shape": "anchor", "color": Color("a78bfa"), "speed": 18.0, "life": 0.36, "size": 0.45, "pull": true, "anchor": true,
+		"zip": 15.0, "dmg": 0.6},
+	# ── Paket 8: Nationen ──
+	"konrad": {"mech": "anvil", "shape": "anvil", "color": Color("ffce00"), "life": 2.2, "gravity": 24.0, "size": 0.6, "height": 7.0,
+		"explode": 1.8, "freeze": 0.45, "push": 0.85, "angle": 70.0, "dmg": 1.15, "windup": 0.28},
+	"bogdan": {"mech": "frost_roar", "color": Color("bfdbfe"), "length": 3.6, "freeze": 0.8, "dmg": 0.8, "windup": 0.3},
+	"kaan": {"mech": "crescent", "shape": "moon_crescent", "color": Color("ffffff"), "speed": 13.0, "life": 1.6, "size": 0.55, "turn": 0.42,
+		"pierce": true, "push": 0.45, "angle": 40.0, "dmg": 0.6},
+	"amra": {"mech": "bridge_dive", "color": Color("38bdf8"), "rise": 13.0, "dive": 24.0, "radius": 3.2, "dmg": 1.0, "windup": 0.15},
+	"dusty": {"mech": "lasso", "shape": "lasso", "color": Color("d6b37a"), "speed": 17.0, "life": 0.5, "size": 0.5, "lasso": true, "push": 0.2, "dmg": 0.55},
 }
 
 ## Body pose shown while a special runs, per mechanic.

@@ -24,9 +24,13 @@ func run() -> void:
 		app.progression.unlocked[bg_id] = true
 		app.progression.menu_bg = bg_id
 	app.show_title("splash")
-	for n in range(150): await process_frame
+	for n in range(60): await process_frame
 	await shot("splash")
 	app._enter_main_menu()
-	for n in range(240): await process_frame
+	await process_frame
+	await process_frame
+	if app.title_panel != null:
+		app._close_title_panel()
+	for n in range(60): await process_frame
 	await shot("menu")
 	quit()

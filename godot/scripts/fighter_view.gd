@@ -151,6 +151,8 @@ const MIXAMO_BODIES := {
 	"brunhild": "arissa_fighter", "thorn_witch": "elven_archer", "nyx": "vampire_lord", "shira": "assassin_night",
 	"frostwyrm": "parasite_beast", "cyborg_mech": "cyber_ybot", "reaper_hound": "maw_alien", "treant": "pumpkin_abomination",
 	"celestial_fox": "maria_prop", "mossback": "warrok_brute", "arber": "brute_titan",
+	"kalyx": "demon_warlord", "vorruk": "mutant_titan", "neris": "arissa_fighter",
+	"konrad": "castle_guard", "bogdan": "paladin_nord", "kaan": "gladiator_heraklios", "amra": "arissa_fighter", "dusty": "boss_enforcer",
 }
 
 static func load_model_scene(path: String) -> PackedScene:
@@ -229,7 +231,7 @@ func setup(p: Dictionary) -> void:
 		if m.mesh:
 			max_mesh_height = maxf(max_mesh_height, m.mesh.get_aabb().size.y)
 
-	var target_h: float = 2.15 if p.family in ["warrok_brute", "mutant_titan", "golem", "brunhild", "pumpkin_abomination", "kettenwart", "treant", "mossback"] else 1.80
+	var target_h: float = 2.15 if p.family in ["warrok_brute", "mutant_titan", "golem", "brunhild", "pumpkin_abomination", "kettenwart", "treant", "mossback", "bogdan", "vorruk"] else 1.80
 	if p.has("boss"): target_h = float(load("res://scripts/bosses.gd").data(str(p.boss)).get("height", 3.3))
 	elif p.family == "grimbolt": target_h = 1.3   # small goblin
 	elif p.family == "don_valente": target_h = 1.9

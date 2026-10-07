@@ -222,6 +222,6 @@ static func chapters() -> Array:
 			S._cam("sky", 0, 3.0),
 			S._narr("Seitdem zieht sich nachts eine Blitzspur in zwei Farben über Neon-Metropolis: violett – und ein kleines bisschen fuchsrot."),
 			{"t": "title", "text": "LEGENDE VOLLENDET", "sub": "Amethya · Gewitterkind"},
-			S._narr("Relikt erhalten: Der offene Kristall  ·  +400 Münzen  ·  Glückstruhe  ·  Goldrahmen  ·  +15 % Heilung im Abenteuer"),
+			S._narr("Relikt erhalten: Der offene Kristall  ·  +400 Münzen  ·  Legenden-Truhe  ·  Goldrahmen  ·  +15 % Heilung im Abenteuer"),
 		]},
 	]

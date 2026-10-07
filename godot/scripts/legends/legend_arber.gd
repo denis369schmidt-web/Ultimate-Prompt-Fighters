@@ -189,6 +189,6 @@ static func chapters() -> Array:
 			S._narr("Bei Sonnenaufgang fällt der erste Schnee. Er bleibt auf einem roten Dach liegen. Über den Bergen kreist ein schwarzer Adler mit zwei Köpfen."),
 			S._pose(0, "Victory", 1.4),
 			{"t": "title", "text": "LEGENDE VOLLENDET", "sub": "Arbër · Die Besa"},
-			S._narr("Relikt erhalten: Ilirs Wasserwaage  ·  +400 Münzen  ·  Glückstruhe  ·  Goldrahmen  ·  +15 % Heilung im Abenteuer"),
+			S._narr("Relikt erhalten: Ilirs Wasserwaage  ·  +400 Münzen  ·  Legenden-Truhe  ·  Goldrahmen  ·  +15 % Heilung im Abenteuer"),
 		]},
 	]

@@ -207,6 +207,6 @@ static func chapters() -> Array:
 			S._pose(0, "Crouch", 1.4),
 			S._narr("Zum ersten Mal in siebenhundert Jahren schläft der Seelenernter. Eine kleine Seele hält seine Sense, ganz ernst, ganz stolz. Sie fasst nur ein bisschen was an."),
 			{"t": "title", "text": "LEGENDE VOLLENDET", "sub": "Nyx · Die lange Schicht"},
-			S._narr("Relikt erhalten: Mottes Papierlaterne  ·  +400 Münzen  ·  Glückstruhe  ·  Goldrahmen  ·  +15 % Heilung im Abenteuer"),
+			S._narr("Relikt erhalten: Mottes Papierlaterne  ·  +400 Münzen  ·  Legenden-Truhe  ·  Goldrahmen  ·  +15 % Heilung im Abenteuer"),
 		]},
 	]

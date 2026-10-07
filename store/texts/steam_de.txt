@@ -1,0 +1,112 @@
+STEAM – STORE-TEXTE (DEUTSCH)
+Alle Zahlen sind am Spielcode geprüft (Stand 07.10.2026: 58 Kämpfer, 58 Legenden, 19 Bosse, 32 Versus-Arenen + 8 Story-Schauplätze, 13 Mutatoren, 29 Erfolge). Wenn sich Inhalte ändern, hier mitziehen.
+Felder in Steamworks: App-Admin → Store-Seite bearbeiten → Reiter „Beschreibung“ / „Grundlegende Informationen“.
+
+────────────────────────────────────────────────────────────────────
+NAME
+────────────────────────────────────────────────────────────────────
+Prompt Fighters Ultimate
+
+────────────────────────────────────────────────────────────────────
+KURZBESCHREIBUNG  (Steam-Limit 300 Zeichen – dieser Text: 233)
+────────────────────────────────────────────────────────────────────
+Ein Platform-Fighter, in dem Treffer dich nicht umhauen, sondern aus der Arena schleudern. 58 Kämpfer mit eigener Signatur-Technik und eigenem Finisher, 19 Bosse, zwei vertonte Kampagnen – und bis zu vier Spieler an einem Bildschirm.
+
+────────────────────────────────────────────────────────────────────
+AUSFÜHRLICHE BESCHREIBUNG  (BBCode – so einfügen)
+────────────────────────────────────────────────────────────────────
+[h2]Je mehr Schaden, desto weiter fliegst du[/h2]
+Hier gibt es keine Lebensleiste, die leerläuft. Jeder Treffer treibt die Prozentanzeige hoch – und je höher sie steht, desto weiter schleudert dich der nächste Schlag. Wer aus der Arena fliegt, verliert ein Leben. Ein Kampf kann so in einer Sekunde kippen: ein sauberer Smash bei 120 %, und dein Gegner ist Geschichte.
+
+[h2]58 Kämpfer, die sich wirklich unterschiedlich spielen[/h2]
+Jeder Kämpfer hat eigene Werte, eigene Sprung- und Fallphysik, 15 eigene Angriffe und eine Signatur-Technik, die es nur bei ihm gibt:
+[list]
+[*][b]Vlad[/b] löst sich in einen Fledermausschwarm auf, fliegt unberührbar durch dich hindurch und heilt sich an jedem Biss.
+[*][b]Grimbolt[/b] klebt dir eine tickende Zeitbombe an – weglaufen hilft nicht.
+[*][b]Echo[/b] feuert einen Glitch-Schuss und tauscht mit dem Getroffenen die Plätze.
+[*][b]Kettenwart[/b] zieht dich heran und hält dich drei Sekunden lang an der Kette.
+[*][b]Vanguard[/b] markiert deinen Standort – eine Sekunde später schlägt ein Strahl aus dem Orbit ein.
+[/list]
+Und jeder Kämpfer beendet einen Sieg mit seinem eigenen, filmisch inszenierten [b]Finisher[/b] – per Tastenkombination, wenn der Gegner benommen ist. Blut-Effekte lassen sich abschalten.
+
+[h2]Ein Satz wird zum Kämpfer[/h2]
+In der [b]Fusionskammer[/b] tippst du eine Idee ein – „Cyber-Samurai mit Drachenflügeln und Flammenklinge“ – und bekommst einen spielbaren Kämpfer mit passender Ausrüstung, passendem Element und ausbalancierten Werten. Das läuft komplett offline und regelbasiert auf deinem Rechner: kein Online-Zwang, kein KI-Modell, keine Wartezeit.
+
+[h2]Geschichten, nicht nur Kämpfe[/h2]
+[list]
+[*][b]Die göttliche Prüfung[/b] – frei nach Dantes Göttlicher Komödie: von der Erde durch die Hölle bis in den Himmel. 21 Kapitel gegen zehn Fürsten der Hölle und neun Chöre der Engel, mit deutscher Sprachausgabe.
+[*][b]Der Riss zwischen den Welten[/b] – die Saga danach: 14 Kapitel mit Zwischensequenzen und Reaktions-Szenen, in denen du im richtigen Moment drücken musst.
+[*][b]58 Legenden[/b] – jeder Kämpfer hat seine eigene vierteilige Geschichte: Herkunft, Rivale, Abgrund, Legende. Du schaltest sie frei, indem du ihn meisterst.
+[/list]
+
+[h2]Zu viert auf der Couch[/h2]
+Bis zu vier Spieler an einem Bildschirm – jeder gegen jeden, 2 gegen 2 oder 3 gegen 1, mit Freunden oder gegen die KI. Dazu 13 Mutatoren, die jede Runde auf den Kopf stellen: Mondsprung, Riesen, Winzlinge, Bombenhagel, Platztausch, Sudden Death und mehr.
+
+[h2]Immer ein Grund für noch eine Runde[/h2]
+[list]
+[*][b]Abenteuer[/b]: Welle um Welle, mit Rekorden pro Kämpfer
+[*][b]Boss-Rush[/b] gegen alle 19 Bosse hintereinander
+[*][b]Tages-Herausforderung[/b] mit Serien-Bonus, Wochen-Events und Herausforderer, die mitten im Spiel auftauchen
+[*][b]32 Arenen[/b] mit eigenem Wetter und eigener Stimmung, dazu 8 Schauplätze in Hölle und Himmel für die Story
+[*][b]29 Erfolge[/b], Kämpfer-Meisterschaft und ein Shop voller Skins, Waffen und Arenen
+[/list]
+
+[h2]Fair bezahlt[/h2]
+Du kaufst das Spiel einmal. Alles, was der Shop anbietet, verdienst du dir mit Münzen im Spiel. Keine Lootboxen, keine Echtgeld-Währung, kein Pay-to-win.
+
+[h2]Steuerung[/h2]
+Controller empfohlen (Xbox-Layout), Tastatur wird voll unterstützt, Touch-Steuerung lässt sich zuschalten – zum Beispiel auf dem Steam Deck.
+
+────────────────────────────────────────────────────────────────────
+„ÜBER DIESES SPIEL“ – OPTIONALE ÜBERSCHRIFTS-GRAFIKEN
+────────────────────────────────────────────────────────────────────
+Steam erlaubt animierte GIFs/WebM zwischen den Absätzen. Größter Hebel für Kaufentscheidungen:
+kurze Clips (3–6 s) von je einer Signatur-Technik und einem Finisher. Liste dafür in docs/STORE_RELEASE.md, Abschnitt „Trailer & Clips“.
+
+────────────────────────────────────────────────────────────────────
+INHALTSBESCHREIBUNG (Steamworks → Inhaltsumfrage)
+────────────────────────────────────────────────────────────────────
+Gelegentliche Gewalt / Comic-Gewalt: ja (Kämpfe zwischen menschenähnlichen und fantastischen Figuren).
+Blut: ja, in Finishern – abschaltbar (Optionen → FINISHER / BLUT).
+Freie Texteingabe: Spieler-Prompts in der Fusionskammer werden nur lokal ausgewertet, nicht geteilt.
+Text für Spieler sichtbar:
+„Stilisierte Kampfgewalt zwischen Fantasy-Figuren. Optionale Finisher mit Blut-Effekten, die sich in den Optionen abschalten lassen.“
+
+────────────────────────────────────────────────────────────────────
+KI-OFFENLEGUNG (Steamworks → Inhaltsumfrage → „KI-generierte Inhalte“)
+────────────────────────────────────────────────────────────────────
+Vorab generierte Inhalte: JA –
+„Die Sprachausgabe der Story-Dialoge wurde offline mit der Sprachsynthese Piper TTS erzeugt (Stimmen aus den frei lizenzierten CC0-Datensätzen Thorsten-Voice und Kerstin). Texte, Figuren, 3D-Modelle, Musik und Spielinhalte sind nicht KI-generiert.“
+Live generierte Inhalte: NEIN –
+(Die Fusionskammer setzt Kämpfer regelbasiert aus festen Bausteinen zusammen; es läuft kein generatives Modell.)
+→ Vor dem Absenden selbst prüfen, ob das für ALLE Assets stimmt (z. B. Menühintergründe in art/menu_bg_source, Konzeptbilder).
+
+────────────────────────────────────────────────────────────────────
+SPRACHEN (Steamworks → Grundlegende Informationen → Sprachen)
+────────────────────────────────────────────────────────────────────
+Deutsch: Benutzeroberfläche ✔ · Vollständige Audioausgabe ✔ · Untertitel ✔
+Keine weitere Sprache ankreuzen, solange das Spiel nicht übersetzt ist – Steam-Nutzer bewerten falsche Sprachangaben sofort negativ.
+Hinweis: Mit nur Deutsch ist der Markt klein. Eine englische Übersetzung ist der größte einzelne Umsatzhebel (siehe docs/STORE_RELEASE.md).
+
+────────────────────────────────────────────────────────────────────
+GENRE & TAGS
+────────────────────────────────────────────────────────────────────
+Genre: Action · Indie
+Tags (Reihenfolge = Gewichtung, die ersten 5 zählen am meisten):
+ 1 Fighting          2 Platform Fighter   3 Local Multiplayer   4 Action
+ 5 3D Fighter        6 Beat 'em up        7 Character Customization
+ 8 Local Co-Op       9 PvP                10 Singleplayer      11 Fantasy
+12 Story Rich       13 Controller         14 Arcade            15 Colorful
+16 Bosses           17 Dark Fantasy      18 Stylized
+(Steam erlaubt 20 Tags; nur Tags setzen, die ein Käufer im Spiel wiedererkennt.)
+
+────────────────────────────────────────────────────────────────────
+STEAM-FUNKTIONEN (nur ankreuzen, was wirklich eingebaut ist)
+────────────────────────────────────────────────────────────────────
+✔ Einzelspieler
+✔ PvP · Gemeinsamer/geteilter Bildschirm (PvP)
+✔ Koop · Gemeinsamer/geteilter Bildschirm (Koop) – Team 2 gegen 2 / 3 gegen 1 mit KI-Gegnern
+✔ Volle Controller-Unterstützung
+✔ Remote Play Together – lokaler Mehrspieler läuft darüber automatisch; einmal mit zwei Konten testen
+✗ Steam-Errungenschaften – erst ankreuzen, wenn die 29 Erfolge über GodotSteam gemeldet werden
+✗ Steam Cloud – erst ankreuzen, wenn user://-Spielstände in Steam Cloud eingetragen sind

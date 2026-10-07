@@ -202,6 +202,6 @@ static func chapters() -> Array:
 			S._narr("Über Block 9 hängt seitdem ein Licht, das nie ausgeht. Die Leute sagen, ein Ninja sitzt dort oben. Er sitzt einfach. Er wartet nicht. Er ist da."),
 			S._pose(0, "Victory", 1.4),
 			{"t": "title", "text": "LEGENDE VOLLENDET", "sub": "Volt · Und dann bleib"},
-			S._narr("Relikt erhalten: Die zweite Zeile  ·  +400 Münzen  ·  Glückstruhe  ·  Goldrahmen  ·  +15 % Heilung im Abenteuer"),
+			S._narr("Relikt erhalten: Die zweite Zeile  ·  +400 Münzen  ·  Legenden-Truhe  ·  Goldrahmen  ·  +15 % Heilung im Abenteuer"),
 		]},
 	]

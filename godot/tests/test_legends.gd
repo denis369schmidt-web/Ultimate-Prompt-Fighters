@@ -4,6 +4,8 @@ extends "res://tests/test_base.gd"
 
 const StoryLegends = preload("res://scripts/story_legends.gd")
 const Adventure = preload("res://scripts/adventure.gd")
+const Rewards = preload("res://scripts/rewards.gd")
+const Backgrounds = preload("res://scripts/backgrounds.gd")
 
 const STEP_TYPES := ["stage", "title", "narrate", "say", "cam", "move", "pose", "face", "fx", "vanish", "appear", "wait", "fight", "music", "qte", "choice", "branch", "bonds", "set"]
 
@@ -22,6 +24,7 @@ func run() -> void:
 	test_unlocking(app, story)
 	await test_playthrough(app, story)
 	test_adventure_relic()
+	test_legend_chest(app)
 	app.queue_free()
 	await process_frame
 	finish("legends")
@@ -112,6 +115,7 @@ func test_playthrough(app, story) -> void:
 	app.progression.fighter_xp["arber"] = app.progression.MASTERY[2]
 	app.progression.legend_relics = {}
 	var coins: int = app.progression.coins
+	var owned: int = owned_items(app.progression)
 	story.open_legend("arber")
 	for k in range(4):
 		story.start_chapter(k)
@@ -126,7 +130,33 @@ func test_playthrough(app, story) -> void:
 		check(not story.running and story.is_done(k) and fights == 1, "Arbër chapter %d plays through with its fight" % (k + 1))
 	check(app.progression.legend_relics.has("arber") and app.progression.coins >= coins + StoryLegends.RELIC_COINS, "the finished legend pays the relic and coins")
 	check(not app.progression.grant_legend("arber", 400), "the relic is given only once")
+	check(owned_items(app.progression) == owned + 1 or app.progression.coins >= coins + StoryLegends.RELIC_COINS + Rewards.LEGEND_CHEST_COINS,
+		"the finished legend opens the legend chest (a new item, coins only with a full collection)")
 	story.auto_advance = false
+
+func owned_items(prog) -> int:
+	return prog.skins_owned.size() + prog.weapons_owned.size() + prog.unlocked.size()
+
+## The legend chest never repeats an owned item; with everything owned it pays coins.
+func test_legend_chest(app) -> void:
+	var prog = app.progression
+	var saved := [prog.skins_owned.duplicate(), prog.weapons_owned.duplicate(), prog.unlocked.duplicate(), prog.coins]
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 7
+	var before: int = owned_items(prog)
+	var r: Dictionary = Rewards.open_legend_chest(prog, rng, Backgrounds.LIST)
+	check(str(r.kind) in ["skin", "weapon", "background"] and owned_items(prog) == before + 1, "the legend chest holds a new item: %s" % Rewards.reward_text(r))
+	for s in Rewards.SKINS: if not s.has("path"): prog.skins_owned[s.id] = true
+	for w in Rewards.WEAPONS: prog.weapons_owned[w.id] = true
+	for b in Backgrounds.LIST: prog.unlocked[b.id] = true
+	var coins: int = prog.coins
+	r = Rewards.open_legend_chest(prog, rng, Backgrounds.LIST)
+	check(r.kind == "coins" and prog.coins == coins + Rewards.LEGEND_CHEST_COINS, "with a full collection the legend chest pays coins")
+	prog.skins_owned = saved[0]
+	prog.weapons_owned = saved[1]
+	prog.unlocked = saved[2]
+	prog.coins = saved[3]
+	prog.save_progress()
 
 func test_adventure_relic() -> void:
 	var a := Adventure.new()

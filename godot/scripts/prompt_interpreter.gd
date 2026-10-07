@@ -76,10 +76,29 @@ static func interpret(raw: Variant, slot: int = 0) -> Dictionary:
 	var kettenwart := has_any(lower, ["kettenwart", "kerkermeister", "seelenketten"])
 	var don_valente := has_any(lower, ["don valente", "unterweltpate", "leibwächter-geschütz"])
 
+	# Concept-art trio: Kalyx (twin crystal crown), Vorruk (alien colossus), Neris (chain hand).
+	var kalyx := has_any(lower, ["kalyx", "zwiekristall", "kristallkrone"])
+	var vorruk := has_any(lower, ["vorruk", "alien-koloss", "alien koloss", "sternenkoloss"])
+	var neris := has_any(lower, ["neris", "kettenhand", "kristallkette"])
+	# Five national fighters (Germany, Russia, Turkey, Bosnia, USA).
+	var konrad := has_any(lower, ["konrad", "schmiedemeister", "deutschland", "schwarz-rot-gold", "germany"])
+	var bogdan := has_any(lower, ["bogdan", "bogatyr", "russland", "russia"])
+	var kaan := has_any(lower, ["kaan", "halbmondkrieger", "türkei", "tuerkei", "turkey"])
+	var amra := has_any(lower, ["amra", "brückenspringerin", "bosnien", "mostar", "bosnia"])
+	var dusty := has_any(lower, ["dusty", "rodeo-ranger", "rodeo ranger", "amerika", "sternenbanner", "stars and stripes"])
+
 	var arber := has_any(lower, ["arbër", "arber", "bohrmeister", "shqiponja", "doppeladler", "doppelkopfadler", "zwei bohrmaschinen"])
 
 	var fam := "ninja"
-	if arber: fam = "arber"
+	if kalyx: fam = "kalyx"
+	elif vorruk: fam = "vorruk"
+	elif neris: fam = "neris"
+	elif konrad: fam = "konrad"
+	elif bogdan: fam = "bogdan"
+	elif kaan: fam = "kaan"
+	elif amra: fam = "amra"
+	elif dusty: fam = "dusty"
+	elif arber: fam = "arber"
 	elif nekra: fam = "nekra"
 	elif grimbolt: fam = "grimbolt"
 	elif echo: fam = "echo"
@@ -130,6 +149,54 @@ static func interpret(raw: Variant, slot: int = 0) -> Dictionary:
 	elif heavy: fam = "golem"
 
 	var fam_configs: Dictionary = {
+		"kalyx": {
+			"values": [20, 26, 17, 20, 17], "element": "ice", "weight": 1.05,
+			"std_name": "Kristallfaust", "std_range": 2.1, "std_cd": 0.46, "std_windup": 0.09, "std_push": 0.26,
+			"spec_name": "Kronenwechsel", "spec_type": "whirl", "spec_range": 1.8, "spec_cd": 1.2, "spec_windup": 0.1, "spec_push": 0.6, "spec_angle": 55.0, "spec_dmg_bonus": 0.0,
+			"fname": "KALYX (ZWIEKRISTALL)", "modules": ["twin_crystal_crown", "gold_chains"]
+		},
+		"vorruk": {
+			"values": [32, 29, 24, 6, 9], "element": "acid", "weight": 1.35,
+			"std_name": "Krallenhieb", "std_range": 2.6, "std_cd": 0.66, "std_windup": 0.16, "std_push": 0.38,
+			"spec_name": "Zirra, hol sie!", "spec_type": "projectile", "spec_range": 5.0, "spec_cd": 4.0, "spec_windup": 0.3, "spec_push": 0.3, "spec_angle": 50.0, "spec_dmg_bonus": 0.0,
+			"fname": "VORRUK (STERNENKOLOSS)", "modules": ["flesh_plates", "long_claws"]
+		},
+		"neris": {
+			"values": [17, 24, 13, 27, 19], "element": "dark_magic", "weight": 0.92,
+			"std_name": "Kettenschlag", "std_range": 2.5, "std_cd": 0.42, "std_windup": 0.08, "std_push": 0.24,
+			"spec_name": "Kettenanker", "spec_type": "projectile", "spec_range": 4.5, "spec_cd": 2.4, "spec_windup": 0.14, "spec_push": 0.4, "spec_angle": 40.0, "spec_dmg_bonus": 0.0,
+			"fname": "NERIS (KETTENHAND)", "modules": ["chain_gauntlet", "shoulder_crystals"]
+		},
+		"konrad": {
+			"values": [24, 26, 22, 12, 16], "element": "metal", "weight": 1.25,
+			"std_name": "Hammerschlag", "std_range": 2.2, "std_cd": 0.56, "std_windup": 0.13, "std_push": 0.32,
+			"spec_name": "Amboss", "spec_type": "meteor", "spec_range": 4.0, "spec_cd": 3.4, "spec_windup": 0.28, "spec_push": 0.85, "spec_angle": 70.0, "spec_dmg_bonus": 1.0,
+			"fname": "KONRAD (DEUTSCHLAND)", "modules": ["forge_hammer", "black_red_gold"]
+		},
+		"bogdan": {
+			"values": [30, 27, 23, 9, 11], "element": "ice", "weight": 1.32,
+			"std_name": "Streitkolben", "std_range": 2.3, "std_cd": 0.62, "std_windup": 0.15, "std_push": 0.36,
+			"spec_name": "Wintergebrüll", "spec_type": "whirl", "spec_range": 3.4, "spec_cd": 3.6, "spec_windup": 0.3, "spec_push": 0.8, "spec_angle": 35.0, "spec_dmg_bonus": 1.0,
+			"fname": "BOGDAN (RUSSLAND)", "modules": ["bogatyr_mace", "white_blue_red"]
+		},
+		"kaan": {
+			"values": [19, 27, 15, 22, 17], "element": "wind_slash", "weight": 1.0,
+			"std_name": "Säbelhieb", "std_range": 2.2, "std_cd": 0.44, "std_windup": 0.08, "std_push": 0.24,
+			"spec_name": "Halbmondwelle", "spec_type": "projectile", "spec_range": 5.0, "spec_cd": 2.8, "spec_windup": 0.2, "spec_push": 0.5, "spec_angle": 40.0, "spec_dmg_bonus": 0.0,
+			"fname": "KAAN (TÜRKEI)", "modules": ["crescent_sabre", "red_crescent"]
+		},
+		"amra": {
+			"values": [17, 23, 13, 29, 18], "element": "water", "weight": 0.9,
+			"std_name": "Wirbeltritt", "std_range": 2.0, "std_cd": 0.38, "std_windup": 0.06, "std_push": 0.22,
+			"spec_name": "Mostar-Sprung", "spec_type": "eruption", "spec_range": 3.2, "spec_cd": 3.4, "spec_windup": 0.15, "spec_push": 0.8, "spec_angle": 80.0, "spec_dmg_bonus": 1.0,
+			"fname": "AMRA (BOSNIEN)", "modules": ["diver_wraps", "lily_blue_gold"]
+		},
+		"dusty": {
+			"values": [21, 25, 17, 20, 17], "element": "ki_gold", "weight": 1.04,
+			"std_name": "Sporenkick", "std_range": 2.1, "std_cd": 0.46, "std_windup": 0.09, "std_push": 0.26,
+			"spec_name": "Lasso", "spec_type": "projectile", "spec_range": 5.0, "spec_cd": 2.8, "spec_windup": 0.16, "spec_push": 0.4, "spec_angle": 40.0, "spec_dmg_bonus": 0.0,
+			"fname": "DUSTY (USA)", "modules": ["lasso", "stars_and_stripes"]
+		},
 		"nekra": {
 			"values": [18, 26, 12, 20, 24], "element": "soul_dark", "weight": 0.9,
 			"std_name": "Knochenpeitsche", "std_range": 2.3, "std_cd": 0.46, "std_windup": 0.09, "std_push": 0.22,
@@ -408,7 +475,7 @@ static func interpret(raw: Variant, slot: int = 0) -> Dictionary:
 		},
 		"valkyrie": {
 			"values": [17, 22, 16, 23, 22], "element": "holy", "weight": 1.05,
-			"std_name": "Standard Strike", "std_range": 1.85, "std_cd": 0.52, "std_windup": 0.10, "std_push": 0.20,
+			"std_name": "Standard Strike", "std_range": 2.1, "std_cd": 0.52, "std_windup": 0.10, "std_push": 0.20,
 			"spec_name": "Radiant Pierce", "spec_type": "holy_pierce", "spec_range": 2.45, "spec_cd": 3.2, "spec_windup": 0.32, "spec_push": 0.62, "spec_angle": 42.0, "spec_dmg_bonus": 0.0,
 			"fname": "BOLTAR (ARMBRUSTRITTER)", "modules": ["radiant_armor", "light_rapier"]
 		},

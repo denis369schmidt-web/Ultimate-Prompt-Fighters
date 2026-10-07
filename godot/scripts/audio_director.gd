@@ -20,9 +20,11 @@ const TRACKS := {
 const FIGHT_TRACKS := ["battle_valor", "battle_tempest", "boss_metal_loop"]
 ## Sound keys used by main.gd and their pitch spread (fraction).
 const SFX_PITCH := {"hit": 0.12, "block": 0.1, "jump": 0.12, "land": 0.1, "electric": 0.15, "lava": 0.12,
-	"ko": 0.06, "slash": 0.12, "drill": 0.1, "ui_select": 0.05, "ui_confirm": 0.03, "ui_back": 0.03}
+	"ko": 0.06, "slash": 0.12, "drill": 0.1, "ui_select": 0.05, "ui_confirm": 0.03, "ui_back": 0.03,
+	"anvil": 0.06, "lasso": 0.1, "hound": 0.08, "crown_frost": 0.05, "crown_glut": 0.06, "chain": 0.1}
 const SFX_DB := {"hit": -4.0, "block": -6.0, "jump": -10.0, "land": -12.0, "electric": -9.0, "lava": -8.0,
-	"ko": -3.0, "slash": -7.0, "drill": -9.0, "ui_select": -12.0, "ui_confirm": -9.0, "ui_back": -10.0}
+	"ko": -3.0, "slash": -7.0, "drill": -9.0, "ui_select": -12.0, "ui_confirm": -9.0, "ui_back": -10.0,
+	"anvil": -5.0, "lasso": -7.0, "hound": -6.0, "crown_frost": -8.0, "crown_glut": -7.0, "chain": -8.0}
 const DUCK_DB := -10.0
 
 ## Ambience per arena; arenas not listed are matched by keywords in their id (AMBIENCE_KEYS).

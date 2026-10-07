@@ -221,6 +221,6 @@ static func chapters() -> Array:
 			S._narr("Der Wald auf seinem Rücken blüht. Die Igelkinder lernen schwimmen. Und eine Haselmaus erzählt jedem Wanderer, dass sie mit einem Berg befreundet ist."),
 			S._pose(0, "Victory", 1.4),
 			{"t": "title", "text": "LEGENDE VOLLENDET", "sub": "Mossback · Das Gewicht des Waldes"},
-			S._narr("Relikt erhalten: Das Moospolster  ·  +400 Münzen  ·  Glückstruhe  ·  Goldrahmen  ·  +15 % Heilung im Abenteuer"),
+			S._narr("Relikt erhalten: Das Moospolster  ·  +400 Münzen  ·  Legenden-Truhe  ·  Goldrahmen  ·  +15 % Heilung im Abenteuer"),
 		]},
 	]

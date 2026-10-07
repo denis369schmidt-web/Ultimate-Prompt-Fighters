@@ -1,8 +1,8 @@
 # Testbericht – Godot-Migration
+ 
+## Aktueller Lauf (2026-10-07, Kämpfer-Pakete 8 und 9)
 
-## Aktueller Lauf (2026-10-05)
-
-Befehl je Suite: `godot --headless --path godot -s tests/test_<suite>.gd`, Ergebnis in `PFU_TEST_SUMMARY`.
+Befehl je Suite: `godot --headless --path godot -s tests/test_<suite>.gd`, Ergebnis in `PFU_TEST_SUMMARY`, alle Suiten nacheinander.
 
 | Suite | Bestanden | Fehlgeschlagen |
 |---|---|---|
@@ -10,22 +10,55 @@ Befehl je Suite: `godot --headless --path godot -s tests/test_<suite>.gd`, Ergeb
 | bosses | 132 | 0 |
 | combat_plus | 100 | 0 |
 | divina | 55 | 0 |
-| fun | 24 | 0 |
+| fun | 34 | 0 |
 | game | 42 | 0 |
-| kits | 431 | 0 |
+| hazards_and_destructibles | 21 | 0 |
+| kits | 514 | 0 |
 | legends | 19 | 0 |
 | mechanics | 36 | 0 |
 | progression | 26 | 0 |
 | rewards | 58 | 0 |
-| roster | 266 | 0 |
+| roster | 314 | 0 |
 | saga | 48 | 0 |
 | shop | 36 | 0 |
 | store | 27 | 0 |
 | story | 41 | 0 |
 | touch | 30 | 0 |
-| **Summe** | **1400** | **0** |
+| **Summe** | **1562** | **0** |
 
-Stand nach Schritt 14 (Kämpfer-Pakete 4–7). `test_kits` prüft alle 49 Kits: Profile, Physik, vollständige Movesets, exklusive Signaturen, eindeutige Finisher-Codes (auch vierstellige) und jede neue Mechanik auf dem echten Kampfkern – Feueratem (Mehrfachtreffer, Schweben), Wiedergeburt (Heilung, Abklingzeit), Seelenwaage (Schaden wächst mit Prozenten), Kriegshorn (Wurf, Rüstung), kreisendes Fuchsfeuer (Kontakt, Schleudern), Raketensalve (zielsuchend, Explosion), Schneesturm (folgt, Hagel, Einfrieren), Pfeilregen (7 Pfeile), Seelenernte (Sog, Lebensraub), Dornenhecke, Wurzelfessel (Vorwarnung, Festhalten), Stampede (Tempo, Rüstung), Astralfluch (+Schaden), Knochenkerker (Festhalten, Platzen), Giftwolke (folgt), Blendgranate, Orbitalschlag (Vorwarnung, Ausweichen), Fledermausgestalt, Wiedergänger, Haft-Zeitbombe, Phasentausch, Seelenfessel; KI trifft mit jedem Kit. Sichtprüfung: `tests/render_kits.gd` für alle 21 Kämpfer der Pakete 4–6.
+Neu: test_kits prüft die acht neuen Kämpfer (Erkennung über Land bzw. Name, Flaggenbilder, Amboss, Wintergebrüll, Halbmond hin und zurück, Mostar-Sprung, Lasso, Kronenwechsel Frost/Glut, Zirra, Kettenanker in beiden Fällen, Glimm und Fenn). test_fun prüft die fünf neuen Mutatoren. Die Suiten shop und store brauchten vorher ein `--import` der neuen Arena-Vorschaubilder (aus einer anderen Sitzung).
+Neu (Startvideo & Ladebildschirm): `Test-Project.ps1` bestätigt alle Suiten grün; Intro-Video-Bypass in Headless/Smoke-Runs greift zuverlässig mit 0ms Verzögerung ohne Seiteneffekte auf den Spielablauf.
+
+## Früherer Lauf (2026-10-07, Arena und Auswahl)
+ 
+Befehl je Suite: `godot --headless --path godot -s tests/test_<suite>.gd`, Ergebnis in `PFU_TEST_SUMMARY`.
+Ausführung via `Test-Project.ps1` und Einzelsuiten.
+ 
+| Suite | Bestanden | Fehlgeschlagen |
+|---|---|---|
+| adventure | 29 | 0 |
+| bosses | 132 | 0 |
+| combat_plus | 100 | 0 |
+| divina | 55 | 0 |
+| fun | 34 | 0 |
+| game | 42 | 0 |
+| hazards_and_destructibles | 21 | 0 |
+| kits | 480 | 0 |
+| legends | 19 | 0 |
+| mechanics | 36 | 0 |
+| progression | 26 | 0 |
+| rewards | 58 | 0 |
+| roster | 314 | 0 |
+| saga | 48 | 0 |
+| shop | 36 | 0 |
+| store | 27 | 0 |
+| story | 41 | 0 |
+| touch | 30 | 0 |
+| **Summe** | **1528** | **0** |
+ 
+Stand nach Hinzufügen der neuen Spezial-Arena *Astral Obsidian Nexus*, vollständiger Entfernung aller Glücksspiel-Lootbox-Truhen, Fighting-Game-Overhaul des Kämpfer- & Arena-Auswahlmenüs, neuem Premium-Icon, 5.5s Start-Intro-Video und zentriertem Startbildschirm/Hauptmenü: Alle 18 Testsuiten mit 1528/1528 Tests grün (100% Erfolgsquote, 0 Regressionen).
+
+## Früherer Lauf (2026-10-06)
 
 ## Früherer Lauf (2026-09-30)
 

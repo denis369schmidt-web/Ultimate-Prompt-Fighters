@@ -227,6 +227,6 @@ static func chapters() -> Array:
 			S._narr("Im Frühling reiten sechs Reiter auf den Palast zu. Im Thronsaal stehen keine sieben Throne mehr – nur ein langer Tisch. Und am Ende ein Platz für den Jüngsten."),
 			S._pose(0, "Victory", 1.4),
 			{"t": "title", "text": "LEGENDE VOLLENDET", "sub": "Varakh · Die sechs Namen"},
-			S._narr("Relikt erhalten: Iseks Namensliste  ·  +400 Münzen  ·  Glückstruhe  ·  Goldrahmen  ·  +15 % Heilung im Abenteuer"),
+			S._narr("Relikt erhalten: Iseks Namensliste  ·  +400 Münzen  ·  Legenden-Truhe  ·  Goldrahmen  ·  +15 % Heilung im Abenteuer"),
 		]},
 	]

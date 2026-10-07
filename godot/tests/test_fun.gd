@@ -9,6 +9,7 @@ func _initialize() -> void:
 
 func run() -> void:
 	test_rules()
+	test_party_rules()
 	await test_main()
 	finish("fun")
 
@@ -48,6 +49,58 @@ func test_rules() -> void:
 	check(FunModes.check_comeback(p2, 51).is_empty(), "coming back the next day is normal")
 	var gift: Dictionary = FunModes.check_comeback(p2, 56)
 	check(gift.get("days", 0) == 5 and p2.coins >= 200 and p2.chests == 1, "five days away: a welcome-back gift")
+
+
+func rule_match(ids: Array):
+	var m = Combat.new()
+	m.start([Prompt.interpret("Zip der Blitzkurier mit Turbo-Sprint", 0), Prompt.interpret("Kairo der Sturmmönch mit Solar-Kanone", 1)], null, "manual", 3)
+	m.countdown = 0.0
+	m.items.clear()
+	FunModes.apply(m, [], ids)
+	return m
+
+func idle(m, n: int, ev: Array = []) -> void:
+	for k in range(n):
+		m.item_spawn_timer = 999.0
+		m.events.clear()
+		m.tick([{"move": 0.0}, {"move": 0.0}])
+		ev.append_array(m.events)
+
+func test_party_rules() -> void:
+	for id in ["bomb_rain", "vampire", "swap", "escalation", "item_rain"]:
+		check(FunModes.MUTATORS.has(id) and FunModes.mutator_text([id]) != "", "mutator %s exists with a name" % id)
+	var m = rule_match(["bomb_rain"])
+	var ev: Array = []
+	idle(m, int(5.0 / Combat.STEP), ev)
+	var warned := false
+	var hit := false
+	for e in ev:
+		if e.type == "boss_telegraph" and e.shape == "circle": warned = true
+		if e.type == "hazard_hit" and e.kind == "bombe": hit = true
+	check(warned and hit, "bomb rain: a red circle warns, then the bomb hits a fighter standing there")
+	m = rule_match(["swap"])
+	m.fighters[0].x = -3.0
+	m.fighters[1].x = 4.0
+	ev = []
+	idle(m, int(15.2 / Combat.STEP), ev)
+	var swapped := false
+	for e in ev: if e.type == "rule_swap": swapped = true
+	check(swapped and m.fighters[0].x > 0.0 and m.fighters[1].x < 0.0, "swap: after 15 s the fighters trade places")
+	m = rule_match(["vampire"])
+	m.fighters[0].damage_percent = 50.0
+	m.fighters[0].x = 0.0
+	m.fighters[1].x = 1.2
+	m.fighters[0].facing = 1
+	m.queue_attack(0, false)
+	idle(m, 30)
+	check(m.fighters[1].damage_percent > 0.0 and m.fighters[0].damage_percent < 50.0, "blood thirst: hitting heals the attacker (%.1f%%)" % m.fighters[0].damage_percent)
+	m = rule_match(["escalation"])
+	m.elapsed = 60.0
+	check(is_equal_approx(m.escalation_mult(), 1.6) and rule_match([]).rules.is_empty(), "escalation grows with time, no rules without mutators")
+	m = rule_match(["item_rain"])
+	m.item_spawn_timer = 0.0
+	m.tick([{"move": 0.0}, {"move": 0.0}])
+	check(m.item_spawn_timer <= 5.0, "gift rain: the next item comes within 5 s")
 
 func test_main() -> void:
 	var app = load("res://main.tscn").instantiate()

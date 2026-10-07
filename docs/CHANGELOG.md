@@ -4,6 +4,56 @@ Format: neueste Einträge oben. Jeder Schritt nennt Spieler-Wirkung und technisc
 
 ## [Unreleased]
 
+### Schritt 18 – Feinschliff: eigene Sounds, sichtbare Helfertiere, neue Erfolge (2026-10-07)
+
+- **Eigene Soundeffekte**, synthetisch erzeugt (`godot/tools/synth_sfx.py`, eigenes Werk, in `docs/AUDIO_LICENSES.md`): Amboss-Klingen beim Einschlag, Lasso-Surren mit Peitschenknall, Zirras Knurren und Bellen, Kristallklingen (Frost) und Feuerstoß (Glut) beim Kronenwechsel, Kettenrasseln für Neris' Anker und die Seelenfessel des Kettenwarts.
+- **Helfertiere besser sichtbar:** Zirra, Glimm und Fenn werden 1,5–1,8-fach größer gezeichnet, schauen in Laufrichtung und wippen beim Laufen bzw. Schweben.
+- **Die KI ruft Helfertiere:** Wer mit dem Abwärts-Spezial etwas beschwört (Glimm, Fenn, die Kanone der Piratin), nutzt es jetzt auch als Computergegner, vorher nie.
+- **7 neue Erfolge (36 statt 29):** Weltreise (mit allen fünf Länder-Kämpfern gewinnen), Neue Gesichter (Kalyx, Vorruk und Neris spielen), Zwiegespalten (50 Kronenwechsel), Rudelführer (20 Helfertiere), Chaos-Liebhaber (10 Siege mit Mutatoren), Regelbrecher (mit allen 13 Mutatoren kämpfen), Vollständige Sammlung (alle 58 Kämpfer spielen).
+- **Legenden-Belohnung:** Der Abspann versprach eine „Glückstruhe“, die es nicht mehr gab. Kurzzeitig gab es stattdessen Münzen; auf Wunsch des Nutzers gibt es jetzt wieder eine echte **Legenden-Truhe** (`rewards.gd open_legend_chest`, aus der Store-Sitzung). Der Abspann aller 58 Legenden lautet „+400 Münzen · Legenden-Truhe“.
+- **Porträts** der acht neuen Kämpfer aus ihren 3D-Modellen gerendert.
+- **Design-Dokumente** nach der 13-Punkte-Vorlage: `docs/characters/KALYX.md`, `VORRUK.md`, `NERIS.md`.
+
+### Schritt 17 – Kämpfer-Paket 9: Kalyx, Vorruk und Neris nach Concept-Art (2026-10-07)
+
+Drei Kämpfer nach den Concept-Art-Vorlagen des Nutzers, jeder mit einem eigenen beschwörbaren Helfertier.
+
+| Kämpfer | Archetyp | Signatur (neue Mechanik) | Helfertier | Finisher |
+|---|---|---|---|---|
+| Kalyx, der Zwiekristall | Elementwechsler | **Kronenwechsel**: Die Kristallkrone wechselt zwischen Frost (blau, jeder Treffer lässt kurz erstarren) und Glut (rot, +20 % Schaden); beim Wechsel flammt sie rundum auf | ↓Spezial **Glimm**, Kristallsalamander (läuft zum Gegner, friert ein) | ZWIEKRISTALL ↑ ↓ ← Spezial |
+| Vorruk, der Sternenkoloss | Superschwergewicht (Gewicht 1,48) | **Zirra, hol sie!**: Die Alien-Hündin rennt zum Gegner, springt Fliegenden hinterher und beißt immer wieder | Zirra (Signatur) | HEIMWEH DER STERNE ↓ ↓ ← Schlag |
+| Neris, die Kettenhand | Kettenkämpferin | **Kettenanker**: Der Anker fliegt schräg nach oben; trifft er, zieht er den Gegner heran, verfehlt er, zieht er Neris zum Ankerpunkt (frischt die Erholung auf) | ↓Spezial **Fenn**, Glasflügler (schwebt und schießt Kristallsplitter) | KRISTALLKERKER ← ↑ → Spezial |
+
+- `hero_recolor.gdshader`: optionaler Hautton (`skin_tint`, in `HEROES` als `"skin"`). Bisherige Kämpfer bleiben unverändert.
+- Neue Ausrüstung in `hero_gear.gd`: Kristallkrone (wechselt live die Farbe mit dem Zustand), Goldketten, Gurt, Armreifen, Fleischplatten, Langkrallen, Kopfwülste, Schulterkristalle, Kettenhandschuh, Schal, Gürtelkette, Leuchtadern.
+- Neue Projektilformen: Salamander, Alien-Hund, Anker, Glasflügler. Die Geschützmechanik nimmt jetzt eine eigene Form an.
+- Je eine handgeschriebene Legende mit vier Kapiteln.
+- Kämpferauswahl: Das Raster hat jetzt 15 Spalten mit 4 Zeilen (Platz für 60 Karten), und die Überschrift zählt die Kämpfer selbst.
+
+### Schritt 16 – Kämpfer-Paket 8: fünf Länder-Kämpfer (2026-10-07)
+
+Jeder zeigt sein Land auf den ersten Blick: Die Flagge weht auf einem Banner am Rücken (im Code gezeichnet, keine Bilddatei) und sitzt als Wappen auf der Brust, das Outfit trägt die Landesfarben, und Name und Karte nennen das Land.
+
+| Kämpfer | Land | Signatur (neue Mechanik) | Finisher |
+|---|---|---|---|
+| Konrad, der Schmiedemeister | Deutschland | **Amboss**: fällt vom Himmel auf den Gegner und betäubt beim Aufprall | MEISTERSTÜCK → ↓ → Schlag |
+| Bogdan, der Bogatyr | Russland | **Wintergebrüll**: breiter Frostkegel, friert ein | WEISSE NACHT ↑ ← ↑ Spezial |
+| Kaan, der Halbmondkrieger | Türkei | **Halbmondwelle**: fliegt hinaus und kommt zurück, trifft zweimal | HALBMOND UND STERN ↓ → ↑ Spezial |
+| Amra, die Brückenspringerin | Bosnien | **Mostar-Sprung**: senkrecht hoch, kopfüber hinab (unberührbar), Wasserfontäne beim Aufprall | SPRUNG VON DER ALTEN BRÜCKE ↑ ↑ ↓ Spezial |
+| Dusty, der Rodeo-Ranger | USA | **Lasso**: fängt den Gegner und wirft ihn hinter sich | HIGH NOON ← ↓ → Schlag |
+
+Jeder hat eine eigene Legende mit vier Kapiteln, eigene Sprüche und eigene Ausrüstung (Schmiedehammer, Bogatyr-Helm und Streitkolben, Kılıç, Cowboyhut und Lasso).
+
+### Schritt 15 – Balance, wirksame Werte und neue Mutatoren (2026-10-07)
+
+- **Technik und Vitalität wirken jetzt im Kampf.** Beide Werte wurden bisher angezeigt, hatten aber keine Wirkung (Spieler mit viel Technik waren klar im Nachteil, Korrelation −0,37 mit der Siegquote).
+  - Technik: +1,2 % Schaden je Punkt über 15, −1,2 % je Punkt darunter.
+  - Vitalität: −0,8 % erlittener Rückstoß je Punkt über 20 (begrenzt auf ±15 %).
+- **Valkyrie** (5 % Siege im Balance-Lauf): Sie schwebte zu lange über dem Gegner und wurde ab ca. 100 % oben abgeschossen. Schwerkraft 17 → 20, Gewicht 1,0 → 1,08, breitere Trefferzonen für Aufwärts-Smash, Aufwärts- und Sturzangriff, KI-Reichweite passend zur Lanze. In Testduellen jetzt 22–43 % Siege.
+- **Neues Werkzeug** `tests/balance_report.gd`: Jeder gegen jeden, KI gegen KI, als Rangliste.
+- **Fünf neue Mutatoren** (Optionen und Tages-Herausforderung): 💣 Bombenhagel (roter Warnkreis, dann Einschlag), 🩸 Blutdurst (40 % des ausgeteilten Schadens heilen), 🔀 Platztausch (alle 15 s), 📈 Eskalation (+1 % Schaden pro Sekunde, höchstens ×3), 🎁 Geschenkregen (Items alle 3–5 s). Sie sind nur aktiv, wenn man sie einschaltet.
+- `test_kits`: Der KI-Treffertest versucht es bis zu dreimal mit anderen Würfeln (der Kampf ist chaotisch, kleine Zahlenänderungen kippen einzelne Duelle).
+
 ### Schritt 14 – Kämpfer-Paket 7: Agenten, Unterwelt & Tüftler – alle 49 Kämpfer individuell (2026-10-05)
 
 Mit dem letzten Paket hat **jeder der 49 Kämpfer** ein eigenes Kit: eigene Werte und Physik, 15 eigene Angriffe, eine exklusive Signatur-Mechanik und einen eigenen Finisher-Film.

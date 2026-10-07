@@ -199,6 +199,6 @@ static func chapters() -> Array:
 			S._pose(0, "Victory", 1.4),
 			S._cam("sky", 0, 3.0),
 			{"t": "title", "text": "LEGENDE VOLLENDET", "sub": "Der Höllenhund · Der Weg nach Hause"},
-			S._narr("Relikt erhalten: Linas Goldmünze  ·  +400 Münzen  ·  Glückstruhe  ·  Goldrahmen  ·  +15 % Heilung im Abenteuer"),
+			S._narr("Relikt erhalten: Linas Goldmünze  ·  +400 Münzen  ·  Legenden-Truhe  ·  Goldrahmen  ·  +15 % Heilung im Abenteuer"),
 		]},
 	]

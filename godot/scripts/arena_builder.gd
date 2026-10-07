@@ -36,6 +36,7 @@ const LIFE := {
 	"gladiator_fortress": {"fog": Color(0.8, 0.75, 0.65), "fog_density": 0.3, "shafts": 3, "shaft_tint": Color(1.0, 0.85, 0.6), "flock": "birds"},
 	"mystic_grove": {"fog": Color(0.7, 0.85, 0.8), "fog_density": 0.6, "shafts": 4, "shaft_tint": Color(0.75, 1.0, 0.85), "flock": "birds"},
 	"frozen_summit": {"fog": Color(0.9, 0.95, 1.0), "fog_density": 0.5, "shafts": 1, "shaft_tint": Color(0.85, 0.95, 1.0), "flock": "none"},
+	"astral_nexus": {"fog": Color(0.35, 0.12, 0.55), "fog_density": 0.45, "shafts": 4, "shaft_tint": Color(0.75, 0.45, 1.0), "flock": "none"},
 	"neon_metropolis": {"fog": Color(0.35, 0.2, 0.45), "fog_density": 0.45, "shafts": 0, "flock": "none"},
 	"heaven_gate": {"fog": Color(1.0, 0.85, 0.6), "fog_density": 0.45, "shafts": 4, "shaft_tint": Color(1.0, 0.85, 0.55), "flock": "doves"},
 	"heaven_spheres": {"fog": Color(0.75, 0.82, 1.0), "fog_density": 0.4, "shafts": 3, "shaft_tint": Color(0.8, 0.88, 1.0), "flock": "doves"},
@@ -68,6 +69,7 @@ const THEMES := {
 	"cocytus": {"top": "ph:snow_02", "side": "ph:rock_wall_10", "trim": Color("7dd3fc"), "under": "island", "weather": "snow", "rock_tint": Color("8aa4c0"), "sky": "rogland_moonlit_night", "sky_rot": 30.0, "sky_tint": Color(0.3, 0.42, 0.62), "sky_energy": 1.2},
 	"heaven_spheres": {"top": "ph:marble_01", "side": "ph:large_sandstone_blocks", "trim": Color("bfe3ff"), "under": "island", "weather": "fireflies", "rock_tint": Color("e8dcc4"), "sky": "rogland_moonlit_night", "sky_rot": 160.0, "sky_tint": Color(0.55, 0.62, 0.9), "sky_energy": 1.6},
 	"neon_metropolis": {"top": "ph:metal_plate", "side": "ph:concrete_panels", "trim": Color("ff3db4"), "under": "tower", "weather": "rain", "rock_tint": Color("ffffff"), "sky": "shanghai_bund", "sky_rot": 90.0, "sky_energy": 2.2, "sky_y": -2.0},
+	"astral_nexus": {"top": "ph:volcanic_rock_tiles", "side": "ph:dark_rock", "trim": Color("a855f7"), "under": "island", "weather": "fireflies", "rock_tint": Color("4c1d95"), "sky": "rogland_moonlit_night", "sky_rot": 180.0, "sky_tint": Color(0.7, 0.35, 1.0), "sky_energy": 2.2},
 }
 
 var time := 0.0
@@ -112,6 +114,9 @@ static func pbr(tex_name: String, uv_scale: float = 0.35, tint: Color = Color.WH
 	m.uv1_world_triplanar = true
 	m.uv1_scale = Vector3.ONE * uv_scale
 	m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+	m.rim_enabled = true
+	m.rim = 0.38
+	m.rim_tint = 0.45
 	_mat_cache[key] = m
 	return m
 
@@ -135,6 +140,9 @@ static func _scan_material(scan: String, uv_scale: float, tint: Color) -> Standa
 	m.uv1_triplanar_sharpness = 4.0
 	m.uv1_scale = Vector3.ONE * uv_scale
 	m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+	m.rim_enabled = true
+	m.rim = 0.35
+	m.rim_tint = 0.40
 	return m
 
 static func flat(color: Color, rough: float = 0.7, metal: float = 0.0) -> StandardMaterial3D:
@@ -452,7 +460,7 @@ func build(id: String) -> void:
 	var th: Dictionary = theme_for(id)
 	sky_dome(th.sky, th.sky_rot, th.get("sky_tint", Color.WHITE), float(th.get("sky_y", -8.0)))
 	_stage(th)
-	_platforms(th)
+	_platforms(th, id)
 	var fn := "_scene_" + id
 	var bg: Dictionary = Backgrounds.for_arena(id)
 	if has_method(fn): call(fn, th)
@@ -621,6 +629,19 @@ func _stage(th: Dictionary) -> void:
 		box(Vector3(0.07, 0.07, 5.2), Vector3(side * (width * 0.5 + 0.17), -0.02, -0.8), trim, Vector3.ZERO, false)
 		# Ledge caps mark the grab points.
 		box(Vector3(0.35, 0.6, 5.3), Vector3(side * (width * 0.5 + 0.02), -0.35, -0.8), side_mat)
+
+	# ── Radiating Energy Conduits & Corner Braziers ──
+	for s in [-1, 1]:
+		box(Vector3(width * 0.35, 0.01, 0.06), Vector3(s * (width * 0.28), 0.003, -0.8), glow(th.trim, 1.6), Vector3.ZERO, false)
+		box(Vector3(width * 0.44, 0.02, 0.03), Vector3(s * (width * 0.24), 0.002, 1.65), glow(th.trim, 1.2), Vector3.ZERO, false)
+		box(Vector3(width * 0.44, 0.02, 0.03), Vector3(s * (width * 0.24), 0.002, -3.15), glow(th.trim, 1.2), Vector3.ZERO, false)
+
+		# Atmospheric Braziers at outer stage background corners
+		var bx: float = s * (width * 0.46)
+		box(Vector3(0.65, 1.1, 0.65), Vector3(bx, 0.30, -2.8), side_mat)
+		cyl(0.42, 0.22, 0.30, Vector3(bx, 0.95, -2.8), pbr("metal_panels", 0.4, Color("c2833a")), 12)
+		_fire(Vector3(bx, 1.25, -2.8), th.get("trim", Color("ff8a2a")).lerp(Color("ff5500"), 0.4), 2.2)
+		light(Vector3(bx, 1.45, -2.8), th.get("trim", Color("ffaa33")), 1.2, 7.5, 0.3)
 	match th.under:
 		"island":
 			box(Vector3(width - 0.4, 2.2, 4.6), Vector3(0, -1.6, -0.8), side_mat)
@@ -654,9 +675,17 @@ func _stage(th: Dictionary) -> void:
 			for side in [-1, 1]:
 				box(Vector3(0.08, 40.0, 0.08), Vector3(side * (width * 0.5 - 0.1), -20.4, 1.72), glow(th.trim, 3.0), Vector3.ZERO, false)
 
-## Pass-through platforms from the combat rules, dressed per theme.
-func _platforms(th: Dictionary) -> void:
-	for plat in Combat.PLATFORMS:
+## Pass-through platforms of the arena's layout (Combat.LAYOUTS), dressed per theme.
+func _platforms(th: Dictionary, id: String) -> void:
+	var plats: Array = Combat.platforms_for(id)
+	if Combat.ARENA_LAYOUT.get(id, "") == "towers":
+		# Stone columns behind the stacked side platforms make them read as towers.
+		var col_mat := pbr(th.side, 0.3, th.rock_tint)
+		for k in [2, 3]:
+			var top: Dictionary = plats[k + 4]
+			var cx: float = (float(plats[k].x1) + float(plats[k].x2)) * 0.5
+			box(Vector3(1.1, float(top.y) - 0.3, 0.9), Vector3(cx, (float(top.y) - 0.3) * 0.5, -1.35), col_mat)
+	for plat in plats:
 		var w: float = plat.x2 - plat.x1
 		var cx: float = (plat.x1 + plat.x2) * 0.5
 		# Walkable top, a darker, narrower body below it (reads as a thick, carved slab).
@@ -793,7 +822,7 @@ func _scene_pirate_galleon(th: Dictionary) -> void:
 	prop("wooden_barrels_01", Vector3(-5.5, 0.0, -3.7), 1.1, 20.0)
 	prop("Barrel_01", Vector3(5.0, 0.0, -3.6), 0.95, 0.0)
 	prop("wooden_crate_02", Vector3(6.3, 0.0, -3.5), 0.7, 15.0)
-	prop("treasure_chest", Vector3(1.8, 0.0, -3.7), 0.6, -10.0)
+	prop("wooden_barrels_01", Vector3(1.8, 0.0, -3.7), 0.9, -10.0)
 	for x in [-2.6, 3.6]:
 		prop("Lantern_01", Vector3(x, 0.0, -3.9), 0.55, 0.0)
 		light(Vector3(x, 0.8, -3.2), Color("ffcf7a"), 1.1, 6.0, 5.0)
@@ -1480,6 +1509,60 @@ func _scene_neon_metropolis(th: Dictionary) -> void:
 	flickers.append([holo, 1.0, 11.0])
 	light(Vector3(-6, 3.0, -1.5), Color("ff3db4"), 2.0, 11.0, 2.5)
 	light(Vector3(6, 3.0, -1.5), Color("22d3ee"), 2.0, 11.0, 3.1)
+
+func _scene_astral_nexus(th: Dictionary) -> void:
+	# Giant Cosmic Chrono Rings orbiting slowly in the astral void
+	var ring_root := Node3D.new()
+	ring_root.position = Vector3(0, 7.5, -20.0)
+	add_child(ring_root)
+
+	for ri in range(3):
+		var torus := TorusMesh.new()
+		var r_outer: float = 14.0 + ri * 6.5
+		torus.outer_radius = r_outer
+		torus.inner_radius = r_outer - 0.45
+		torus.rings = 36
+		var r_mesh := MeshInstance3D.new()
+		r_mesh.mesh = torus
+		var r_mat := glow(Color("a855f7") if ri % 2 == 0 else Color("38bdf8"), 3.2 - ri * 0.4)
+		r_mesh.material_override = r_mat
+		r_mesh.rotation_degrees = Vector3(15.0 * (ri - 1), 0, 20.0 * ri)
+		ring_root.add_child(r_mesh)
+		rotors.append([r_mesh, Vector3.FORWARD, 0.12 * (1 if ri % 2 == 0 else -1)])
+
+	# Floating Monolith Obelisks with glowing runic inlays
+	for k in range(6):
+		var mx: float = -28.0 + k * 11.2 + (2.0 if k >= 3 else -2.0)
+		var mz: float = -14.0 - absf(mx) * 0.35
+		var my: float = rng.randf_range(2.0, 5.0)
+		var obelisk := box(Vector3(1.8, 14.0, 1.8), Vector3(mx, my, mz), pbr("ph:volcanic_rock_tiles", 0.3, Color(0.25, 0.18, 0.35)))
+		obelisk.rotation_degrees = Vector3(rng.randf_range(-6, 6), rng.randf_range(0, 360), rng.randf_range(-8, 8))
+		bobbers.append([obelisk, my, rng.randf_range(0.4, 0.8), 0.7])
+		# Glowing central rune conduit
+		var rune := box(Vector3(0.25, 11.0, 1.9), Vector3(mx, my, mz), glow(Color("c084fc"), 3.5), Vector3.ZERO, false)
+		bobbers.append([rune, my, rng.randf_range(0.4, 0.8), 0.7])
+
+	# Astral Braziers on Outer Wings
+	for s in [-1, 1]:
+		var bx: float = s * 11.5
+		prop("stone_fire_pit", Vector3(bx, 0.0, -3.2), 0.65, 0.0)
+		_fire(Vector3(bx, 0.65, -3.2), Color("a855f7"), 2.8)
+		light(Vector3(bx, 1.2, -2.8), Color("c084fc"), 1.8, 10.0, 3.5)
+
+	# Ethereal floating energy spheres bobbing in the cosmic ether
+	for k in range(12):
+		var sx: float = rng.randf_range(-22.0, 22.0)
+		var sy: float = rng.randf_range(3.0, 12.0)
+		var sz: float = rng.randf_range(-18.0, -6.0)
+		var orb := sphere(0.24, Vector3(sx, sy, sz), glow(Color("e879f9") if k % 2 == 0 else Color("38bdf8"), 3.6), false)
+		bobbers.append([orb, sy, rng.randf_range(0.6, 1.4), 0.45])
+
+	# Cosmic Void Rim Light
+	var rim := DirectionalLight3D.new()
+	rim.light_color = Color("c084fc")
+	rim.light_energy = 1.2
+	rim.rotation_degrees = Vector3(-35, 170, 0)
+	add_child(rim)
 
 # ───────────────────────────────────────────────────────────── animation ──
 

@@ -1,6 +1,7 @@
 extends RefCounted
 ## Fun and come-back systems:
-##   Mutators       – party rules for any fight (low gravity, giants, glass cannons …), chosen in OPTIONEN.
+##   Mutators       – party rules for any fight (low gravity, giants, glass cannons, bomb rain, swaps …),
+##                    chosen in OPTIONEN. "rule" mutators switch on a rule in combat.gd (sim.rules).
 ##   Daily challenge – one hand-picked fight per day (same for everyone on that day): fighter, opponents,
 ##                    two mutators and a goal. A streak of days pays more and more; day 7 gives a chest.
 ##   Weekly event   – every week another bonus (double XP, gold rush, mutator festival …).
@@ -25,6 +26,16 @@ const MUTATORS := {
 		"damage": 150.0},
 	"super_start": {"name": "VOLLE KRAFT", "icon": "🔥", "text": "Alle starten mit voller Super-Leiste.",
 		"super": true},
+	"bomb_rain": {"name": "BOMBENHAGEL", "icon": "💣", "text": "Alle paar Sekunden schlägt eine Bombe ein – der rote Kreis warnt vorher.",
+		"rule": "bomb_rain"},
+	"vampire": {"name": "BLUTDURST", "icon": "🩸", "text": "Wer trifft, heilt 40 % des Schadens, den er austeilt.",
+		"rule": "vampire"},
+	"swap": {"name": "PLATZTAUSCH", "icon": "🔀", "text": "Alle 15 Sekunden tauschen die Kämpfer die Plätze.",
+		"rule": "swap"},
+	"escalation": {"name": "ESKALATION", "icon": "📈", "text": "Jede Sekunde trifft härter – nach einer Minute doppelt so hart.",
+		"rule": "escalation"},
+	"item_rain": {"name": "GESCHENKREGEN", "icon": "🎁", "text": "Waffen und Power-ups fallen alle paar Sekunden vom Himmel.",
+		"rule": "item_rain"},
 }
 
 const EVENTS := [
@@ -57,6 +68,7 @@ static func apply(sim, views: Array, ids: Array) -> void:
 	for id in ids:
 		if not MUTATORS.has(id): continue
 		var m: Dictionary = MUTATORS[id]
+		if m.has("rule"): sim.rules[str(m.rule)] = true
 		for k in range(sim.fighters.size()):
 			var f: Dictionary = sim.fighters[k]
 			if f.get("is_boss", false): continue

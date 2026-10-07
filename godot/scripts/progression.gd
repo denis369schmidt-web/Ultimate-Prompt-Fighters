@@ -61,7 +61,16 @@ const ACHIEVEMENTS := {
 	"grade_s": ["Stilikone", "Erreiche die Kampfnote S", "grade_s", 1],
 	"streak5w": ["Unaufhaltsam", "Gewinne 5 Kämpfe in Folge", "best_win_streak", 5],
 	"chapters10": ["Chronist", "Schließe 10 Story-Kapitel ab", "chapters", 10],
+	"nations5": ["Weltreise", "Gewinne mit allen fünf Länder-Kämpfern", "nations_won", 5],
+	"trio3": ["Neue Gesichter", "Spiele mit Kalyx, Vorruk und Neris", "trio_played", 3],
+	"crown50": ["Zwiegespalten", "Wechsle 50-mal Kalyx' Kristallkrone", "crown_shifts", 50],
+	"pets20": ["Rudelführer", "Rufe 20-mal ein Helfertier (Zirra, Glimm, Fenn)", "pets", 20],
+	"mutator_win10": ["Chaos-Liebhaber", "Gewinne 10 Kämpfe mit Mutatoren", "mutator_wins", 10],
+	"mutators_all": ["Regelbrecher", "Kämpfe mit jedem der 13 Mutatoren", "mutators_seen", 13],
+	"roster_all": ["Vollständige Sammlung", "Spiele mit allen 58 Kämpfern", "fighters_played", 58],
 }
+const NATIONS := ["konrad", "bogdan", "kaan", "amra", "dusty"]
+const TRIO := ["kalyx", "vorruk", "neris"]
 
 ## Weekly challenges: bigger goals, coins instead of XP; all three add a free chest.
 const WEEKLY := {
@@ -151,12 +160,12 @@ static func rank_for(level: int) -> String:
 func stars_of(fam: String) -> int:
 	return stars_for(int(fighter_xp.get(fam, 0)))
 
-## A finished legend: the relic, coins and a chest – only once per fighter. Returns true the first time.
+## A finished legend: the relic and coins – only once per fighter. Returns true the first time;
+## story_mode.gd then opens the legend chest (rewards.gd open_legend_chest).
 func grant_legend(fam: String, coins_gain: int) -> bool:
 	if legend_relics.has(fam): return false
 	legend_relics[fam] = true
 	coins += coins_gain
-	chests += 1
 	save_progress()
 	return true
 
@@ -307,7 +316,11 @@ func begin_match(family: String, mode: String, day: int = today()) -> void:
 	_day = day
 	_family = family
 	_match = {"hits": 0, "damage": 0.0, "combo": 0, "kos": 0, "finishers": 0, "signatures": 0,
-		"weapons": 0, "dashes": 0, "stocks_lost": 0, "bosses": 0}
+		"weapons": 0, "dashes": 0, "stocks_lost": 0, "bosses": 0, "crown_shifts": 0, "pets": 0, "mutators": []}
+
+## Mutators active in this match (fun_modes.gd), for the mutator achievements.
+func note_mutators(ids: Array) -> void:
+	if _active: _match.mutators = ids.duplicate()
 
 func is_tracking() -> bool:
 	return _active
@@ -328,7 +341,12 @@ func track(ev: Dictionary) -> void:
 		"finisher":
 			if int(ev.get("actor", -1)) == 0: _match.finishers += 1
 		"signature":
-			if int(ev.get("actor", -1)) == 0: _match.signatures += 1
+			if int(ev.get("actor", -1)) == 0:
+				_match.signatures += 1
+				var mech: String = str(ev.get("mech", ""))
+				if mech == "pack_hound" or (mech in ["revenant", "turret"] and _family in ["kalyx", "neris"]): _match.pets += 1
+		"crown_shift":
+			if int(ev.get("actor", -1)) == 0: _match.crown_shifts += 1
 		"weapon_pickup":
 			if int(ev.get("actor", -1)) == 0: _match.weapons += 1
 		"air_dash":
@@ -373,6 +391,21 @@ func end_match(result: int, bonus_coins: int = 0, context: Dictionary = {}) -> D
 	if not _family in played: played.append(_family)
 	stats["played"] = played
 	stats["fighters_played"] = played.size()
+	_add("crown_shifts", int(_match.get("crown_shifts", 0)))
+	_add("pets", int(_match.get("pets", 0)))
+	stats["trio_played"] = played.filter(func(f): return f in TRIO).size()
+	if won and _family in NATIONS:
+		var nw: Array = stats.get("nations_list", [])
+		if not _family in nw: nw.append(_family)
+		stats["nations_list"] = nw
+		stats["nations_won"] = nw.size()
+	var muts: Array = _match.get("mutators", [])
+	if not muts.is_empty():
+		if won: _add("mutator_wins", 1)
+		var seen: Array = stats.get("mutators_list", [])
+		for m in muts: if not m in seen: seen.append(m)
+		stats["mutators_list"] = seen
+		stats["mutators_seen"] = seen.size()
 
 	# Daily challenges.
 	var completed: Array = []

@@ -1,20 +1,78 @@
 # Prompt Fighter Ultimate — Projektstatus
 
-> Letztes Update: 2026-10-05
+> Letztes Update: 2026-10-07
 
-## Aktueller Stand (2026-10-05)
+## Aktueller Stand (2026-10-07, Kämpfer-Pakete 8 und 9)
 
-- **49 Kämpfer** (+ Fusionskammer), **19 Bosse**, 23 Arenen (Shop), bis zu 4 Spieler, Xbox-Pad und Touch, Android-Export.
-- **Kämpfer-Individualisierung** (`scripts/fighter_kits.gd`, `signatures.gd`, `combat.gd _sig_activate`, `main.gd _finisher_variant`):
-  **Alle 49 Kämpfer** mit eigenem Kit (Pakete 1–7 und Arbër).
-  Neue Finisher-Codes haben vier Eingaben (alle 32 Drei-Tasten-Codes sind vergeben).
-- **Modi**: Versus, Team 2v2/3v1, Bosskampf und Boss-Rush, Storykampagnen „Göttliche Prüfung“ und Saga „Der Riss zwischen den Welten“,
-  Legenden (50 handgeschriebene, je 4 Kapitel), Abenteuer, Tages-Herausforderung, Wochen-Events, Mutatoren.
-- **Fortschritt und Shop** eingebunden (Münzen, Truhen, Liga, Ruhmespfad, Meisterschaft, Skins, Waffen, Arenen).
-- **Audio**: Musik, SFX, Ansager, Ambience, Story-Stimmen (Lizenzen in `docs/AUDIO_LICENSES.md`).
-- Tests: 17 Suiten, 1400/1400 grün (Details in `docs/TEST_REPORT.md`).
-- Offen: Finisher-Standbilder zeitlich besser treffen, Balance-Läufe (KI gegen KI), Balance-Läufe, Shop-Hintergründe noch KI-Bilder,
-  FPS-Benchmark auf integrierter GPU.
+- **58 Kämpfer** im Kader (plus Fusionskammer), jeder mit eigenem Kit, eigener Signatur, eigenem Finisher-Film und eigener Legende (58 Legenden).
+- **Paket 8 – Länder-Kämpfer:** Konrad (Deutschland), Bogdan (Russland), Kaan (Türkei), Amra (Bosnien), Dusty (USA). Die Flagge weht auf einem Banner am Rücken und sitzt als Wappen auf der Brust, das Outfit trägt die Landesfarben.
+- **Paket 9 – Concept-Art-Trio:** Kalyx (Kristallkrone Frost/Glut, Helfer Glimm), Vorruk (Sternenkoloss, Alien-Hündin Zirra), Neris (Kettenhand mit Anker, Glasflügler Fenn).
+- **Werte:** Technik (Schaden) und Vitalität (Rückstoß) wirken jetzt im Kampf.
+- **Balance:** Valkyrie überarbeitet (vorher 5 % Siege). Ein neuer vollständiger Lauf von `tests/balance_report.gd` steht noch aus; der letzte wurde nach 11 von 50 Kämpfern wegen Speichermangel vom System abgebrochen.
+- **Mutatoren:** 13 (neu: Bombenhagel, Blutdurst, Platztausch, Eskalation, Geschenkregen).
+- **Kämpferauswahl:** Raster mit 15 × 4 Plätzen.
+- **Tests:** alle 18 Suiten grün (1562 Prüfungen).
+
+## Früherer Stand (2026-10-07, Arena und Auswahl)
+
+- **Neues Premium-Icon & Boot-Splash**:
+  - Hochauflösendes AAA-App-Icon (512x512) mit metallischem Schild-Emblem, "PF"-Monogramm, kollidierenden Elektro-Cyan- und Feuer-Klingen im kosmischen Raum (`godot/icon.png` und `godot/icon_512.png`).
+  - Boot-Splash in `project.godot` mit sanftem Filter und optimiertem Zentrierungsmodus (`boot_splash/use_filter=true`).
+- **Photorealistisches 60-FPS AAA-Ladebildschirm- & Intro-Video (vollflächig ohne Ränder)**:
+  - **Vollfensterfüllendes 16:9 Format**: Randlos auf 1280x720 skaliert (`boot_splash/fullsize=true` mit [godot/splash_1280x720.png](file:///c:/Users/schmidtdenis/Desktop/Ultimate%20Prompt%20Fighters/PromptFighterUltimate/godot/splash_1280x720.png)). Das Startbild und das Video füllen das gesamte Fenster ohne störende Kästen, Kreisränder oder Letterboxing aus.
+  - **Butterweiche 60 FPS**: 330 gerenderte Frames für absolut flüssige Rotationen der holografischen Cyber-Ringe, Partikel-Embers, Ladebalken-Fortschritt und Lichtreflex-Sweeps über dem "PF"-Emblem.
+  - **Nahtlose Emblem-Integration**: Reiner Alphamasken-Freisteller des metallischen Schildes mit lodernden Elementarklingen direkt im atmosphärischen Tiefenraum (Cyan-Aura links, Amber-Aura rechts, Bodenschimmer).
+  - **Kino-Sounddesign**: Professionelle Stereo-Tonspur (Turbinen-Riser 40–140 Hz, Telemetrie-Pings, 34-Hz-Subbass, Titan-Amboss-Aufprall und D-Dur-Orchesterpad).
+  - **Engine-Crossfade**: 0.35s weicher Dissolve-Übergang direkt in das 3D-Hauptmenü; jederzeit per Tastendruck/Gamepad überspringbar (in Headless-Tests mit 0ms Bypass).
+- **Runderneuerter Startbildschirm & Hauptmenü**:
+  - **Perfekte Symmetrie & Zentrierung**: Sowohl der Splash-Screen ("Drücke Start") als auch das Hauptmenü sind nun exakt horizontal zentriert.
+  - **Kristallklare Lesbarkeit & Kontrast**: Dunkle Obsidian-Glashintergründe mit leuchtenden Akzenträndern vor der 3D-Arena.
+  - **Neues Hauptmenü**: 7 gleichmäßig proportionierte Menükarten mit Icons (`⚔ VERSUS-KAMPF`, `📖 STORY-MODUS`, `🗺 ABENTEUER-TURM`, `🛒 KAMPF-SHOP`, `★ EXTRAS & BELOHNUNGEN`, `⚙ EINSTELLUNGEN`, `📜 CREDITS`) und aktivem Glow-Rahmen.
+  - **Performance-Optimierung**: Beseitigung aller per-Frame Dictionary-Allokationen in `_title_camera(delta)` (State-Cache), automatische Pausierung der 3D-Hintergrundkamera bei geöffneten Modalfenstern und optimierte Schwebepartikel (22) für butterweiche 60+ FPS.
+  - **Vollständige Säuberung**: Letzte Reste von "Glückstruhe" in Login- und Challenge-Screens restlos durch garantierte Münzen (+500 🪙) ersetzt.
+- **Neue Spezial-Arena: Astral Obsidian Nexus (`astral_nexus`)**:
+  - Konzentrisch rotierende Chrono-Ringe (`rotors`), schwebende Obsidian-Monolithen mit glühenden Runen-Adern (`bobbers`), violette Plasma-Braziers und kosmische Lichtstrahlen im Raumzeit-Vakuum.
+  - Eigene interaktive Gefahrenzone: `quantum_rift` (Astral-Riss mit Partikelwirbel, 16 DMG, 0.75 Rückstoß).
+  - Hochauflösende 384x216 Vorschau-Grafik und PBR-Materialien mit Lavastein-Emission.
+- **Vollständige Entfernung aller Glücksspiel- / Lootbox-Truhen**:
+  - Glücksspiel-Truhen (`🎁 GLÜCKSTRUHE`) restlos aus dem Shop, Quests und Belohnungsabläufen entfernt.
+  - Store umgestellt auf ein transparentes Direktkauf-System (Hintergründe, Waffen, Skins gegen Münzen).
+  - Tägliche Missionen, Herausforderer-Bonus und Abenteuer-Meilensteine vergeben nun garantierte, transparente Münz-Belohnungen (+250 / +500 🪙).
+  - Bestehende gespeicherte Truhen werden beim Spielstart automatisch 1:1 zu je 250 Münzen umgewandelt.
+  - Dekorative Schatzkisten in Arenen durch authentische nautische Frachtfässer ersetzt.
+- **Kompletter Overhaul der Kämpfer- & Arena-Auswahl (Fighting Game Style)**:
+  - Inspiriert von Street Fighter 6, Tekken 8 und Super Smash Bros:
+  - **14x4 Roster-Grid**: Alle 56 Kämpfer klar gegliedert auf 84x44 Karten mit Porträts, Element-Tags und 1P/2P Badges.
+  - **P1 & P2 Showcases**: Getrennte Profile mit glühenden Akzenten (Cyan P1 / Amber P2), Attributsbalken (HP, KRAFT, RÜSTUNG, TEMPO, TECHNIK), Spezialmove-Banner und Rangsternen.
+  - **Arena-Vorschaupanel**: Zentrales Modul mit 16:9 Artwork-Vorschau, Karussell-Steuerung, dynamischer Fallen-Warnanzeige und Quick-Pick-Buttons inklusive Astral Nexus.
+  - **Saubere Header- & Match-Optionen**: Direkte Regler für Kampfmodus, Spieleranzahl, Leben, KI-Stufe und Finisher.
+- **Testabdeckung**: Alle Testsuiten grün, 0 Regressionen.
+
+## Früherer Stand (2026-10-06)
+
+- **Arena-Grafik & Shader-Upgrade**:
+  - Dynamisches PBR-Material-Upgrade mit Rim-Lighting (0.35–0.38 Rim, 0.45 Tint) und Tiefen-Normal-Maps.
+  - Monumentales arkanes Kampf-Mandala im Zentrum jeder Arena mit rotierendem Stern-Kern und sanft pulsierender Magie-Aura.
+  - Strahlende Energie-Kanäle und doppelte Leucht-Kantenfasen (`trim`) entlang der Plattformgrenzen.
+  - 4 monumentale Eck-Feuerschalen (Braziers) mit dynamischem Partikelfeuer und flackerndem Licht.
+- **Interaktive Arena-Fallen (Hazards)**:
+  - Dynamisch konfigurierte Fallen passend zum Arena-Motiv:
+    - *Vulkan/Hölle*: Flammenwerfer & Magma-Geysire (`fire_vent`) mit Vorwarnung, Ausbruch und vertikalem Hochschleudern.
+    - *Kolosseum/Bastion*: Mechanische Boden-Stachelfallen (`spikes`) mit Vorwarnungs-Rütteln und scharfem Schnappstoß.
+    - *Neon Metropolis*: Hochspannungs-Tesla-Gitter (`tesla_shock`) mit Blitzentladung.
+    - *Eisgipfel/Cocytus*: Eisstalaktiten-Geysire (`ice_stalactite`) mit Gefrierwirkung.
+    - *Mystic Grove*: Giftige Dornenranken (`thorn_roots`).
+- **Zerstörbare Arena-Objekte (Destructibles) & Trümmer-Physik**:
+  - Auf den Arenen platzierte interaktive Objekte: Antike Runensäulen, mystische Kristallschreine und gepanzerte Vorratskisten.
+  - Erleiden Schaden durch Schläge, Projektile und geworfene Gegenstände.
+  - Bei Zerstörung: Gewaltige Explosion mit 3D-Physik-Trümmerstücken (Debris), Schockwelle, Kamera-Erschütterung und Sound.
+  - Lassen wertvolle Power-Ups / Items fallen (Titan-Pilz, Stern der Unsterblichkeit, Heilherz, Turbostiefel, Smash-Hammer oder Explosivfässer).
+  - Automatischer Wiederaufbau-Timer (Respawn).
+- **VFX & Kampfeffekt-Upgrade**:
+  - Multi-Tier Hitsparks mit Richtungs-Funkenregen, Schockwellen-Tori und Hitstop-Kameraerschütterung.
+  - Impact-Frame Flash bei harten Treffern.
+  - Staubwolken bei Sprints und Lande-Aufprallringe.
+- **Testabdeckung**: 18 Suiten, 1421/1421 grün (inkl. neuer Suite `test_hazards_and_destructibles.gd`).
 
 Die folgenden Abschnitte beschreiben den älteren Stand vom 2026-09-25.
 

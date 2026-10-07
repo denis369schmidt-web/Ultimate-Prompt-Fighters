@@ -1,0 +1,14 @@
+"DepotBuild"
+{
+	"DepotID" "DEPOTID"
+	"FileMapping"
+	{
+		"LocalPath" "*"
+		"DepotPath" "."
+		"Recursive" "1"
+	}
+	// Nie ausliefern: Debug-Symbole, Logs, die Steam-Test-ID.
+	"FileExclusion" "*.pdb"
+	"FileExclusion" "*.log"
+	"FileExclusion" "steam_appid.txt"
+}

@@ -210,6 +210,6 @@ static func chapters() -> Array:
 			S._say("hero", "Hannes, das ist Muschel. Neuer Matrose. Er klaut Würste und hört besser zu als ich. Er bleibt."),
 			S._pose(0, "Victory", 1.4),
 			{"t": "title", "text": "LEGENDE VOLLENDET", "sub": "Tobi · Fünf Teller"},
-			S._narr("Relikt erhalten: Der sechste Teller  ·  +400 Münzen  ·  Glückstruhe  ·  Goldrahmen  ·  +15 % Heilung im Abenteuer"),
+			S._narr("Relikt erhalten: Der sechste Teller  ·  +400 Münzen  ·  Legenden-Truhe  ·  Goldrahmen  ·  +15 % Heilung im Abenteuer"),
 		]},
 	]

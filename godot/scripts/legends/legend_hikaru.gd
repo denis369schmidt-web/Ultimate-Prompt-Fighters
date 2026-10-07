@@ -212,6 +212,6 @@ static func chapters() -> Array:
 			S._cam("sky", 0, 3.0),
 			S._narr("Auf Akanes Stein liegt seitdem jedes Jahr ein neues Holzschwert. Und jedes Jahr hat es eine Kerbe mehr."),
 			{"t": "title", "text": "LEGENDE VOLLENDET", "sub": "Hikaru · Die dreizehnte Form"},
-			S._narr("Relikt erhalten: Akanes Holzschwert  ·  +400 Münzen  ·  Glückstruhe  ·  Goldrahmen  ·  +15 % Heilung im Abenteuer"),
+			S._narr("Relikt erhalten: Akanes Holzschwert  ·  +400 Münzen  ·  Legenden-Truhe  ·  Goldrahmen  ·  +15 % Heilung im Abenteuer"),
 		]},
 	]

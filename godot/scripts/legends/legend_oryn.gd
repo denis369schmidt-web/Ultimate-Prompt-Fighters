@@ -230,6 +230,6 @@ static func chapters() -> Array:
 			S._narr("Oryn trinkt eine einzige Kanne Kamillentee. Dann schläft er ein, auf zwei Mehlsäcken, mitten im Satz. Im Traum sieht er kein Ende. Nur einen Morgen."),
 			S._pose(0, "Victory", 1.4),
 			{"t": "title", "text": "LEGENDE VOLLENDET", "sub": "Oryn · Die tausendste Nacht"},
-			S._narr("Relikt erhalten: Selkas Kamillenkanne  ·  +400 Münzen  ·  Glückstruhe  ·  Goldrahmen  ·  +15 % Heilung im Abenteuer"),
+			S._narr("Relikt erhalten: Selkas Kamillenkanne  ·  +400 Münzen  ·  Legenden-Truhe  ·  Goldrahmen  ·  +15 % Heilung im Abenteuer"),
 		]},
 	]

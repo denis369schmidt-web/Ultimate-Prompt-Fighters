@@ -25,6 +25,7 @@ func place(f: Dictionary, x: float, y: float = 0.0) -> void:
 
 func run() -> void:
 	test_platforms()
+	test_layouts()
 	test_ring_out()
 	test_knockback_scaling()
 	test_weight()
@@ -95,6 +96,55 @@ func test_facing() -> void:
 	a.facing = -1
 	m.tick(idle_commands())
 	check(a.facing == -1, "an attack in progress does not auto-turn the fighter")
+
+## Weakest jumpers (fighter_kits.gd: jump 7.0 m/s, gravity 24, one air jump) climb about 2.0 m.
+const MAX_CLIMB := 2.0
+
+## Every arena layout keeps the eight platform roles, stays on the stage and can be climbed by
+## the heaviest fighters; items and breakables move onto the platforms of the new layout.
+func test_layouts() -> void:
+	for lname in Combat.LAYOUTS:
+		var plats: Array = Combat.LAYOUTS[lname]
+		var names_ok := plats.size() == Combat.PLATFORMS.size()
+		var reach_ok := true
+		for k in range(plats.size()):
+			var p: Dictionary = plats[k]
+			if names_ok and p.name != Combat.PLATFORMS[k].name: names_ok = false
+			if p.x1 < Combat.STAGE_LEFT or p.x2 > Combat.STAGE_RIGHT or p.x2 - p.x1 < 1.5: reach_ok = false
+			# Something to jump from: the floor, or a lower platform not too far to the side.
+			var climbable: bool = p.y <= MAX_CLIMB
+			for q in plats:
+				var gap: float = maxf(0.0, maxf(q.x1 - p.x2, p.x1 - q.x2))
+				if q.y < p.y and p.y - q.y <= MAX_CLIMB and gap <= 2.0: climbable = true
+			if not climbable:
+				reach_ok = false
+				print("  unreachable: %s %s" % [lname, p.name])
+		check(names_ok, "layout %s keeps the eight platform roles in order" % lname)
+		check(reach_ok, "every platform of layout %s is on the stage and reachable" % lname)
+	var used := {}
+	for aid in Combat.ARENA_LAYOUT: used[Combat.ARENA_LAYOUT[aid]] = true
+	check(used.size() >= 3, "the shop arenas use at least three different layouts")
+
+	var m = match_ready()
+	m.set_arena("bg_colosseum_dusk")
+	check(m.platforms == Combat.LAYOUTS.towers, "the colosseum plays the towers layout")
+	var seated := true
+	for thing in m.items + m.destructibles:
+		if float(thing.y) < 0.5: continue
+		var on_plat := false
+		for p in m.platforms:
+			if float(thing.x) >= p.x1 - 0.05 and float(thing.x) <= p.x2 + 0.05 and absf(float(thing.y) - p.y) < 0.3: on_plat = true
+		if not on_plat: seated = false
+	check(seated, "items and breakables sit on the towers platforms, none float in the air")
+	var plat: Dictionary = m.platforms[4]
+	var f: Dictionary = m.fighters[0]
+	place(f, (plat.x1 + plat.x2) * 0.5, plat.y + 0.6)
+	f.vy = -2.0
+	f.is_grounded = false
+	run_ticks(m, 40)
+	check(f.is_grounded and absf(f.y - plat.y) < 0.01, "fighter lands on the towers centre platform")
+	m.set_arena("")
+	check(m.platforms == Combat.PLATFORMS, "arenas without a layout play the classic platforms")
 
 func test_platforms() -> void:
 	var m = match_ready()

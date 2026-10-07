@@ -1,0 +1,83 @@
+GOOGLE PLAY – STORE-EINTRAG (DEUTSCH)
+Play Console → Wachstum → Store-Präsenz → Haupt-Store-Eintrag. Zahlen am Code geprüft (07.10.2026: 58 Kämpfer, 58 Legenden, 19 Bosse, 32 Versus-Arenen + 8 Story-Schauplätze, 13 Mutatoren, 29 Erfolge).
+Play-Regeln für Texte: keine Rangangaben („Nr. 1“, „bestes Spiel“), keine Preis-/Rabattwerbung,
+keine Aufrufe wie „Jetzt herunterladen“, Emojis/Großbuchstaben nur sparsam.
+
+────────────────────────────────────────────────────────────────────
+APP-NAME  (max. 30 Zeichen – dieser: 24)
+────────────────────────────────────────────────────────────────────
+Prompt Fighters Ultimate
+
+────────────────────────────────────────────────────────────────────
+KURZBESCHREIBUNG  (max. 80 Zeichen – diese: 76)
+────────────────────────────────────────────────────────────────────
+Schleudere deine Gegner aus der Arena: 58 Kämpfer, 19 Bosse, zwei Kampagnen.
+
+────────────────────────────────────────────────────────────────────
+VOLLSTÄNDIGE BESCHREIBUNG  (max. 4000 Zeichen – diese: 3038)
+────────────────────────────────────────────────────────────────────
+Hier leert sich keine Lebensleiste. Jeder Treffer treibt die Prozentanzeige deines Gegners hoch – und je höher sie steht, desto weiter fliegt er beim nächsten Schlag. Wer aus der Arena geschleudert wird, verliert ein Leben. Ein sauberer Smash bei 120 %, und die Runde ist entschieden.
+
+★ 58 KÄMPFER, DIE SICH WIRKLICH UNTERSCHIEDLICH SPIELEN
+Jeder Kämpfer hat eigene Werte, eigene Sprungphysik, 15 eigene Angriffe und eine Signatur-Technik, die es nur bei ihm gibt:
+• Vlad zerfällt in einen Fledermausschwarm, fliegt unberührbar durch dich hindurch und heilt sich an jedem Biss.
+• Grimbolt klebt dir eine tickende Zeitbombe an – weglaufen hilft nicht.
+• Echo tauscht per Glitch-Schuss die Plätze mit dir.
+• Vanguard markiert deinen Standort, eine Sekunde später schlägt ein Strahl aus dem Orbit ein.
+Jeden Sieg krönt ein eigener, filmisch inszenierter Finisher. Blut-Effekte lassen sich abschalten.
+
+★ EIN SATZ WIRD ZUM KÄMPFER
+In der Fusionskammer tippst du eine Idee ein – „Cyber-Samurai mit Drachenflügeln und Flammenklinge“ – und bekommst einen spielbaren Kämpfer mit passender Ausrüstung und ausbalancierten Werten. Komplett offline auf deinem Gerät, ohne KI-Modell und ohne Wartezeit.
+
+★ GESCHICHTEN, NICHT NUR KÄMPFE
+• Der Riss zwischen den Welten – eine Saga in 14 Kapiteln mit Zwischensequenzen und Reaktions-Szenen.
+• Die göttliche Prüfung – frei nach Dantes Göttlicher Komödie: von der Erde durch die Hölle bis in den Himmel. 21 Kapitel gegen zehn Fürsten der Hölle und neun Chöre der Engel, mit deutscher Sprachausgabe.
+• 58 Legenden – jeder Kämpfer hat seine eigene Geschichte in vier Kapiteln, die du freischaltest, indem du ihn meisterst.
+
+★ ZU VIERT AN EINEM GERÄT ODER GEGEN DIE KI
+Jeder gegen jeden, 2 gegen 2 oder 3 gegen 1. Dazu 13 Mutatoren, die jede Runde auf den Kopf stellen: Mondsprung, Riesen, Winzlinge, Bombenhagel, Platztausch, Sudden Death und mehr.
+
+★ IMMER NOCH EINE RUNDE
+• Abenteuer: Welle um Welle, mit Rekorden pro Kämpfer
+• Tages-Herausforderung mit Serien-Bonus und wöchentliche Events
+• 32 Arenen mit eigenem Wetter und eigener Stimmung, dazu 8 Schauplätze in Hölle und Himmel
+• 29 Erfolge, Kämpfer-Meisterschaft und ein Shop für Skins, Waffen und Arenen – alles mit Münzen aus dem Spiel freischaltbar
+
+★ STEUERUNG FÜR DEN TOUCHSCREEN
+Virtueller Stick und große Aktionstasten, gebaut für das Spielen im Querformat. Bluetooth-Controller werden ebenfalls unterstützt.
+
+★ FAIR: GRATIS STARTEN, EINMAL KAUFEN
+Kostenlos spielbar sind alle 58 Kämpfer, Versus, Abenteuer, die komplette Saga, alle Legenden, die ersten drei Kapitel der göttlichen Prüfung und drei Bosse. Die Vollversion ist ein einmaliger Kauf und schaltet den Rest der göttlichen Prüfung, alle 19 Bosse und den Boss-Rush frei – für immer.
+Keine Werbung. Keine Lootboxen. Keine Echtgeld-Währung. Kein Pay-to-win. Optionale Pakete enthalten genau das, was draufsteht, und alles darin lässt sich auch im Spiel verdienen.
+
+★ OFFLINE
+Zum Spielen brauchst du weder Internet noch ein Konto. (Nur Käufe laufen über Google Play.)
+
+Sprache: Deutsch.
+
+────────────────────────────────────────────────────────────────────
+KATEGORIE & TAGS (Play Console → Store-Einstellungen)
+────────────────────────────────────────────────────────────────────
+App oder Spiel: Spiel
+Kategorie: Action          (Alternative „Arcade“ – Action passt besser zu Kampfspielen)
+Tags (bis zu 5): Kampfspiel · Brawler · Lokaler Mehrspieler · Offline · Stilisiert
+E-Mail-Adresse für Nutzer: Pflicht – eigene Support-Adresse anlegen (nicht die private).
+Website: optional, aber empfohlen (dort auch die Datenschutzerklärung, siehe store/legal/).
+
+────────────────────────────────────────────────────────────────────
+IN-APP-PRODUKTE (Play Console → Monetarisieren → Produkte → In-App-Produkte)
+Produkt-IDs MÜSSEN exakt so heißen (godot/scripts/products.gd). Alle als „nicht verbrauchbar“ behandeln
+(das Spiel bestätigt Käufe, verbraucht sie aber nicht).
+────────────────────────────────────────────────────────────────────
+pfu_full_game     Vollversion                 7,99 €
+  „Schaltet die göttliche Prüfung (21 Kapitel), alle 19 Bosse und den Boss-Rush frei. Einmal kaufen, für immer spielen.“
+pfu_pack_neon     Neon-Nächte-Paket            2,99 €
+  „5 Arenen fürs Startmenü und zum Kämpfen (Neon-Skyline, Graffiti-Gasse, Regendach, Nachtmarkt, Sturmdach) + die Skins Neonpuls und Kristall.“
+pfu_pack_legends  Himmel-&-Hölle-Paket         3,99 €
+  „Die Skins Galaxie, Geist, Lavaherz und Schattenform + die Waffen Seelensense und Donnerhammer.“
+pfu_pack_arenas   Arena-Sammlung               4,99 €
+  „Alle 22 zusätzlichen Arenen auf einen Schlag – fürs Startmenü und zum Kämpfen.“
+pfu_pack_weapons  Waffenkammer                 2,99 €
+  „Alle 8 Shop-Waffen – vom Schattenkatana bis zur Plasmakanone.“
+pfu_supporter     Unterstützer-Paket           4,99 €
+  „Danke für deine Unterstützung! Exklusiver Titel ‚Gönner der Arenen‘, der Skin Goldrausch und 1000 Münzen.“

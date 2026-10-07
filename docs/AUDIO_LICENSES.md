@@ -58,3 +58,4 @@ Credit-Zeile: „Ambience: Nature Ambient Pack Vol 1 by JC Sounds (CC BY 4.0)“
 ## Selbst erzeugt
 
 - `sfx/drill/drill_1..4.ogg` (Arbërs Bohrmaschinen): synthetisch erzeugt (Motorobertöne, Getriebe-Rattern, Bohr-Grit), eigenes Werk.
+- `sfx/anvil/`, `sfx/lasso/`, `sfx/hound/`, `sfx/crown_frost/`, `sfx/crown_glut/`, `sfx/chain/` (Konrads Amboss, Dustys Lasso, Zirra, Kalyx' Kronenwechsel, Neris' Kette): synthetisch erzeugt mit `godot/tools/synth_sfx.py` (Sinus-Teiltöne, gefiltertes Rauschen), eigenes Werk, keine Samples.

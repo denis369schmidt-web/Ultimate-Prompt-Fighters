@@ -193,6 +193,6 @@ static func chapters() -> Array:
 			S._narr("Zum ersten Mal seit fünf Jahren steht das Morgentor bei Tag weit offen. Händler kommen herein, Kinder, Fremde. Oben auf der Mauer stehen zwei Wächterinnen."),
 			S._pose(0, "Victory", 1.4),
 			{"t": "title", "text": "LEGENDE VOLLENDET", "sub": "Boltar · Dreißig Pfeile"},
-			S._narr("Relikt erhalten: Estrids Pfortenschlüssel  ·  +400 Münzen  ·  Glückstruhe  ·  Goldrahmen  ·  +15 % Heilung im Abenteuer"),
+			S._narr("Relikt erhalten: Estrids Pfortenschlüssel  ·  +400 Münzen  ·  Legenden-Truhe  ·  Goldrahmen  ·  +15 % Heilung im Abenteuer"),
 		]},
 	]

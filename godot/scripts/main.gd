@@ -14,6 +14,8 @@ const BossModels = preload("res://scripts/boss_models.gd")
 const WeaponModels = preload("res://scripts/weapon_models.gd")
 const Adventure = preload("res://scripts/adventure.gd")
 const FunModes = preload("res://scripts/fun_modes.gd")
+const UiStyle = preload("res://scripts/ui_style.gd")
+const FrameBox = preload("res://scripts/ui_frame_box.gd")
 const CYAN := Color("49def4")
 const ORANGE := Color("ff925b")
 const PLAYER_COLORS := [Color("49def4"), Color("ff925b"), Color("4ade80"), Color("c084fc")]
@@ -27,6 +29,9 @@ const CAMERA_MAX_DIST := 34.0
 const CAMERA_HEIGHT_OFFSET := 0.6
 ## Share of the screen height not covered by the top and bottom HUD bars.
 const HUD_FREE_FRACTION := 0.68
+## Pet projectiles drawn larger: shape -> [scale, height offset] (Zirra, Glimm, Fenn).
+const PET_SHAPES := {"alien_hound": [1.0, 0.0], "salamander": [1.4, -0.75], "glassfly": [1.25, 0.12]}
+
 ## Height of the player marker arrow above the fighter's feet.
 const MARKER_HEIGHT := 2.35
 
@@ -148,7 +153,8 @@ var ARENAS = {
     "frozen_summit": {
         "name": "FROZEN SUMMIT",
         "sky": preload("res://assets/textures/arenas/sky2_frozen_summit.png"),
-        "thumb": null, "floor": null, "floor_em": null, "floor_norm": null,
+        "thumb": preload("res://assets/textures/ui/thumb_frozen_summit.png"),
+        "floor": null, "floor_em": null, "floor_norm": null,
         "sun_color": Color("e0f2fe"),
         "sun_rot": Vector3(-40, 25, 0),
         "ambient_color": Color("3b5b7a"),
@@ -205,11 +211,24 @@ var ARENAS = {
     "neon_metropolis": {
         "name": "NEON METROPOLIS",
         "sky": preload("res://assets/textures/arenas/sky2_neon_metropolis.png"),
-        "thumb": null, "floor": null, "floor_em": null, "floor_norm": null,
+        "thumb": preload("res://assets/textures/ui/thumb_neon_metropolis.png"),
+        "floor": null, "floor_em": null, "floor_norm": null,
         "sun_color": Color("ffb3e6"),
         "sun_rot": Vector3(-50, -30, 0),
         "ambient_color": Color("3a1d5c"),
         "fire_color": Color("ff3db4")
+    },
+    "astral_nexus": {
+        "name": "ASTRAL OBSIDIAN NEXUS",
+        "sky": preload("res://assets/textures/arenas/sky2_neon_metropolis.png"),
+        "thumb": preload("res://assets/textures/ui/thumb_astral_nexus.png"),
+        "floor": preload("res://assets/textures/arenas/floor_stone_albedo.png"),
+        "floor_em": preload("res://assets/textures/arenas/floor_lava_emission.png"),
+        "floor_norm": preload("res://assets/textures/arenas/floor_stone_normal.png"),
+        "sun_color": Color("d8b4fe"),
+        "sun_rot": Vector3(-45, -20, 0),
+        "ambient_color": Color("2e1065"),
+        "fire_color": Color("c084fc")
     }
 }
 
@@ -270,6 +289,8 @@ var world_env: WorldEnvironment
 var sunlight: DirectionalLight3D
 ## Builds the stage, platforms, scenery, weather and accent lights of every arena.
 var arena_builder: Node3D
+var hazard_nodes: Array = []
+var destructible_nodes: Array = []
 var camera_shake := 0.0
 var camera_look := Vector3(0, 1.15, 0)
 ## Big center announcer text ("3", "2", "1", "GO!", "GAME!") and full-screen flash.
@@ -324,8 +345,16 @@ var shop_buttons: Array = []
 var shop_index := 0
 ## Start screen stage: "splash" (press start) or "menu" (the painted main menu).
 var title_stage := "splash"
+var splash_box: PanelContainer
 var splash_cover: Panel
 var splash_label: Label
+var title_info_panel: PanelContainer
+var title_item_hint: Label
+var title_hl_tween: Tween
+var title_hint_panel: PanelContainer
+var arena_buttons: Dictionary = {}
+var arena_name_btn: Button = null
+var arena_chip_buttons: Dictionary = {}
 var splash_tween: Tween
 ## Controller navigation for every menu panel: a glowing frame jumps between buttons.
 var nav_layer: CanvasLayer
@@ -394,6 +423,19 @@ var mk_p2_name_label: Label
 var mk_p2_sub_label: Label
 var mk_p2_stats_label: Label
 
+var mk_p1_portrait: TextureRect
+var mk_p1_bars: Dictionary = {}
+var mk_p1_special_lbl: Label
+var mk_p1_stars_lbl: Label
+
+var mk_p2_portrait: TextureRect
+var mk_p2_bars: Dictionary = {}
+var mk_p2_special_lbl: Label
+var mk_p2_stars_lbl: Label
+
+var arena_thumb_rect: TextureRect = null
+var arena_hazard_lbl: Label = null
+
 var fusionskammer_modal: PanelContainer
 var fusionskammer_prompt_edit: LineEdit
 var fusionskammer_body_option: OptionButton
@@ -429,7 +471,7 @@ func _ready() -> void:
     refresh_previews()
     update_mk_grid_visuals()
     # Start screen at launch (not in smoke/capture runs and headless tests, which drive the game directly).
-    if not smoke and not capture_selection and DisplayServer.get_name() != "headless": show_title("splash")
+    if not smoke and not capture_selection and DisplayServer.get_name() != "headless": play_startup_intro()
     get_window().focus_exited.connect(func():
         if active and sim.mode == "manual" and not smoke: paused = true)
     story = StoryModeScript.new()
@@ -817,6 +859,12 @@ func update_projectiles() -> void:
             projectile_nodes[pr.id] = node
         node.position = Vector3(pr.x, pr.y, 0.3)
         if pr.has("size_now"): node.scale = Vector3.ONE * float(pr.size_now) / float(spec.get("size", 0.3))
+        if PET_SHAPES.has(shape):
+            # Summoned pets: shown bigger, facing where they run, with a little run/hover bob.
+            var pet: Array = PET_SHAPES[shape]
+            node.scale = Vector3.ONE * float(pet[0])
+            node.position.y += float(pet[1]) + absf(sin(Time.get_ticks_msec() * 0.012 + pr.id)) * 0.09
+            if absf(pr.vx) > 0.1: node.rotation.y = 0.0 if pr.vx > 0.0 else PI
         if pr.get("stuck", false) or pr.get("pooled", false):
             pass # stuck in the floor / lying on it
         elif shape in ["saber", "boomerang", "scythe", "glitch"]:
@@ -1015,6 +1063,8 @@ func setup_items() -> void:
                 root_item.add_child(smod)
 
         root_item.add_child(mesh_inst)
+    setup_hazards_ui()
+    setup_destructibles_ui()
 
 func apply_arena(id: String) -> void:
     if not ARENAS.has(id): id = "blood_moon"
@@ -1054,41 +1104,495 @@ func apply_arena(id: String) -> void:
     sunlight.light_color = a.sun_color
     sunlight.light_energy = 1.35
     arena_builder.build(id)
+    sim.set_arena(id)
+    setup_hazards_ui()
+    setup_destructibles_ui()
 
     if status:
         status.text = "%s  /  %s" % [a.name, ("AGENTENKAMPF" if sim.mode == "autonomous" else "LOKALER VERSUS")]
+    if arena_thumb_rect and is_instance_valid(arena_thumb_rect):
+        arena_thumb_rect.texture = a.get("thumb", null)
+    if arena_hazard_lbl and is_instance_valid(arena_hazard_lbl):
+        var h_desc := "🛡 TURNIER-STANDARD · KEINE FALLEN"
+        if id in ["volcano_sanctum", "hell_flames"]: h_desc = "🔥 GEFAHR: FEUER-FONTÄNEN (17 DMG)"
+        elif id in ["astral_nexus"]: h_desc = "🌌 GEFAHR: QUANTUM-RISS & GRAVITATION"
+        elif id in ["imperial_colosseum", "gladiator_fortress"]: h_desc = "⚔ GEFAHR: BODEN-STACHELN"
+        elif id in ["neon_metropolis"]: h_desc = "⚡ GEFAHR: TESLA-SCHOCKS (13 DMG)"
+        elif id in ["frozen_summit", "cocytus"]: h_desc = "❄️ GEFAHR: EIS-STALAKTITEN"
+        elif id in ["mystic_grove"]: h_desc = "🌿 GEFAHR: DORNENWURZELN"
+        arena_hazard_lbl.text = h_desc
+    if arena_name_btn and is_instance_valid(arena_name_btn):
+        arena_name_btn.text = a.name.to_upper()
+    for chip_k in arena_chip_buttons:
+        var chip_b: Button = arena_chip_buttons[chip_k]
+        if is_instance_valid(chip_b):
+            _style_arena_chip(chip_b, chip_k == id)
 
-func panel_style(color: Color, border: Color = Color("34445b"), width: int = 1, radius: int = 12) -> StyleBoxFlat:
-    var s := StyleBoxFlat.new()
-    s.bg_color = color
-    s.border_color = border
-    s.set_border_width_all(width)
-    s.set_corner_radius_all(radius)
-    s.content_margin_left = 18
-    s.content_margin_right = 18
-    s.content_margin_top = 12
-    s.content_margin_bottom = 12
+## Framed plate from the design system (scripts/ui_style.gd): cut corners, double edge,
+## gradient fill and soft shadow. Same arguments as before; radius sets the corner cut.
+func panel_style(color: Color, border: Color = UiStyle.RIM, width: int = 1, radius: int = 12) -> FrameBox:
+    var s: FrameBox = UiStyle.frame(color, border, width, radius)
+    # Big panels get corner brackets in their edge color.
+    if radius >= 10 and width >= 1 and color.a > 0.5: s.ornaments = true
     return s
 
-func label(text: String, size: int = 18, color: Color = Color("dce7f5")) -> Label:
+## Text label. Sizes from 20 up are headings and use the display face (Teko).
+func label(text: String, size: int = 18, color: Color = UiStyle.TEXT) -> Label:
     var l := Label.new()
     l.text = text
+    if size >= 20:
+        l.add_theme_font_override("font", UiStyle.display_font(600, 1))
+        size = int(round(size * 1.22))
     l.add_theme_font_size_override("font_size", size)
     l.add_theme_color_override("font_color", color)
     return l
 
+## Standard menu button: framed plate with hover, pressed, focus and disabled states,
+## the display face and a small lift on hover. color tints the edge and hover glow.
 func button(text: String, color: Color, callback: Callable) -> Button:
     var b := Button.new()
     b.text = text
-    b.custom_minimum_size = Vector2(0, 46)
-    b.add_theme_font_size_override("font_size", 17)
-    b.add_theme_color_override("font_color", Color("ecf4ff"))
-    b.add_theme_stylebox_override("normal", panel_style(Color("162b40"), color.darkened(0.3)))
-    b.add_theme_stylebox_override("hover", panel_style(Color("29445a"), color))
-    b.add_theme_stylebox_override("pressed", panel_style(Color("34566d"), color))
+    b.custom_minimum_size = Vector2(0, UiStyle.TOUCH_MIN)
+    b.add_theme_font_override("font", UiStyle.display_font(500, 1))
+    b.add_theme_font_size_override("font_size", 15)
+    UiStyle.style_button(b, color)
     b.focus_mode = Control.FOCUS_NONE
+    b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
     b.pressed.connect(callback)
+    # Teko is narrower than the body face: scale whatever size the caller sets once it is shown.
+    b.tree_entered.connect(_bump_display_size.bind(b), CONNECT_ONE_SHOT)
     return b
+
+## Tab in a window header. The active tab is a lit plate with a gold underline glow.
+func tab_button(text: String, active: bool, callback: Callable, accent: Color = UiStyle.GOLD) -> Button:
+    var b := button(text, accent if active else Color("64748b"), callback)
+    if active:
+        var on: FrameBox = UiStyle.frame(Color(accent.r * 0.24, accent.g * 0.2, accent.b * 0.14, 0.95), accent, 1, 8)
+        on.border_width_bottom = 3
+        on.underglow = Color(accent.r, accent.g, accent.b, 0.30)
+        on.seam = 0.5
+        on.content_margin_top = 6
+        on.content_margin_bottom = 6
+        for st in ["normal", "hover", "pressed"]: b.add_theme_stylebox_override(st, on)
+        b.add_theme_color_override("font_color", accent.lightened(0.6))
+        b.add_theme_color_override("font_hover_color", Color.WHITE)
+    else:
+        b.add_theme_color_override("font_color", UiStyle.MUTED.lightened(0.15))
+    return b
+
+func _bump_display_size(c: Control) -> void:
+    if c.has_meta("ui_size_bumped"): return
+    c.set_meta("ui_size_bumped", true)
+    var fs: int = c.get_theme_font_size("font_size")
+    c.add_theme_font_size_override("font_size", int(round(fs * 1.28)))
+
+
+func _create_stat_bar(stat_name: String, bar_color: Color) -> Dictionary:
+    var row := HBoxContainer.new()
+    row.custom_minimum_size = Vector2(0, 15)
+    row.add_theme_constant_override("separation", 6)
+
+    var name_lbl := Label.new()
+    name_lbl.text = stat_name
+    name_lbl.custom_minimum_size = Vector2(46, 15)
+    name_lbl.add_theme_font_size_override("font_size", 9)
+    name_lbl.add_theme_color_override("font_color", Color("94a3b8"))
+    row.add_child(name_lbl)
+
+    var pbar := ProgressBar.new()
+    pbar.custom_minimum_size = Vector2(110, 8)
+    pbar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    pbar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+    pbar.min_value = 0
+    pbar.max_value = 140
+    pbar.value = 50
+    pbar.show_percentage = false
+
+    var bg_box := StyleBoxFlat.new()
+    bg_box.bg_color = Color(0.04, 0.07, 0.12, 0.9)
+    bg_box.set_corner_radius_all(3)
+    pbar.add_theme_stylebox_override("background", bg_box)
+
+    var fill_box := StyleBoxFlat.new()
+    fill_box.bg_color = bar_color
+    fill_box.set_corner_radius_all(3)
+    pbar.add_theme_stylebox_override("fill", fill_box)
+    row.add_child(pbar)
+
+    var val_lbl := Label.new()
+    val_lbl.text = "50"
+    val_lbl.custom_minimum_size = Vector2(34, 15)
+    val_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+    val_lbl.add_theme_font_size_override("font_size", 9)
+    val_lbl.add_theme_color_override("font_color", Color("e2e8f0"))
+    row.add_child(val_lbl)
+
+    return {"row": row, "bar": pbar, "val": val_lbl}
+
+
+func setup_hazards_ui() -> void:
+    for node in hazard_nodes:
+        if is_instance_valid(node): node.queue_free()
+    hazard_nodes.clear()
+    for h in sim.hazards:
+        var root_h := Node3D.new()
+        root_h.position = Vector3(float(h.x), float(h.y), 0.0)
+        root_h.set_meta("hazard_id", int(h.id))
+        root_h.set_meta("hazard_type", str(h.type))
+        add_child(root_h)
+        hazard_nodes.append(root_h)
+
+        var h_type: String = str(h.type)
+        if h_type == "fire_vent":
+            var collar := MeshInstance3D.new()
+            var cyl := CylinderMesh.new()
+            cyl.top_radius = 0.58
+            cyl.bottom_radius = 0.72
+            cyl.height = 0.16
+            cyl.radial_segments = 16
+            collar.mesh = cyl
+            var c_mat := StandardMaterial3D.new()
+            c_mat.albedo_color = Color("2e1c14")
+            c_mat.metallic = 0.75
+            c_mat.roughness = 0.35
+            collar.material_override = c_mat
+            root_h.add_child(collar)
+
+            var core := MeshInstance3D.new()
+            var core_cyl := CylinderMesh.new()
+            core_cyl.top_radius = 0.44
+            core_cyl.bottom_radius = 0.44
+            core_cyl.height = 0.05
+            core.mesh = core_cyl
+            core.position.y = 0.06
+            var core_mat := StandardMaterial3D.new()
+            core_mat.albedo_color = Color("ff4400")
+            core_mat.emission_enabled = true
+            core_mat.emission = Color("ff6600")
+            core_mat.emission_energy_multiplier = 3.5
+            core.material_override = core_mat
+            root_h.add_child(core)
+            root_h.set_meta("core_mat", core_mat)
+
+            var hl := OmniLight3D.new()
+            hl.light_color = Color("ff6a00")
+            hl.light_energy = 0.6
+            hl.omni_range = 4.5
+            hl.position.y = 0.4
+            root_h.add_child(hl)
+            root_h.set_meta("light", hl)
+
+            var p := CPUParticles3D.new()
+            p.emitting = false
+            p.amount = 45
+            p.lifetime = 0.7
+            p.one_shot = true
+            p.explosiveness = 0.85
+            p.position = Vector3(0, 0.1, 0)
+            p.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE
+            p.emission_sphere_radius = 0.35
+            p.direction = Vector3(0, 1, 0)
+            p.spread = 15.0
+            p.gravity = Vector3(0, 4.0, 0)
+            p.initial_velocity_min = 6.0
+            p.initial_velocity_max = 9.5
+            var q := QuadMesh.new()
+            q.size = Vector2(0.35, 0.35)
+            var pmat := StandardMaterial3D.new()
+            pmat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+            pmat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+            pmat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+            pmat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+            pmat.vertex_color_use_as_albedo = true
+            pmat.albedo_color = Color(2.5, 1.2, 0.3)
+            q.material = pmat
+            p.mesh = q
+            var g := Gradient.new()
+            g.set_color(0, Color(1, 1, 0.4, 1))
+            g.add_point(0.4, Color(1, 0.4, 0.1, 0.8))
+            g.set_color(g.get_point_count() - 1, Color(0.6, 0.1, 0.05, 0))
+            p.color_ramp = g
+            root_h.add_child(p)
+            root_h.set_meta("particles", p)
+
+        elif h_type == "tesla_shock":
+            for s in [-0.55, 0.55]:
+                var pylon := MeshInstance3D.new()
+                var cyl := CylinderMesh.new()
+                cyl.top_radius = 0.08
+                cyl.bottom_radius = 0.14
+                cyl.height = 1.3
+                pylon.mesh = cyl
+                pylon.position = Vector3(s, 0.65, 0)
+                var pmat := StandardMaterial3D.new()
+                pmat.albedo_color = Color("22d3ee")
+                pmat.metallic = 0.9
+                pmat.roughness = 0.2
+                pylon.material_override = pmat
+                root_h.add_child(pylon)
+
+                var sphere := MeshInstance3D.new()
+                var sph := SphereMesh.new()
+                sph.radius = 0.15
+                sph.height = 0.3
+                sphere.mesh = sph
+                sphere.position = Vector3(s, 1.35, 0)
+                var smat := StandardMaterial3D.new()
+                smat.albedo_color = Color("00e5ff")
+                smat.emission_enabled = true
+                smat.emission = Color("00e5ff")
+                smat.emission_energy_multiplier = 3.0
+                sphere.material_override = smat
+                root_h.add_child(sphere)
+
+        elif h_type == "quantum_rift":
+            var rift_ring := MeshInstance3D.new()
+            var torus := TorusMesh.new()
+            torus.inner_radius = 0.45
+            torus.outer_radius = 0.65
+            rift_ring.mesh = torus
+            rift_ring.position.y = 0.05
+            var r_mat := StandardMaterial3D.new()
+            r_mat.albedo_color = Color("1e0c33")
+            r_mat.emission_enabled = true
+            r_mat.emission = Color("a855f7")
+            r_mat.emission_energy_multiplier = 3.5
+            rift_ring.material_override = r_mat
+            root_h.add_child(rift_ring)
+            root_h.set_meta("core_mat", r_mat)
+
+            var hl := OmniLight3D.new()
+            hl.light_color = Color("c084fc")
+            hl.light_energy = 0.8
+            hl.omni_range = 5.0
+            hl.position.y = 0.4
+            root_h.add_child(hl)
+            root_h.set_meta("light", hl)
+
+            var p := CPUParticles3D.new()
+            p.emitting = false
+            p.amount = 40
+            p.lifetime = 0.8
+            p.one_shot = true
+            p.explosiveness = 0.8
+            p.position = Vector3(0, 0.1, 0)
+            p.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE
+            p.emission_sphere_radius = 0.3
+            p.direction = Vector3(0, 1, 0)
+            p.spread = 20.0
+            p.gravity = Vector3(0, 5.0, 0)
+            p.initial_velocity_min = 5.0
+            p.initial_velocity_max = 8.0
+            var q := QuadMesh.new()
+            q.size = Vector2(0.28, 0.28)
+            var pmat := StandardMaterial3D.new()
+            pmat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+            pmat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+            pmat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+            pmat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+            pmat.vertex_color_use_as_albedo = true
+            pmat.albedo_color = Color(2.0, 1.2, 2.8)
+            q.material = pmat
+            p.mesh = q
+            var g := Gradient.new()
+            g.set_color(0, Color(1, 0.6, 1, 1))
+            g.add_point(0.4, Color(0.7, 0.3, 1, 0.8))
+            g.set_color(g.get_point_count() - 1, Color(0.3, 0.1, 0.6, 0))
+            p.color_ramp = g
+            root_h.add_child(p)
+            root_h.set_meta("particles", p)
+
+        else:
+            var base := MeshInstance3D.new()
+            var b_box := BoxMesh.new()
+            b_box.size = Vector3(1.2, 0.08, 1.2)
+            base.mesh = b_box
+            base.position.y = 0.02
+            var b_mat := StandardMaterial3D.new()
+            b_mat.albedo_color = Color("2b3543")
+            b_mat.metallic = 0.85
+            b_mat.roughness = 0.35
+            base.material_override = b_mat
+            root_h.add_child(base)
+
+            var spike_holder := Node3D.new()
+            spike_holder.position.y = -0.55
+            root_h.add_child(spike_holder)
+            root_h.set_meta("spikes_node", spike_holder)
+
+            var sp_mat := StandardMaterial3D.new()
+            sp_mat.albedo_color = Color("94a3b8")
+            sp_mat.metallic = 0.95
+            sp_mat.roughness = 0.18
+            sp_mat.emission_enabled = true
+            sp_mat.emission = Color("ff2233") if h_type == "spikes" else Color("67e8f9")
+            sp_mat.emission_energy_multiplier = 0.5
+
+            for sx in [-0.35, 0.0, 0.35]:
+                for sz in [-0.35, 0.35]:
+                    var spk := MeshInstance3D.new()
+                    var sp_cone := CylinderMesh.new()
+                    sp_cone.top_radius = 0.0
+                    sp_cone.bottom_radius = 0.09
+                    sp_cone.height = 0.95
+                    sp_cone.radial_segments = 8
+                    spk.mesh = sp_cone
+                    spk.position = Vector3(sx, 0.45, sz)
+                    spk.material_override = sp_mat
+                    spike_holder.add_child(spk)
+
+func setup_destructibles_ui() -> void:
+    for node in destructible_nodes:
+        if is_instance_valid(node): node.queue_free()
+    destructible_nodes.clear()
+    for d in sim.destructibles:
+        var root_d := Node3D.new()
+        root_d.position = Vector3(float(d.x), float(d.y), 0.0)
+        root_d.set_meta("destructible_id", int(d.id))
+        root_d.set_meta("destructible_type", str(d.type))
+        add_child(root_d)
+        destructible_nodes.append(root_d)
+
+        var d_type: String = str(d.type)
+        if d_type == "pillar":
+            var base_box := MeshInstance3D.new()
+            var bmesh := BoxMesh.new()
+            bmesh.size = Vector3(0.85, 0.25, 0.85)
+            base_box.mesh = bmesh
+            base_box.position.y = 0.125
+            var st_mat := StandardMaterial3D.new()
+            st_mat.albedo_color = Color("c4b5a2")
+            st_mat.roughness = 0.65
+            base_box.material_override = st_mat
+            root_d.add_child(base_box)
+
+            var col := MeshInstance3D.new()
+            var c_cyl := CylinderMesh.new()
+            c_cyl.top_radius = 0.32
+            c_cyl.bottom_radius = 0.36
+            c_cyl.height = 1.7
+            c_cyl.radial_segments = 14
+            col.mesh = c_cyl
+            col.position.y = 1.05
+            col.material_override = st_mat
+            root_d.add_child(col)
+
+            var band := MeshInstance3D.new()
+            var b_cyl := CylinderMesh.new()
+            b_cyl.top_radius = 0.35
+            b_cyl.bottom_radius = 0.35
+            b_cyl.height = 0.22
+            band.mesh = b_cyl
+            band.position.y = 1.05
+            var b_mat := StandardMaterial3D.new()
+            b_mat.albedo_color = Color("ffaa00")
+            b_mat.emission_enabled = true
+            b_mat.emission = Color("ffaa00")
+            b_mat.emission_energy_multiplier = 2.5
+            band.material_override = b_mat
+            root_d.add_child(band)
+
+            var cap := MeshInstance3D.new()
+            var cap_mesh := BoxMesh.new()
+            cap_mesh.size = Vector3(0.85, 0.22, 0.85)
+            cap.mesh = cap_mesh
+            cap.position.y = 1.95
+            cap.material_override = st_mat
+            root_d.add_child(cap)
+
+        elif d_type == "crystal":
+            for k in range(5):
+                var cry := MeshInstance3D.new()
+                var c_cyl := CylinderMesh.new()
+                c_cyl.top_radius = 0.0
+                c_cyl.bottom_radius = 0.18 - k * 0.02
+                c_cyl.height = 1.8 - k * 0.2
+                c_cyl.radial_segments = 6
+                cry.mesh = c_cyl
+                cry.position = Vector3((k - 2) * 0.16, cry.mesh.height * 0.5, (k % 2) * 0.15 - 0.08)
+                cry.rotation_degrees = Vector3((k % 3 - 1) * 8.0, 0, (k - 2) * 11.0)
+                var cmat := StandardMaterial3D.new()
+                cmat.albedo_color = Color(0.2, 0.8, 1.0, 0.85)
+                cmat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+                cmat.roughness = 0.12
+                cmat.metallic = 0.4
+                cmat.emission_enabled = true
+                cmat.emission = Color("38bdf8")
+                cmat.emission_energy_multiplier = 2.8
+                cry.material_override = cmat
+                root_d.add_child(cry)
+
+        else:
+            for k in range(2):
+                var box_inst := MeshInstance3D.new()
+                var bmesh := BoxMesh.new()
+                bmesh.size = Vector3(0.72, 0.38, 0.72)
+                box_inst.mesh = bmesh
+                box_inst.position.y = 0.19 + k * 0.39
+                var c_mat := StandardMaterial3D.new()
+                c_mat.albedo_color = Color("6b4c2b")
+                c_mat.roughness = 0.75
+                box_inst.material_override = c_mat
+                root_d.add_child(box_inst)
+
+func spawn_debris_explosion(pos: Vector3, count: int = 10, col: Color = Color("c4b5a2")) -> void:
+    for k in range(count):
+        var chunk := MeshInstance3D.new()
+        var bm := BoxMesh.new()
+        var sz: float = randf_range(0.12, 0.24)
+        bm.size = Vector3(sz, sz, sz)
+        chunk.mesh = bm
+        var m := StandardMaterial3D.new()
+        m.albedo_color = col
+        m.roughness = 0.7
+        chunk.material_override = m
+        add_child(chunk)
+        chunk.position = pos + Vector3(randf_range(-0.3, 0.3), randf_range(0.1, 0.8), randf_range(-0.2, 0.2))
+        var vel := Vector3(randf_range(-4.5, 4.5), randf_range(3.5, 7.5), randf_range(-1.5, 1.5))
+        var rot_spd := Vector3(randf_range(-10, 10), randf_range(-10, 10), randf_range(-10, 10))
+        var tw := create_tween()
+        var dur := randf_range(0.9, 1.3)
+        tw.tween_method(func(prog: float):
+            if is_instance_valid(chunk):
+                var cur_t: float = prog * dur
+                chunk.position = pos + vel * cur_t + Vector3(0, -0.5 * 18.0 * cur_t * cur_t, 0)
+                if chunk.position.y < 0.05:
+                    chunk.position.y = 0.05
+                    vel.y = absf(vel.y) * 0.3
+                chunk.rotation += rot_spd * 0.016
+        , 0.0, 1.0, dur)
+        tw.parallel().tween_property(m, "albedo_color:a", 0.0, dur)
+        tw.tween_callback(chunk.queue_free)
+
+func footstep_dust(pos: Vector3, dir: float) -> void:
+    var p := CPUParticles3D.new()
+    p.one_shot = true
+    p.amount = 8
+    p.lifetime = 0.35
+    p.explosiveness = 0.9
+    p.direction = Vector3(-dir, 0.5, 0)
+    p.spread = 25.0
+    p.gravity = Vector3(0, -4.0, 0)
+    p.initial_velocity_min = 1.0
+    p.initial_velocity_max = 2.5
+    var q := QuadMesh.new()
+    q.size = Vector2(0.12, 0.12)
+    var m := StandardMaterial3D.new()
+    m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+    m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+    m.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+    m.vertex_color_use_as_albedo = true
+    m.albedo_color = Color(0.9, 0.85, 0.78, 0.45)
+    q.material = m
+    p.mesh = q
+    var g := Gradient.new()
+    g.set_color(0, Color(1, 1, 1, 0.6))
+    g.set_color(1, Color(1, 1, 1, 0))
+    p.color_ramp = g
+    add_child(p)
+    p.position = pos
+    p.emitting = true
+    get_tree().create_timer(0.45).timeout.connect(p.queue_free)
 
 func setup_ui() -> void:
     var layer := CanvasLayer.new()
@@ -1096,6 +1600,7 @@ func setup_ui() -> void:
     root_ui = Control.new()
     root_ui.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     root_ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    root_ui.theme = UiStyle.build_theme()
     layer.add_child(root_ui)
     var top := PanelContainer.new()
     root_ui.add_child(top)
@@ -1121,13 +1626,17 @@ func setup_ui() -> void:
     col_left.add_theme_constant_override("separation", 6)
     row.add_child(col_left)
 
+    var middle_box := PanelContainer.new()
+    middle_box.custom_minimum_size = Vector2(136, 62)
+    middle_box.add_theme_stylebox_override("panel", panel_style(Color(0.01, 0.018, 0.03, 0.95), Color(0.24, 0.36, 0.52, 0.7), 1, 8))
+    row.add_child(middle_box)
     var middle := VBoxContainer.new()
-    middle.custom_minimum_size.x = 130
-    row.add_child(middle)
-    var brand := label("PROMPT FIGHTER", 15, CYAN)
+    middle.alignment = BoxContainer.ALIGNMENT_CENTER
+    middle_box.add_child(middle)
+    var brand := label("ROUND 1", 11, Color("7dd3fc"))
     brand.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     middle.add_child(brand)
-    timer = label("99", 34)
+    timer = label("99", 34, Color("fef08a"))
     timer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     middle.add_child(timer)
 
@@ -1203,15 +1712,16 @@ func setup_ui() -> void:
     bottom.add_theme_stylebox_override("panel", panel_style(Color(0.025,0.042,0.075,0.94)))
     var footer := HBoxContainer.new()
     bottom.add_child(footer)
-    var keys := label("🎮 MENÜ: Steuerkreuz Kämpfer · A wählen · Y Zufall · X Bosse · LB/RB Arena · ⧉ Modus · R3 Teams · ☰ KAMPF · B Hauptmenü   |   KAMPF: A Schlag · B Spezial · X/Y Sprung · LB/RB Greifen · LT/RT Schild · R-Stick Smash · ☰ Pause   |   ⌨ P1 A/D W S Q F G E · P2 Pfeile I K L O", 11)
+    var keys := label("🎮 A Schlag · B Spezial · X/Y Sprung · LB/RB Greifen · LT/RT Schild · R-Stick Smash · ☰ Pause   |   ⌨ F/G Angriff · SPACE Sprung · E Schild · Q Greifen   |   P1 A/D · P2 Pfeile", 11, Color("cbd5e1"))
     keys.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     footer.add_child(keys)
     footer.add_child(button("↻  R", CYAN, restart_round))
     footer.add_child(button("Auswahl", ORANGE, show_selection))
-    status = label("BLOOD MOON TERRACE  /  LOKALER VERSUS", 15, Color("bfcee1"))
+    status = label("BLOOD MOON TERRACE  /  LOKALER VERSUS", 13, Color("bfcee1"))
+    status.add_theme_stylebox_override("normal", panel_style(Color(0.012, 0.02, 0.035, 0.85), Color(0.2, 0.3, 0.44, 0.55), 1, 6))
     root_ui.add_child(status)
     status.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
-    status.position = Vector2(390, 159)
+    status.position = Vector2(440, 110)
 
     # Hide battle HUD initially while in character selection
     battle_hud_top.hide()
@@ -1243,149 +1753,179 @@ func setup_ui() -> void:
         selection.add_child(h_info)
         profile_text.append(h_info)
 
-    # 1. TOP HEADER BAR
+    # Layout (1280 x 720 canvas): header 16..1264 / 6..50, P1 and P2 cards at the sides
+    # (58..476), arena plate and start button in the middle under the live fighters,
+    # roster across the bottom (484..714).
+    # 1. HEADER BAR
     var top_bar := PanelContainer.new()
-    top_bar.position = Vector2(24, 12)
-    top_bar.custom_minimum_size = Vector2(1232, 44)
-    top_bar.add_theme_stylebox_override("panel", panel_style(Color(0.02, 0.03, 0.06, 0.82), Color(0.18, 0.24, 0.35, 0.6), 1, 8))
+    top_bar.position = Vector2(16, 6)
+    top_bar.size = Vector2(1248, 44)
+    top_bar.custom_minimum_size = Vector2(1248, 44)
+    var top_sb: FrameBox = panel_style(Color(0.02, 0.03, 0.055, 0.94), Color(0.30, 0.38, 0.52, 0.8), 1, 10)
+    top_sb.ornaments = false
+    top_sb.content_margin_top = 5
+    top_sb.content_margin_bottom = 5
+    top_sb.content_margin_left = 10
+    top_sb.content_margin_right = 10
+    top_bar.add_theme_stylebox_override("panel", top_sb)
     selection.add_child(top_bar)
 
     var top_h := HBoxContainer.new()
-    top_h.add_theme_constant_override("separation", 7)
+    top_h.add_theme_constant_override("separation", 6)
     top_bar.add_child(top_h)
 
-    var btn_random := button("🎲 ZUFALL [J]", Color("f7c844"), _on_random_select_pressed)
-    btn_random.custom_minimum_size = Vector2(120, 34)
-    btn_random.add_theme_font_size_override("font_size", 12)
-    top_h.add_child(btn_random)
+    var header_btn := func(text: String, accent: Color, cb: Callable, node_name: String = "") -> Button:
+        var hb := button(text, accent, cb)
+        if node_name != "": hb.name = node_name
+        hb.custom_minimum_size = Vector2(0, 34)
+        hb.add_theme_font_size_override("font_size", 12)
+        top_h.add_child(hb)
+        return hb
 
-    var btn_story := button("📖 STORYMODUS", Color("f472b6"), func(): story.open_menu())
-    btn_story.custom_minimum_size = Vector2(130, 34)
-    btn_story.add_theme_font_size_override("font_size", 12)
-    top_h.add_child(btn_story)
-
-    var btn_home := button("🏠 MENÜ", Color("fbbf24"), show_title)
-    btn_home.custom_minimum_size = Vector2(90, 34)
-    btn_home.add_theme_font_size_override("font_size", 12)
-    top_h.add_child(btn_home)
-
-    var btn_boss := button("👁 BOSSKAMPF", Color("ff5a1f"), open_boss_menu)
-    btn_boss.name = "BtnBoss"
-    btn_boss.custom_minimum_size = Vector2(130, 34)
-    btn_boss.add_theme_font_size_override("font_size", 12)
-    top_h.add_child(btn_boss)
-
-    var btn_players := button("👥 1 GEGEN 1", Color("38bdf8"), _toggle_player_count)
-    btn_players.name = "BtnPlayerCount"
-    btn_players.custom_minimum_size = Vector2(150, 34)
-    btn_players.add_theme_font_size_override("font_size", 12)
-    top_h.add_child(btn_players)
+    header_btn.call("MENÜ", Color("fbbf24"), show_title)
+    header_btn.call("STORY", Color("f472b6"), func(): story.open_menu())
+    header_btn.call("BOSS", Color("ff5a1f"), open_boss_menu, "BtnBoss")
+    header_btn.call("ZUFALL  J", Color("f7c844"), _on_random_select_pressed)
 
     var title_spacer1 := Control.new()
     title_spacer1.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     top_h.add_child(title_spacer1)
 
-    var mk_title := label("WÄHLE DEINEN KÄMPFER", 16, Color("f7c844"))
+    var mk_title := label("KÄMPFERAUSWAHL", 20, UiStyle.GOLD)
     mk_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    mk_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
     top_h.add_child(mk_title)
 
     var title_spacer2 := Control.new()
     title_spacer2.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     top_h.add_child(title_spacer2)
 
-    for spec in [["BtnAiLevel", _cycle_ai_level, Color("94a3b8")], ["BtnStocks", _cycle_stocks, Color("f87171")], ["BtnFinisher", _toggle_finishers, Color("ef4444")]]:
-        var ob := button("", spec[2], spec[1])
-        ob.name = spec[0]
-        ob.custom_minimum_size = Vector2(100, 34)
-        ob.add_theme_font_size_override("font_size", 11)
-        top_h.add_child(ob)
+    var btn_mode: Button = header_btn.call("SPIELER vs KI", Color("4ae371"), _cycle_combat_mode, "BtnCombatMode")
+    btn_mode.custom_minimum_size.x = 132
+    var btn_players: Button = header_btn.call("1 GEGEN 1", Color("38bdf8"), _toggle_player_count, "BtnPlayerCount")
+    btn_players.custom_minimum_size.x = 112
+    for spec in [["BtnStocks", _cycle_stocks, Color("f87171"), 84], ["BtnAiLevel", _cycle_ai_level, Color("94a3b8"), 84], ["BtnFinisher", _toggle_finishers, Color("ef4444"), 104]]:
+        var ob: Button = header_btn.call("", spec[2], spec[1], spec[0])
+        ob.custom_minimum_size.x = spec[3]
 
-    var btn_mode := button("⚔ SPIELER vs KI", Color("4ae371"), _cycle_combat_mode)
-    btn_mode.name = "BtnCombatMode"
-    btn_mode.custom_minimum_size = Vector2(160, 34)
-    btn_mode.add_theme_font_size_override("font_size", 12)
-    top_h.add_child(btn_mode)
+    # 2./3. P1 AND P2 SHOWCASE CARDS
+    _build_showcase_card(0, Vector2(16, 58))
+    _build_showcase_card(1, Vector2(964, 58))
 
-    # 2. P1 FIGHTER DISPLAY (LOWER LEFT ABOVE CARDS)
-    var p1_box := VBoxContainer.new()
-    p1_box.position = Vector2(30, 440)
-    p1_box.custom_minimum_size = Vector2(460, 95)
-    p1_box.add_theme_constant_override("separation", 2)
-    selection.add_child(p1_box)
-
-    mk_p1_name_label = label("VOLT NINJA", 32, Color("ffffff"))
-    p1_box.add_child(mk_p1_name_label)
-
-    mk_p1_sub_label = label("⚡ BLITZ · SCHATTEN-ASSASSINE", 13, CYAN)
-    p1_box.add_child(mk_p1_sub_label)
-
-    mk_p1_stats_label = label("HP 100 · KRAFT 20 · RÜSTUNG 14 · TEMPO 28 · TECHNIK 22", 11, Color("bfcee1"))
-    p1_box.add_child(mk_p1_stats_label)
-
-    # 3. P2 FIGHTER DISPLAY (LOWER RIGHT ABOVE CARDS)
-    var p2_box := VBoxContainer.new()
-    p2_box.position = Vector2(790, 440)
-    p2_box.custom_minimum_size = Vector2(460, 95)
-    p2_box.add_theme_constant_override("separation", 2)
-    selection.add_child(p2_box)
-
-    mk_p2_name_label = label("LAVA GOLEM", 32, Color("ffffff"))
-    mk_p2_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-    p2_box.add_child(mk_p2_name_label)
-
-    mk_p2_sub_label = label("🔥 FEUER · MAGMA-KOLOSS", 13, ORANGE)
-    mk_p2_sub_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-    p2_box.add_child(mk_p2_sub_label)
-
-    mk_p2_stats_label = label("HP 135 · KRAFT 28 · RÜSTUNG 26 · TEMPO 8 · TECHNIK 8", 11, Color("bfcee1"))
-    mk_p2_stats_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-    p2_box.add_child(mk_p2_stats_label)
-
-    var p2_join := label("[RECHTSKLICK]: P2 WÄHLEN  ·  [A] BEITRETEN", 10, Color("55dd88"))
-    p2_join.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-    p2_box.add_child(p2_join)
-
-    # 4. CENTER START MATCH BUTTON & ARENA SELECTOR
+    # 4. CENTER: ARENA PLATE AND START BUTTON (under the live fighters)
     var center_box := VBoxContainer.new()
-    center_box.position = Vector2(500, 418)
-    center_box.custom_minimum_size = Vector2(280, 85)
-    center_box.alignment = BoxContainer.ALIGNMENT_CENTER
+    center_box.position = Vector2(328, 316)
+    center_box.size = Vector2(624, 160)
+    center_box.custom_minimum_size = Vector2(624, 160)
+    center_box.add_theme_constant_override("separation", 8)
     selection.add_child(center_box)
 
-    var btn_start_match := button("⚔ KAMPF STARTEN [ENTER]", Color("ff5500"), func(): start_round(current_combat_mode))
-    btn_start_match.custom_minimum_size = Vector2(280, 44)
-    btn_start_match.add_theme_font_size_override("font_size", 16)
-    center_box.add_child(btn_start_match)
+    var arena_panel := PanelContainer.new()
+    var arena_sb: FrameBox = panel_style(Color(0.02, 0.03, 0.055, 0.93), Color("f59e0b").darkened(0.15), 1, 10)
+    arena_sb.content_margin_left = 10
+    arena_sb.content_margin_right = 12
+    arena_sb.content_margin_top = 8
+    arena_sb.content_margin_bottom = 8
+    arena_panel.add_theme_stylebox_override("panel", arena_sb)
+    center_box.add_child(arena_panel)
 
-    var arena_row := GridContainer.new()
-    arena_row.columns = 4
-    arena_row.add_theme_constant_override("h_separation", 4)
-    arena_row.add_theme_constant_override("v_separation", 3)
-    center_box.add_child(arena_row)
-    for aid in ARENAS:
-        if ARENAS[aid].get("boss", false): continue # boss levels are reached through the boss mode
-        var abtn := Button.new()
-        abtn.text = ARENAS[aid].name.left(10)
-        abtn.custom_minimum_size = Vector2(68, 20)
-        abtn.add_theme_font_size_override("font_size", 8)
-        abtn.add_theme_stylebox_override("normal", panel_style(Color("162b40"), Color("34445b"), 1, 4))
-        abtn.focus_mode = Control.FOCUS_NONE
-        var target_aid: String = aid
-        abtn.pressed.connect(func(): apply_arena(target_aid))
-        arena_row.add_child(abtn)
-    var shop_btn := Button.new()
-    shop_btn.text = "★ SHOP-ARENA"
-    shop_btn.custom_minimum_size = Vector2(80, 20)
-    shop_btn.add_theme_font_size_override("font_size", 8)
-    shop_btn.add_theme_color_override("font_color", Color("fbbf24"))
-    shop_btn.add_theme_stylebox_override("normal", panel_style(Color("2b1f08"), Color("fbbf24"), 1, 4))
-    shop_btn.focus_mode = Control.FOCUS_NONE
-    shop_btn.pressed.connect(_cycle_shop_arena)
-    arena_row.add_child(shop_btn)
+    var arena_top_h := HBoxContainer.new()
+    arena_top_h.add_theme_constant_override("separation", 12)
+    arena_panel.add_child(arena_top_h)
+
+    # Arena preview thumbnail in a thin gold frame.
+    arena_thumb_rect = TextureRect.new()
+    arena_thumb_rect.custom_minimum_size = Vector2(132, 76)
+    arena_thumb_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+    arena_thumb_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+    if ARENAS.has(current_arena): arena_thumb_rect.texture = ARENAS[current_arena].get("thumb", null)
+    var thumb_frame := PanelContainer.new()
+    var thumb_sb: FrameBox = panel_style(Color(0, 0, 0, 0.85), Color("f59e0b").darkened(0.1), 1, 6)
+    thumb_sb.set_content_margin_all(2)
+    thumb_sb.shadow_size = 0
+    thumb_sb.ornaments = false
+    thumb_frame.add_theme_stylebox_override("panel", thumb_sb)
+    thumb_frame.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+    thumb_frame.add_child(arena_thumb_rect)
+    arena_top_h.add_child(thumb_frame)
+
+    var arena_info_v := VBoxContainer.new()
+    arena_info_v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    arena_info_v.add_theme_constant_override("separation", 4)
+    arena_top_h.add_child(arena_info_v)
+
+    var arena_caro := HBoxContainer.new()
+    arena_caro.add_theme_constant_override("separation", 4)
+    arena_info_v.add_child(arena_caro)
+
+    var btn_prev := button("◀", Color("94a3b8"), func(): _step_arena(-1))
+    btn_prev.custom_minimum_size = Vector2(36, 32)
+    btn_prev.add_theme_font_size_override("font_size", 13)
+    arena_caro.add_child(btn_prev)
+
+    arena_name_btn = button((ARENAS[current_arena].name.to_upper() if ARENAS.has(current_arena) else "BLOOD MOON TERRACE"), Color("f59e0b"), func(): _step_arena(1))
+    arena_name_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    arena_name_btn.custom_minimum_size = Vector2(200, 32)
+    arena_name_btn.add_theme_font_size_override("font_size", 14)
+    arena_name_btn.add_theme_color_override("font_color", Color("fde68a"))
+    arena_caro.add_child(arena_name_btn)
+
+    var btn_next := button("▶", Color("94a3b8"), func(): _step_arena(1))
+    btn_next.custom_minimum_size = Vector2(36, 32)
+    btn_next.add_theme_font_size_override("font_size", 13)
+    arena_caro.add_child(btn_next)
+
+    var btn_shop_arena := button("★ SHOP", Color("fbbf24"), _cycle_shop_arena)
+    btn_shop_arena.custom_minimum_size = Vector2(70, 32)
+    btn_shop_arena.add_theme_font_size_override("font_size", 12)
+    arena_caro.add_child(btn_shop_arena)
+
+    arena_hazard_lbl = label("GEFAHR: FEUER-FONTÄNEN", 11, Color("fca5a5"))
+    arena_info_v.add_child(arena_hazard_lbl)
+
+    # Quick-pick chips for the core arenas.
+    var arena_chips := HBoxContainer.new()
+    arena_chips.add_theme_constant_override("separation", 4)
+    arena_info_v.add_child(arena_chips)
+    arena_chip_buttons.clear()
+    var core_arenas := [
+        ["blood_moon", "BLOOD MOON"],
+        ["volcano_sanctum", "VOLCANO"],
+        ["imperial_colosseum", "KOLOSSEUM"],
+        ["astral_nexus", "ASTRAL NEXUS"],
+        ["frozen_summit", "SUMMIT"],
+        ["neon_metropolis", "NEON CITY"]
+    ]
+    for c_spec in core_arenas:
+        var c_id: String = c_spec[0]
+        var chip := Button.new()
+        chip.text = c_spec[1]
+        chip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+        chip.custom_minimum_size = Vector2(0, 24)
+        chip.add_theme_font_size_override("font_size", 13)
+        chip.focus_mode = Control.FOCUS_NONE
+        chip.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+        _style_arena_chip(chip, c_id == current_arena)
+        UiStyle.add_motion(chip, 1.05)
+        chip.pressed.connect(func(): apply_arena(c_id))
+        arena_chips.add_child(chip)
+        arena_chip_buttons[c_id] = chip
+
+    # Start button: the one ember-red, slanted plate on the screen.
+    var btn_start_match := button("KAMPF STARTEN        ENTER / START", Color("ff6a1a"), func(): start_round(current_combat_mode))
+    btn_start_match.custom_minimum_size = Vector2(624, 46)
+    btn_start_match.add_theme_font_size_override("font_size", 19)
+    UiStyle.style_button(btn_start_match, Color("ff6a1a"), Color(0.20, 0.06, 0.02, 0.96), 12, 14.0)
+    var start_normal: FrameBox = btn_start_match.get_theme_stylebox("normal") as FrameBox
+    start_normal.border_color = Color("ff7a2a")
+    start_normal.underglow = Color(1.0, 0.42, 0.1, 0.28)
+    start_normal.seam = 0.4
+    btn_start_match.add_theme_color_override("font_color", Color("fff1e0"))
+    center_box.add_child(btn_start_match)
 
     _refresh_option_buttons.call_deferred()
 
-    # 5. 40-FIGHTER PRESETS (2 ROWS OF 20 CARDS)
+    # 5. 56-FIGHTER PRESETS (40 HOUSE HEROES + EXTENDED)
     mk_presets = [
         {"id": "ninja", "name": "VOLT NINJA", "prompt": "Blitzschneller Schattenninja mit elektrischen Klingen"},
         {"id": "golem", "name": "MAGMOR", "prompt": "Gepanzerter Lavagolem mit brennenden Fäusten"},
@@ -1437,34 +1977,94 @@ func setup_ui() -> void:
         {"id": "echo", "name": "ECHO", "prompt": "Echo das Hologramm mit Phasentausch"},
         {"id": "kettenwart", "name": "KETTENWART", "prompt": "Kettenwart der Kerkermeister mit Seelenketten"},
         {"id": "don_valente", "name": "DON VALENTE", "prompt": "Don Valente der Unterweltpate mit Leibwächter-Geschütz"},
+        {"id": "kalyx", "name": "KALYX", "prompt": "Kalyx der Zwiekristall mit Kristallkrone aus Frost und Glut"},
+        {"id": "vorruk", "name": "VORRUK", "prompt": "Vorruk der Sternenkoloss mit seinem Alienhund Zirra"},
+        {"id": "neris", "name": "NERIS", "prompt": "Neris die Kettenhand mit Kristallkette und Glasflügler Fenn"},
+        {"id": "konrad", "name": "KONRAD", "prompt": "Konrad der Schmiedemeister aus Deutschland mit Schwarz-Rot-Gold"},
+        {"id": "bogdan", "name": "BOGDAN", "prompt": "Bogdan der Bogatyr aus Russland mit Streitkolben"},
+        {"id": "kaan", "name": "KAAN", "prompt": "Kaan der Halbmondkrieger aus der Türkei mit Säbel"},
+        {"id": "amra", "name": "AMRA", "prompt": "Amra die Brückenspringerin aus Bosnien von der Alten Brücke in Mostar"},
+        {"id": "dusty", "name": "DUSTY", "prompt": "Dusty der Rodeo-Ranger aus Amerika mit Lasso und Sternenbanner"},
         {"id": "fusionskammer", "name": "FUSION", "prompt": "Fusionskammer: Eigenen Wunsch-Kämpfer erschaffen"}
     ]
 
-    # 6. BOTTOM FIGHTER GRID CONTAINER
+    # 6. BOTTOM FIGHTER ROSTER GRID (15 COLUMNS x 4 ROWS)
     var grid_panel := PanelContainer.new()
-    grid_panel.position = Vector2(20, 555)
-    grid_panel.custom_minimum_size = Vector2(1240, 150)
-    grid_panel.add_theme_stylebox_override("panel", panel_style(Color(0.015, 0.025, 0.04, 0.88), Color("1e2a3a"), 1, 8))
+    grid_panel.position = Vector2(16, 484)
+    grid_panel.size = Vector2(1248, 230)
+    grid_panel.custom_minimum_size = Vector2(1248, 230)
+    var grid_sb: FrameBox = panel_style(Color(0.016, 0.024, 0.044, 0.95), Color(0.28, 0.36, 0.50, 0.85), 1, 12)
+    grid_sb.content_margin_left = 11
+    grid_sb.content_margin_right = 11
+    grid_sb.content_margin_top = 6
+    grid_sb.content_margin_bottom = 8
+    grid_panel.add_theme_stylebox_override("panel", grid_sb)
     selection.add_child(grid_panel)
 
+    var grid_v := VBoxContainer.new()
+    grid_v.add_theme_constant_override("separation", 5)
+    grid_panel.add_child(grid_v)
+
+    # Roster header
+    var r_hdr := HBoxContainer.new()
+    grid_v.add_child(r_hdr)
+    var r_title := label("KÄMPFER  %d" % mk_presets.filter(func(p): return str(p.id) != "fusionskammer").size(), 13, Color("cbd5e1"))
+    r_title.add_theme_font_override("font", UiStyle.display_font(600, 2))
+    r_title.add_theme_font_size_override("font_size", 17)
+    r_hdr.add_child(r_title)
+    var r_sp := Control.new()
+    r_sp.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    r_hdr.add_child(r_sp)
+    var r_hints := label("Linksklick wählt P1     Rechtsklick wählt P2     J wählt zufällig", 11, UiStyle.MUTED)
+    r_hints.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+    r_hdr.add_child(r_hints)
+
     var mk_grid := GridContainer.new()
-    mk_grid.columns = 17
-    mk_grid.add_theme_constant_override("h_separation", 4)
+    mk_grid.columns = ROSTER_COLUMNS
+    mk_grid.add_theme_constant_override("h_separation", 3)
     mk_grid.add_theme_constant_override("v_separation", 4)
-    grid_panel.add_child(mk_grid)
+    grid_v.add_child(mk_grid)
+
+    # Shared gradients: the element wash fades from the left edge, the shade darkens the name strip.
+    var wash_tex := GradientTexture2D.new()
+    wash_tex.width = 64
+    wash_tex.height = 4
+    var wash_g := Gradient.new()
+    wash_g.set_color(0, Color(1, 1, 1, 0.95))
+    wash_g.set_color(1, Color(1, 1, 1, 0.0))
+    wash_tex.gradient = wash_g
+    var shade_tex := GradientTexture2D.new()
+    shade_tex.width = 4
+    shade_tex.height = 64
+    shade_tex.fill_to = Vector2(0, 1)
+    var shade_g := Gradient.new()
+    shade_g.set_color(0, Color(0, 0, 0, 0.0))
+    shade_g.set_color(1, Color(0, 0, 0, 0.88))
+    shade_tex.gradient = shade_g
 
     mk_card_buttons.clear()
     for idx in range(mk_presets.size()):
         var preset: Dictionary = mk_presets[idx]
+        var is_fusion: bool = preset.id == "fusionskammer"
         var card := Button.new()
-        card.custom_minimum_size = Vector2(68, 44)
+        card.custom_minimum_size = Vector2(78, 44)
         card.focus_mode = Control.FOCUS_NONE
+        card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+        card.clip_contents = false
 
-        var card_v := VBoxContainer.new()
-        card_v.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-        card_v.alignment = BoxContainer.ALIGNMENT_CENTER
-        card_v.mouse_filter = Control.MOUSE_FILTER_IGNORE
-        card.add_child(card_v)
+        var elem_col: Color = Color("c084fc") if is_fusion else Color("64748b")
+        if not is_fusion:
+            var prof: Dictionary = preset.get("profile", {})
+            if prof.is_empty(): prof = Prompt.interpret(str(preset.prompt), 0)
+            elem_col = prof.get("color", elem_col)
+
+        # Element-colored backdrop, inset so the card's edge stays visible.
+        var backdrop := Panel.new()
+        backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        backdrop.position = Vector2(2, 2)
+        backdrop.size = Vector2(74, 40)
+        backdrop.add_theme_stylebox_override("panel", _card_backdrop(elem_col))
+        card.add_child(backdrop)
 
         var port_tex: Texture2D = null
         var rendered_port := "res://assets/textures/characters/portraits/portrait_%s.png" % preset.id
@@ -1474,44 +2074,86 @@ func setup_ui() -> void:
             port_tex = PORTRAITS[preset.id]
         elif ResourceLoader.exists("res://assets/textures/characters/thumbs/thumb_%s.png" % preset.id):
             port_tex = load("res://assets/textures/characters/thumbs/thumb_%s.png" % preset.id)
-
+        # Portrait on the right, cropped from the top so the head stays in view.
         var img := TextureRect.new()
-        img.custom_minimum_size = Vector2(36, 36)
+        img.position = Vector2(22, 2)
+        img.size = Vector2(54, 40)
         img.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-        img.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-        img.texture = port_tex
+        img.stretch_mode = TextureRect.STRETCH_SCALE
+        if port_tex != null and not is_fusion:
+            var at := AtlasTexture.new()
+            at.atlas = port_tex
+            var tw_px: float = port_tex.get_width()
+            at.region = Rect2(0, tw_px * 0.02, tw_px, tw_px * 40.0 / 54.0)
+            img.texture = at
+        else:
+            img.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+            img.texture = port_tex
         img.mouse_filter = Control.MOUSE_FILTER_IGNORE
-        card_v.add_child(img)
+        card.add_child(img)
+
+        var wash := TextureRect.new()
+        wash.texture = wash_tex
+        wash.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+        wash.stretch_mode = TextureRect.STRETCH_SCALE
+        wash.position = Vector2(20, 2)
+        wash.size = Vector2(26, 40)
+        wash.modulate = elem_col.darkened(0.55)
+        wash.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        card.add_child(wash)
+
+        var shade := TextureRect.new()
+        shade.texture = shade_tex
+        shade.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+        shade.stretch_mode = TextureRect.STRETCH_SCALE
+        shade.position = Vector2(2, 18)
+        shade.size = Vector2(74, 24)
+        shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        card.add_child(shade)
 
         var n_lbl := Label.new()
-        n_lbl.text = preset.name
-        n_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-        n_lbl.add_theme_font_size_override("font_size", 7)
-        n_lbl.add_theme_color_override("font_color", Color("dce7f5"))
+        n_lbl.text = str(preset.name)
+        n_lbl.position = Vector2(5, 22)
+        n_lbl.size = Vector2(70, 20)
+        n_lbl.clip_text = true
+        n_lbl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+        n_lbl.add_theme_font_override("font", UiStyle.display_font(600, 1))
+        n_lbl.add_theme_font_size_override("font_size", 14)
+        n_lbl.add_theme_color_override("font_color", Color("f5f8fc"))
+        n_lbl.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
+        n_lbl.add_theme_constant_override("outline_size", 3)
         n_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-        card_v.add_child(n_lbl)
+        card.add_child(n_lbl)
 
-        var badge_p1 := Label.new()
-        badge_p1.text = "P1"
-        badge_p1.add_theme_font_size_override("font_size", 9)
-        badge_p1.add_theme_color_override("font_color", Color("ff9900"))
-        badge_p1.position = Vector2(3, 2)
-        badge_p1.visible = false
+        if is_fusion:
+            var elem_lbl := Label.new()
+            elem_lbl.text = "EIGENER KÄMPFER"
+            elem_lbl.position = Vector2(5, 3)
+            elem_lbl.add_theme_font_size_override("font_size", 8)
+            elem_lbl.add_theme_color_override("font_color", Color("e9d5ff"))
+            elem_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+            card.add_child(elem_lbl)
+
+        var badge_p1 := _player_badge("1P", UiStyle.P1)
+        badge_p1.position = Vector2(1, 1)
         card.add_child(badge_p1)
-
-        var badge_p2 := Label.new()
-        badge_p2.text = "P2"
-        badge_p2.add_theme_font_size_override("font_size", 9)
-        badge_p2.add_theme_color_override("font_color", CYAN)
-        badge_p2.position = Vector2(40, 2)
-        badge_p2.visible = false
+        var badge_p2 := _player_badge("2P", UiStyle.P2)
+        badge_p2.position = Vector2(55, 1)
         card.add_child(badge_p2)
 
         var cursor_frame := Panel.new()
         cursor_frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+        cursor_frame.offset_left = -3
+        cursor_frame.offset_top = -3
+        cursor_frame.offset_right = 3
+        cursor_frame.offset_bottom = 3
         cursor_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
         cursor_frame.visible = false
         card.add_child(cursor_frame)
+
+        UiStyle.add_motion(card, 1.08)
+        card.mouse_entered.connect(func(): card.z_index = 2)
+        card.mouse_exited.connect(func(): card.z_index = 0)
 
         var p_idx := idx
         card.mouse_entered.connect(func():
@@ -1531,29 +2173,40 @@ func setup_ui() -> void:
 
         mk_grid.add_child(card)
         mk_card_buttons.append({"button": card, "badge_p1": badge_p1, "badge_p2": badge_p2, "cursor": cursor_frame})
-
     # 7. FUSIONSKAMMER MODAL STUDIO
     _setup_fusionskammer_modal()
 
     result_panel = PanelContainer.new()
     root_ui.add_child(result_panel)
-    result_panel.position = Vector2(435, 285)
-    result_panel.custom_minimum_size.x = 410
-    result_panel.add_theme_stylebox_override("panel", panel_style(Color(0.025,0.045,0.078,0.97), CYAN))
+    result_panel.position = Vector2(420, 260)
+    result_panel.custom_minimum_size = Vector2(440, 220)
+    result_panel.add_theme_stylebox_override("panel", panel_style(Color(0.012, 0.020, 0.038, 0.96), Color("f59e0b"), 2, 16))
     var result_box := VBoxContainer.new()
+    result_box.add_theme_constant_override("separation", 10)
     result_panel.add_child(result_box)
-    result_box.add_child(label("RUNDE BEENDET", 14, CYAN))
-    result_label = label("", 26)
+    var victory_badge := label("✦ SIEGER DER RUNDE ✦", 13, Color("fde68a"))
+    victory_badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    result_box.add_child(victory_badge)
+    result_label = label("", 28, Color("ffffff"))
+    result_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     result_box.add_child(result_label)
-    revanche_button = button("REVANCHE  ·  R", CYAN, restart_round)
-    result_box.add_child(revanche_button)
+    var btn_row := VBoxContainer.new()
+    btn_row.add_theme_constant_override("separation", 6)
+    result_box.add_child(btn_row)
+    revanche_button = button("REVANCHE  ·  R", Color("38bdf8"), restart_round)
+    revanche_button.custom_minimum_size.y = 42
+    btn_row.add_child(revanche_button)
     adventure_button = button("WEITER ▶  (A)", Color("e41e20"), _adventure_continue)
-    result_box.add_child(adventure_button)
+    adventure_button.custom_minimum_size.y = 42
+    btn_row.add_child(adventure_button)
     adventure_button.hide()
     next_boss_button = button("NÄCHSTER BOSS ▶  (A)", Color("ff5a1f"), next_boss)
-    result_box.add_child(next_boss_button)
+    next_boss_button.custom_minimum_size.y = 42
+    btn_row.add_child(next_boss_button)
     next_boss_button.hide()
-    result_box.add_child(button("Neue Prompts", ORANGE, show_selection))
+    var btn_sel := button("KÄMPFERAUSWAHL", ORANGE, show_selection)
+    btn_sel.custom_minimum_size.y = 42
+    btn_row.add_child(btn_sel)
     result_panel.hide()
 
     screen_flash = ColorRect.new()
@@ -1589,6 +2242,192 @@ func setup_ui() -> void:
     screen_blood_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
     screen_blood_rect.modulate.a = 0.0
     root_ui.add_child(screen_blood_rect)
+
+## Showcase card of the chosen fighter at the side of the selection screen
+## (slot 0 = P1 on the left in cyan, slot 1 = P2 on the right in amber).
+func _build_showcase_card(slot: int, at: Vector2) -> void:
+    var p1: bool = slot == 0
+    var col: Color = UiStyle.P1 if p1 else UiStyle.P2
+    var align: HorizontalAlignment = HORIZONTAL_ALIGNMENT_LEFT if p1 else HORIZONTAL_ALIGNMENT_RIGHT
+    var card := PanelContainer.new()
+    card.position = at
+    card.size = Vector2(300, 418)
+    card.custom_minimum_size = Vector2(300, 418)
+    var cs: FrameBox = panel_style(Color(0.018, 0.028, 0.05, 0.93), col.darkened(0.2), 1, 14)
+    if p1: cs.border_width_left = 4
+    else: cs.border_width_right = 4
+    cs.content_margin_left = 14
+    cs.content_margin_right = 14
+    cs.content_margin_top = 10
+    cs.content_margin_bottom = 12
+    card.add_theme_stylebox_override("panel", cs)
+    selection.add_child(card)
+
+    var box := VBoxContainer.new()
+    box.add_theme_constant_override("separation", 8)
+    card.add_child(box)
+
+    var hdr := HBoxContainer.new()
+    box.add_child(hdr)
+    var tag := label("SPIELER 1" if p1 else "SPIELER 2", 20, col)
+    var hint := label("BEREIT" if p1 else "GEGNER", 11, UiStyle.MUTED)
+    hint.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+    var sp := Control.new()
+    sp.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    if p1:
+        hdr.add_child(tag)
+        hdr.add_child(sp)
+        hdr.add_child(hint)
+    else:
+        hdr.add_child(hint)
+        hdr.add_child(sp)
+        hdr.add_child(tag)
+
+    # Portrait banner: the fighter's portrait across the card, name over a dark fade.
+    var port_p := PanelContainer.new()
+    var ps: FrameBox = panel_style(Color(col.r * 0.16, col.g * 0.16, col.b * 0.2, 1.0), col.darkened(0.05), 1, 8)
+    ps.set_content_margin_all(2)
+    ps.ornaments = false
+    ps.shadow_size = 0
+    port_p.add_theme_stylebox_override("panel", ps)
+    box.add_child(port_p)
+    var banner := Control.new()
+    banner.custom_minimum_size = Vector2(0, 150)
+    banner.clip_contents = true
+    port_p.add_child(banner)
+    var port := TextureRect.new()
+    port.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    port.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+    port.stretch_mode = TextureRect.STRETCH_SCALE
+    port.set_meta("crop_aspect", 268.0 / 150.0)
+    banner.add_child(port)
+    var fade := TextureRect.new()
+    fade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    fade.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+    fade.stretch_mode = TextureRect.STRETCH_SCALE
+    var fade_tex := GradientTexture2D.new()
+    fade_tex.width = 4
+    fade_tex.height = 64
+    fade_tex.fill_to = Vector2(0, 1)
+    var fade_g := Gradient.new()
+    fade_g.offsets = PackedFloat32Array([0.0, 0.45, 1.0])
+    fade_g.colors = PackedColorArray([Color(0, 0, 0, 0), Color(0, 0, 0, 0.15), Color(0.01, 0.015, 0.03, 0.95)])
+    fade_tex.gradient = fade_g
+    fade.texture = fade_tex
+    banner.add_child(fade)
+    var name_v := VBoxContainer.new()
+    name_v.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
+    name_v.offset_left = 10
+    name_v.offset_right = -10
+    name_v.offset_bottom = -6
+    name_v.grow_vertical = Control.GROW_DIRECTION_BEGIN
+    name_v.add_theme_constant_override("separation", -4)
+    banner.add_child(name_v)
+    var name_lbl := label("VOLT NINJA" if p1 else "MAGMOR", 30, Color.WHITE)
+    name_lbl.horizontal_alignment = align
+    name_lbl.clip_text = true
+    name_lbl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+    name_lbl.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.7))
+    name_lbl.add_theme_constant_override("outline_size", 4)
+    var sub_lbl := label("", 11, col.lightened(0.25))
+    sub_lbl.horizontal_alignment = align
+    sub_lbl.clip_text = true
+    sub_lbl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+    var stars_lbl := label("", 11, Color("facc15"))
+    stars_lbl.horizontal_alignment = align
+    name_v.add_child(name_lbl)
+    name_v.add_child(sub_lbl)
+    box.add_child(stars_lbl)
+
+    # Stats in a sunken well.
+    var stat_panel := PanelContainer.new()
+    var ss: FrameBox = panel_style(Color(0.008, 0.012, 0.024, 0.85), Color(0.2, 0.27, 0.38, 0.55), 1, 6)
+    ss.ornaments = false
+    ss.shadow_size = 0
+    ss.sheen = -0.03
+    ss.content_margin_left = 10
+    ss.content_margin_right = 10
+    ss.content_margin_top = 8
+    ss.content_margin_bottom = 8
+    stat_panel.add_theme_stylebox_override("panel", ss)
+    box.add_child(stat_panel)
+    var stat_v := VBoxContainer.new()
+    stat_v.add_theme_constant_override("separation", 5)
+    stat_panel.add_child(stat_v)
+    var bars: Dictionary = mk_p1_bars if p1 else mk_p2_bars
+    bars["hp"] = _create_stat_bar("HP", Color("4ade80"))
+    bars["pwr"] = _create_stat_bar("KRAFT", Color("fb923c"))
+    bars["def"] = _create_stat_bar("RÜST", Color("60a5fa"))
+    bars["spd"] = _create_stat_bar("TEMPO", Color("38bdf8"))
+    bars["tech"] = _create_stat_bar("TECH", Color("c084fc"))
+    for sk in ["hp", "pwr", "def", "spd", "tech"]:
+        stat_v.add_child(bars[sk].row)
+
+    # Special move banner in the player's color.
+    var spec_p := PanelContainer.new()
+    var sps: FrameBox = panel_style(Color(col.r * 0.14, col.g * 0.12, col.b * 0.14, 0.95), col.darkened(0.1), 1, 6)
+    sps.ornaments = false
+    sps.border_width_left = 3 if p1 else 1
+    sps.border_width_right = 1 if p1 else 3
+    sps.content_margin_top = 7
+    sps.content_margin_bottom = 7
+    sps.content_margin_left = 12
+    sps.content_margin_right = 12
+    spec_p.add_theme_stylebox_override("panel", sps)
+    box.add_child(spec_p)
+    var spec_lbl := label("", 12, col.lightened(0.55))
+    spec_lbl.horizontal_alignment = align
+    spec_lbl.clip_text = true
+    spec_lbl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+    spec_p.add_child(spec_lbl)
+
+    if not p1:
+        var join := label("Rechtsklick wählt P2   ·   Pad: A tritt bei", 11, Color("86efac"))
+        join.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+        box.add_child(join)
+
+    var stats_lbl := label("", 9, UiStyle.MUTED)
+    stats_lbl.visible = false
+    box.add_child(stats_lbl)
+
+    if p1:
+        mk_p1_portrait = port
+        mk_p1_name_label = name_lbl
+        mk_p1_sub_label = sub_lbl
+        mk_p1_stars_lbl = stars_lbl
+        mk_p1_special_lbl = spec_lbl
+        mk_p1_stats_label = stats_lbl
+    else:
+        mk_p2_portrait = port
+        mk_p2_name_label = name_lbl
+        mk_p2_sub_label = sub_lbl
+        mk_p2_stars_lbl = stars_lbl
+        mk_p2_special_lbl = spec_lbl
+        mk_p2_stats_label = stats_lbl
+
+var _chip_styles: Dictionary = {}
+
+## Arena quick-pick chip: lit cyan plate when it is the current arena. Styles are cached.
+func _style_arena_chip(chip: Button, on: bool) -> void:
+    if _chip_styles.is_empty():
+        for k in [true, false]:
+            var accent: Color = Color("38bdf8") if k else Color("64748b")
+            var boxes: Dictionary = UiStyle.button_boxes(accent, Color(0.07, 0.16, 0.26, 0.96) if k else Color(0.04, 0.06, 0.1, 0.9), 5)
+            for st in boxes:
+                var sb: FrameBox = boxes[st]
+                sb.content_margin_top = 1
+                sb.content_margin_bottom = 1
+                sb.content_margin_left = 4
+                sb.content_margin_right = 4
+                sb.shadow_size = 0
+                if k and st == "normal":
+                    sb.border_color = Color("38bdf8")
+                    sb.underglow = Color(0.22, 0.74, 0.97, 0.3)
+            _chip_styles[k] = boxes
+    var boxes_on: Dictionary = _chip_styles[on]
+    for st in boxes_on: chip.add_theme_stylebox_override(st, boxes_on[st])
+    chip.add_theme_color_override("font_color", Color("bae6fd") if on else Color("94a3b8"))
+    chip.add_theme_color_override("font_hover_color", Color.WHITE)
 
 func _show_result_panel_if_finished() -> void:
     if active and sim.result != -2: result_panel.show()
@@ -3692,6 +4531,181 @@ func _finisher_variant(variant: String, winner: int, loser: int, center: Vector3
             wf.pose = "Idle"
             await _wait(0.6)
             return true
+        "kalyx":
+            # Twin crystal: frost locks the opponent in ice, the crown turns to ember, the ice bursts.
+            announce("ZWIEKRISTALL", Color("7dd3fc"), 0.45)
+            wf.pose = "Cast"
+            wf["crown"] = "frost"
+            for k in range(3):
+                shock_ring(center, Color("7dd3fc"), 1.6 + k * 0.7)
+                await _wait(0.12)
+            lf.pose = "Dazed"
+            flash_screen(Color("bae6fd"), 0.45)
+            await _wait(0.35)
+            wf["crown"] = "glut"
+            announce("GLUT!", Color("ff5a1f"), 0.3)
+            wf.pose = "Slam"
+            await _wait(0.2)
+            camera_shake = 1.2
+            sound("lava")
+            spark_burst(center, Color("7dd3fc"), 60, 8.0, 0.12)
+            spark_burst(center, Color("ff5a1f"), 60, 8.0, 0.12)
+            lv.visible = false
+            wf.pose = "Idle"
+            await _wait(0.6)
+            return true
+        "vorruk":
+            # Homesick for the stars: the colossus lifts the opponent, Zirra howls, he hurls them to the sky.
+            announce("HEIMWEH DER STERNE", Color("c084fc"), 0.45)
+            wf.x = lf.x - side * 1.4
+            wf.pose = "Roar"
+            sound("ko")
+            await _wait(0.4)
+            lf.pose = "HitReact"
+            _tween_dict(lf, "y", floor_y + 2.2, 0.3)
+            await _wait(0.35)
+            wf.pose = "Slam"
+            camera_shake = 1.4
+            flash_screen(Color("c084fc"), 0.4)
+            _tween_dict(lf, "y", floor_y + 14.0, 0.5)
+            spark_burst(center, Color("67e8f9"), 50, 6.0, 0.1)
+            await _wait(0.5)
+            lv.visible = false
+            wf.pose = "Idle"
+            await _wait(0.6)
+            return true
+        "neris":
+            # Crystal prison: chains from all sides, violet crystals grow over the opponent and shatter.
+            announce("KRISTALLKERKER", Color("a78bfa"), 0.45)
+            wf.pose = "Cast"
+            for k in range(5):
+                var na: float = TAU * k / 5.0
+                _fade_free(_beam(center + Vector3(cos(na) * 3.5, sin(na) * 2.2, 0.1), center, Color("a8a29e"), 0.05), 1.1)
+                sound("block")
+                await _wait(0.09)
+            lf.pose = "Dazed"
+            for k in range(6):
+                spark_burst(center + Vector3(randf_range(-0.6, 0.6), randf_range(-0.8, 0.8), 0.4), Color("a78bfa"), 12, 3.0, 0.08)
+                await _wait(0.06)
+            flash_screen(Color("a78bfa"), 0.5)
+            camera_shake = 1.0
+            sound("hit")
+            spark_burst(center, Color("fbbf24"), 70, 8.0, 0.12)
+            lv.visible = false
+            wf.pose = "Idle"
+            await _wait(0.6)
+            return true
+        "konrad":
+            # Masterpiece: the anvil falls, three hammer blows, the forge glows black-red-gold.
+            wf.pose = "Summon"
+            announce("MEISTERSTÜCK", Color("ffce00"), 0.45)
+            var anv := WeaponModels.projectile("anvil", Color("ffce00"))
+            add_child(anv)
+            anv.position = center + Vector3(0, 6.0, 0.2)
+            var atw := create_tween()
+            atw.tween_property(anv, "position", center + Vector3(0, 0.4, 0.2), 0.35).set_ease(Tween.EASE_IN)
+            await _wait(0.36)
+            lf.pose = "Dazed"
+            camera_shake = 1.0
+            sound("block")
+            shock_ring(Vector3(lf.x, floor_y + 0.1, 0.3), Color("ffce00"), 3.0)
+            for k in range(3):
+                wf.pose = "Slam" if k % 2 == 0 else "Attack"
+                spark_burst(center + Vector3(0, 0.3, 0.4), [Color("1a1a1a"), Color("dd0000"), Color("ffce00")][k], 40, 7.0, 0.1)
+                sound("hit")
+                await _wait(0.22)
+            flash_screen(Color("ffce00"), 0.5)
+            if gore_on: blood_pool(lf.x, floor_y, 1.4)
+            lv.visible = false
+            anv.queue_free()
+            wf.pose = "Idle"
+            await _wait(0.6)
+            return true
+        "bogdan":
+            # White night: the steppe wind freezes the opponent, one mace blow shatters the ice.
+            wf.pose = "Roar"
+            announce("WEISSE NACHT", Color("e0f2fe"), 0.45)
+            sound("electric")
+            for k in range(3):
+                shock_ring(center, [Color("ffffff"), Color("0039a6"), Color("d52b1e")][k], 2.0 + k * 0.8)
+                await _wait(0.14)
+            lf.pose = "Dazed"
+            flash_screen(Color("e0f2fe"), 0.5)
+            await _wait(0.4)
+            wf.x = lf.x - side * 1.2
+            wf.pose = "Slam"
+            await _wait(0.2)
+            camera_shake = 1.3
+            sound("hit")
+            spark_burst(center, Color("bae6fd"), 90, 8.0, 0.14)
+            lv.visible = false
+            wf.pose = "Idle"
+            await _wait(0.6)
+            return true
+        "kaan":
+            # Crescent and star: five crescent cuts, then a white star bursts on red.
+            announce("HALBMOND UND STERN", Color("ffffff"), 0.45)
+            for k in range(5):
+                var s3: float = 1.0 if k % 2 == 0 else -1.0
+                wf.x = lf.x + s3 * 1.1
+                wf.facing = -int(s3)
+                wf.pose = "Attack"
+                _fade_free(_beam(center + Vector3(-1.2, -0.6 + k * 0.3, 0.45), center + Vector3(1.2, 0.6 - k * 0.3, 0.45), Color("ffffff"), 0.06), 0.3)
+                lf.pose = "HitReact"
+                sound("hit")
+                await _wait(0.12)
+            flash_screen(Color("e30a17"), 0.6)
+            spark_burst(center, Color("ffffff"), 80, 7.0, 0.12)
+            camera_shake = 1.0
+            if gore_on: blood_pool(lf.x, floor_y, 1.5)
+            lv.visible = false
+            wf.x = lf.x - side * 1.8
+            wf.facing = int(side)
+            wf.pose = "Idle"
+            await _wait(0.6)
+            return true
+        "amra":
+            # The dive from the Old Bridge: she rises high, flips, and dives straight through.
+            announce("SA STAROG MOSTA!", Color("fecb00"), 0.45)
+            wf.pose = "Jump"
+            _tween_dict(wf, "y", floor_y + 6.0, 0.6)
+            await _wait(0.65)
+            wf.x = lf.x
+            wf.pose = "Slam"
+            _tween_dict(wf, "y", floor_y, 0.16)
+            await _wait(0.17)
+            camera_shake = 1.2
+            sound("lava")
+            for k in range(3):
+                shock_ring(Vector3(lf.x, floor_y + 0.1, 0.3), Color("38bdf8") if k != 1 else Color("fecb00"), 2.0 + k * 1.2)
+            spark_burst(center, Color("bae6fd"), 90, 9.0, 0.12)
+            flash_screen(Color("002395"), 0.4)
+            lv.visible = false
+            wf.pose = "Idle"
+            await _wait(0.6)
+            return true
+        "dusty":
+            # High noon: the bell strikes twelve, the lasso flies, one spin and the opponent sails away.
+            announce("HIGH NOON", Color("fde68a"), 0.5)
+            sound("victory")
+            await _wait(0.5)
+            _fade_free(_beam(Vector3(wf.x, floor_y + 1.3, 0.3), center, Color("c9a46a"), 0.04), 0.9)
+            lf.pose = "HitReact"
+            sound("block")
+            await _wait(0.3)
+            for k in range(8):
+                var la: float = TAU * k / 8.0
+                lf.x = wf.x + cos(la) * 1.6
+                lf.y = floor_y + 1.2 + sin(la) * 0.6
+                await _wait(0.05)
+            flash_screen(Color("b22234"), 0.4)
+            spark_burst(center, Color("ffffff"), 50, 8.0, 0.1)
+            spark_burst(center, Color("3c3b6e"), 50, 8.0, 0.1)
+            camera_shake = 1.0
+            lv.visible = false
+            wf.pose = "Idle"
+            await _wait(0.6)
+            return true
         "arber":
             # Flight of the Shqiponja: the eagle lifts him high, dives, both drills bore through.
             wf.eagle = 4.0
@@ -3810,8 +4824,8 @@ func _toggle_finishers() -> void:
 
 func _refresh_option_buttons() -> void:
     if selection == null: return
-    var texts := {"BtnAiLevel": "🤖 KI-STUFE %d" % ai_level, "BtnStocks": "❤ STOCKS %d" % stock_count,
-        "BtnFinisher": "☠ " + ("BLUTIG" if finishers_on and gore_on else ("OHNE BLUT" if finishers_on else "FINISHER AUS"))}
+    var texts := {"BtnAiLevel": "KI-STUFE %d" % ai_level, "BtnStocks": "STOCKS %d" % stock_count,
+        "BtnFinisher": ("BLUTIG" if finishers_on and gore_on else ("OHNE BLUT" if finishers_on else "FINISHER AUS"))}
     for n in texts:
         var b = selection.find_child(n, true, false)
         if b is Button: b.text = texts[n]
@@ -3821,7 +4835,7 @@ func _toggle_player_count() -> void:
     player_count = 2 if team_mode == "1v1" else 4
     var btn = selection.find_child("BtnPlayerCount", true, false)
     if btn is Button:
-        btn.text = {"1v1": "👥 1 GEGEN 1", "ffa": "👥 4 SPIELER (FFA)", "2v2": "👥 TEAM 2 GEGEN 2", "3v1": "👥 TEAM 3 GEGEN 1"}[team_mode]
+        btn.text = {"1v1": "1 GEGEN 1", "ffa": "4 SPIELER (FFA)", "2v2": "TEAM 2 GEGEN 2", "3v1": "TEAM 3 GEGEN 1"}[team_mode]
         btn.add_theme_color_override("font_color", {"1v1": Color("38bdf8"), "ffa": Color("c084fc"), "2v2": Color("4ade80"), "3v1": Color("fb923c")}[team_mode])
     for pi in range(player_slot_boxes.size()):
         player_slot_boxes[pi].visible = (pi < player_count)
@@ -3911,6 +4925,7 @@ func begin_match(p_list: Array, mode: String, lives: int = 3) -> void:
         v.scale = Vector3.ONE
     if not active_mutators.is_empty() and adventure == null and not daily_active and not challenger_active and not boss_active and (story == null or not story.running):
         FunModes.apply(sim, views, active_mutators)
+        progression.note_mutators(active_mutators)
     setup_items()
     clear_input_buffer()
     status_message_time = 0.0
@@ -4044,23 +5059,29 @@ func _update_nav_frame() -> void:
         add_child(nav_layer)
         nav_frame = Panel.new()
         nav_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
-        var st := StyleBoxFlat.new()
-        st.bg_color = Color(1.0, 0.82, 0.3, 0.1)
-        st.border_color = Color("fde68a")
-        st.set_border_width_all(3)
-        st.set_corner_radius_all(8)
-        st.shadow_color = Color(1.0, 0.7, 0.2, 0.6)
-        st.shadow_size = 12
+        # Gold focus frame with a glow; it glides between buttons instead of jumping.
+        var st: FrameBox = UiStyle.frame(Color(1.0, 0.78, 0.3, 0.07), UiStyle.GOLD, 2, 10)
+        st.shadow_color = Color(1.0, 0.68, 0.2, 0.5)
+        st.shadow_size = 10
+        st.shadow_offset = Vector2.ZERO
+        st.seam = 0.6
+        st.ornaments = true
         nav_frame.add_theme_stylebox_override("panel", st)
         nav_layer.add_child(nav_frame)
     var ctx: Control = _nav_context()
     if ctx == null or nav_focus == null or not is_instance_valid(nav_focus) or not nav_focus.is_visible_in_tree() or not ctx.is_ancestor_of(nav_focus):
         nav_frame.visible = false
         return
-    var r: Rect2 = nav_focus.get_global_rect()
+    var r: Rect2 = nav_focus.get_global_rect().grow(5)
+    if not nav_frame.visible or not UiStyle.animations_on():
+        nav_frame.position = r.position
+        nav_frame.size = r.size
+    else:
+        var k: float = 1.0 - exp(-get_process_delta_time() * 20.0)
+        nav_frame.position = nav_frame.position.lerp(r.position, k)
+        nav_frame.size = nav_frame.size.lerp(r.size, k)
     nav_frame.visible = true
-    nav_frame.position = r.position - Vector2(5, 5)
-    nav_frame.size = r.size + Vector2(10, 10)
+    nav_frame.modulate.a = 0.82 + 0.18 * sin(Time.get_ticks_msec() * 0.006)
 
 ## Next arena for LB/RB in the fighter selection (classic and bought shop arenas).
 func _step_arena(step: int) -> void:
@@ -4143,7 +5164,12 @@ func _current_bg() -> Dictionary:
 const LOGO_FONT := preload("res://assets/fonts/RussoOne-Regular.ttf")
 const UI_FONT_FILE := preload("res://assets/fonts/Teko.ttf")
 const LOGO_SHADER := preload("res://shaders/title_logo.gdshader")
-const MENU_LABELS := {"story": "STORY", "adventure": "ABENTEUER", "versus": "VERSUS", "extras": "EXTRAS", "options": "OPTIONEN", "shop": "SHOP", "credits": "CREDITS"}
+const MENU_LABELS := {"versus": "VERSUS-KAMPF", "story": "STORY-MODUS", "adventure": "ABENTEUER-TURM", "shop": "KAMPF-SHOP", "extras": "EXTRAS & BELOHNUNGEN", "options": "EINSTELLUNGEN", "credits": "CREDITS"}
+## One line under the selected main-menu entry.
+const MENU_HINTS := {"versus": "Zwei bis vier Kämpfer, eine Arena, deine Regeln", "story": "Kampagnen, Kapitel und Legenden", "adventure": "Welle um Welle bis zur Spitze des Turms",
+    "shop": "Arenen, Hintergründe, Waffen und Skins", "extras": "Tagesbelohnung, Ruhmespfad, Aufgaben und Sammlung", "options": "Mutatoren, KI, Grafik und Steuerung", "credits": "Wer dieses Spiel gebaut hat"}
+const TITLE_ITEM_H := 46.0
+const TITLE_ITEM_GAP := 4.0
 ## Fighter line-ups for the start screen; the background picks one.
 const TITLE_LINEUPS := [["kairo", "brunhild", "celestial_fox"], ["varakh", "nyx", "zip"], ["hikaru", "frostwyrm", "ren"],
     ["glaciem", "cyborg_mech", "amethya"], ["raiga", "treant", "shira"], ["oryn", "reaper_hound", "lepora"]]
@@ -4231,23 +5257,90 @@ func _make_logo() -> Control:
         gt.gradient = g
         blade.texture = gt
         row.add_child(blade)
+    var badge_row := HBoxContainer.new()
+    badge_row.alignment = BoxContainer.ALIGNMENT_CENTER
+    badge_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    v.add_child(badge_row)
+    var badge_panel := PanelContainer.new()
+    badge_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    badge_panel.add_theme_stylebox_override("panel", panel_style(Color(0.04, 0.07, 0.12, 0.88), Color("f59e0b"), 1, 10))
+    badge_row.add_child(badge_panel)
+    var badge_lbl := label("✦ NEXT-GEN FIGHTING CHAMPIONSHIP ✦", 12, Color("fde68a"))
+    badge_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    badge_panel.add_child(badge_lbl)
     return v
 
+var intro_layer: CanvasLayer = null
+var intro_player: VideoStreamPlayer = null
+var _title_cached_state: Dictionary = {"x": 0.0, "y": 0.0, "facing": 1, "pose": "Idle", "state": "Idle", "blocking": false}
+
+func play_startup_intro() -> void:
+    if DisplayServer.get_name() == "headless" or smoke or capture_selection:
+        show_title("splash")
+        return
+    var stream := VideoStreamTheora.new()
+    stream.file = "res://assets/video/intro.ogv"
+    intro_layer = CanvasLayer.new()
+    intro_layer.name = "IntroLayer"
+    intro_layer.layer = 120
+    add_child(intro_layer)
+    var black_bg := ColorRect.new()
+    black_bg.color = Color.BLACK
+    black_bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    intro_layer.add_child(black_bg)
+    intro_player = VideoStreamPlayer.new()
+    intro_player.stream = stream
+    intro_player.expand = true
+    intro_player.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    intro_player.audio_track = 0
+    intro_player.volume_db = 0.0
+    intro_layer.add_child(intro_player)
+    var skip_lbl := label("[ LEERTASTE / ENTER / 🎮 TASTE A ZUM ÜBERSPRINGEN ]", 14, Color(1, 1, 1, 0.45))
+    skip_lbl.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
+    skip_lbl.offset_left = -380
+    skip_lbl.offset_top = -36
+    intro_layer.add_child(skip_lbl)
+    intro_player.finished.connect(_finish_startup_intro)
+    intro_player.play()
+
+func _finish_startup_intro() -> void:
+    if intro_layer == null: return
+    var layer_ref := intro_layer
+    intro_layer = null
+    var player_ref := intro_player
+    intro_player = null
+    show_title("splash")
+    var tw := create_tween().set_parallel()
+    for c in layer_ref.get_children():
+        if c is CanvasItem: tw.tween_property(c, "modulate:a", 0.0, 0.35)
+    tw.chain().tween_callback(func():
+        if player_ref:
+            player_ref.stop()
+        if is_instance_valid(layer_ref):
+            layer_ref.queue_free()
+    )
+
+## Main-menu entry: bare type on the dark band; the selection plate behind it
+## (title_highlight) glides to whichever entry is selected.
 func _menu_button(item: String, font: Font) -> Button:
     var b := Button.new()
     b.text = MENU_LABELS.get(item, item.to_upper())
-    b.flat = true
     b.focus_mode = Control.FOCUS_NONE
     b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-    b.custom_minimum_size = Vector2(340, 58)
+    b.custom_minimum_size = Vector2(420, TITLE_ITEM_H)
+    b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
     b.add_theme_font_override("font", font)
-    b.add_theme_font_size_override("font_size", 50)
-    b.add_theme_color_override("font_color", Color(0.85, 0.88, 0.94, 0.85))
-    b.add_theme_color_override("font_hover_color", Color.WHITE)
-    b.add_theme_color_override("font_pressed_color", Color("fde68a"))
-    b.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
-    b.add_theme_constant_override("outline_size", 8)
-    for st in ["normal", "hover", "pressed", "focus"]: b.add_theme_stylebox_override(st, StyleBoxEmpty.new())
+    b.add_theme_font_size_override("font_size", 32)
+    b.add_theme_color_override("font_color", Color(0.80, 0.85, 0.93, 0.78))
+    b.add_theme_color_override("font_hover_color", Color("fffbeb"))
+    b.add_theme_color_override("font_pressed_color", UiStyle.GOLD)
+    b.add_theme_color_override("font_outline_color", Color(0.01, 0.02, 0.04, 0.9))
+    b.add_theme_constant_override("outline_size", 5)
+    var bare := StyleBoxEmpty.new()
+    bare.content_margin_left = 34
+    bare.content_margin_right = 16
+    for st in ["normal", "hover", "pressed", "focus", "hover_pressed"]:
+        b.add_theme_stylebox_override(st, bare)
     return b
 
 func _shade_rect(fill: int, from: Vector2, to: Vector2, alpha: float) -> TextureRect:
@@ -4274,6 +5367,30 @@ func _build_title_screen() -> void:
     # The live arena shows through; vignette and a dark band on the left keep text readable.
     title_screen.add_child(_shade_rect(GradientTexture2D.FILL_RADIAL, Vector2(0.55, 0.5), Vector2(1.25, 1.15), 0.8))
     title_screen.add_child(_shade_rect(GradientTexture2D.FILL_LINEAR, Vector2(0.42, 0), Vector2(0.0, 0), 0.72))
+
+    # Atmospheric floating embers in the title scene
+    var title_particles := CPUParticles2D.new()
+    title_particles.name = "TitleParticles"
+    title_particles.position = Vector2(640, 720)
+    title_particles.amount = 22
+    title_particles.lifetime = 5.0
+    title_particles.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+    title_particles.emission_rect_extents = Vector2(640, 10)
+    title_particles.direction = Vector2(0.1, -1.0)
+    title_particles.spread = 22.0
+    title_particles.gravity = Vector2(0, -12)
+    title_particles.initial_velocity_min = 25.0
+    title_particles.initial_velocity_max = 55.0
+    title_particles.scale_amount_min = 2.0
+    title_particles.scale_amount_max = 4.0
+    var gr := Gradient.new()
+    gr.set_color(0, Color(1, 0.8, 0.4, 0))
+    gr.add_point(0.2, Color(1, 0.85, 0.45, 0.65))
+    gr.add_point(0.8, Color(0.4, 0.8, 1.0, 0.55))
+    gr.set_color(1, Color(1, 1, 1, 0))
+    title_particles.color_ramp = gr
+    title_screen.add_child(title_particles)
+
     title_logo = _make_logo()
     title_screen.add_child(title_logo)
     title_highlight = Panel.new()
@@ -4282,7 +5399,10 @@ func _build_title_screen() -> void:
     title_menu = VBoxContainer.new()
     title_menu.add_theme_constant_override("separation", 0)
     title_screen.add_child(title_menu)
-    var menu_font := _teko(600, 3)
+    title_item_hint = label("", 15, Color("fde68a"))
+    title_item_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    title_screen.add_child(title_item_hint)
+    var menu_font := _teko(600, 2)
     title_hotspots.clear()
     for k in range(Backgrounds.MENU_ITEMS.size()):
         var hb := _menu_button(Backgrounds.MENU_ITEMS[k], menu_font)
@@ -4293,20 +5413,37 @@ func _build_title_screen() -> void:
         hb.pressed.connect(func(): _title_activate(idx))
         title_menu.add_child(hb)
         title_hotspots.append(hb)
-    splash_cover = Panel.new()
-    splash_cover.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    var sc_style := StyleBoxFlat.new()
-    sc_style.bg_color = Color(1, 0.8, 0.4, 0.9)
-    splash_cover.add_theme_stylebox_override("panel", sc_style)
-    title_screen.add_child(splash_cover)
-    splash_label = label("DRÜCKE START", 46, Color("fde68a"))
-    splash_label.add_theme_font_override("font", _teko(500, 14))
+
+    # Sleek Call-to-Action Start Pill
+    splash_box = PanelContainer.new()
+    splash_box.name = "SplashBox"
+    splash_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    title_screen.add_child(splash_box)
+    var sp_v := VBoxContainer.new()
+    sp_v.alignment = BoxContainer.ALIGNMENT_CENTER
+    sp_v.add_theme_constant_override("separation", 3)
+    splash_box.add_child(sp_v)
+
+    splash_label = label("DRÜCKE START  ·  PRESS ANY BUTTON", 38, Color("fffbeb"))
+    splash_label.add_theme_font_override("font", _teko(600, 2))
     splash_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     splash_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-    splash_label.add_theme_color_override("font_outline_color", Color.BLACK)
-    splash_label.add_theme_constant_override("outline_size", 10)
+    splash_label.add_theme_color_override("font_outline_color", Color(0.01, 0.02, 0.04, 0.95))
+    splash_label.add_theme_constant_override("outline_size", 6)
     splash_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    title_screen.add_child(splash_label)
+    sp_v.add_child(splash_label)
+
+    var splash_sub := label("[ ENTER  ·  LEERTASTE  ·  🎮 TASTE A / START ]", 14, Color("93c5fd"))
+    splash_sub.name = "SplashSub"
+    splash_sub.add_theme_font_override("font", _teko(500, 1))
+    splash_sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    sp_v.add_child(splash_sub)
+
+    splash_cover = Panel.new()
+    splash_cover.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    splash_cover.visible = false
+    title_screen.add_child(splash_cover)
+
     var splash_click := Button.new()
     splash_click.flat = true
     splash_click.name = "SplashClick"
@@ -4315,75 +5452,154 @@ func _build_title_screen() -> void:
     for st in ["normal", "hover", "pressed", "focus"]: splash_click.add_theme_stylebox_override(st, StyleBoxEmpty.new())
     splash_click.pressed.connect(func(): if title_stage == "splash": _enter_main_menu())
     title_screen.add_child(splash_click)
-    title_info = label("", 20, Color("fde68a"))
+
+    title_info_panel = PanelContainer.new()
+    title_info_panel.name = "TitleInfoPanel"
+    title_info_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    var info_sb: FrameBox = panel_style(Color(0.02, 0.03, 0.055, 0.86), Color(0.30, 0.38, 0.52, 0.8), 1, 10)
+    info_sb.ornaments = false
+    info_sb.content_margin_top = 2
+    info_sb.content_margin_bottom = 2
+    info_sb.content_margin_left = 20
+    info_sb.content_margin_right = 20
+    title_info_panel.add_theme_stylebox_override("panel", info_sb)
+    title_screen.add_child(title_info_panel)
+    title_info = label("", 18, Color("fde68a"))
     title_info.add_theme_font_override("font", _teko(400, 1))
-    title_info.add_theme_color_override("font_outline_color", Color.BLACK)
-    title_info.add_theme_constant_override("outline_size", 6)
-    title_info.position = Vector2(20, 8)
-    title_screen.add_child(title_info)
-    title_hint = label("↑ ↓ / Maus wählen  ·  ENTER / A bestätigen  ·  Hintergründe und Arenen im SHOP", 17, Color("cbd5e1"))
+    title_info.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    title_info_panel.add_child(title_info)
+
+    title_hint_panel = PanelContainer.new()
+    title_hint_panel.name = "TitleHintPanel"
+    title_hint_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    var hint_sb: FrameBox = panel_style(Color(0.015, 0.025, 0.04, 0.78), Color(0.22, 0.28, 0.40, 0.6), 1, 6)
+    hint_sb.ornaments = false
+    hint_sb.content_margin_top = 2
+    hint_sb.content_margin_bottom = 2
+    title_hint_panel.add_theme_stylebox_override("panel", hint_sb)
+    title_screen.add_child(title_hint_panel)
+    title_hint = label("↑ ↓ / Maus wählen  ·  ENTER / A bestätigen  ·  Hintergründe und Arenen im SHOP", 15, Color("cbd5e1"))
     title_hint.add_theme_font_override("font", _teko(400, 1))
-    title_screen.add_child(title_hint)
+    title_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    title_hint_panel.add_child(title_hint)
     title_screen.resized.connect(_layout_title)
 
 func _refresh_title_info() -> void:
     var lv: int = progression.level()
     var hooks := ""
-    if Rewards.login_ready(progression, Progression.today()): hooks += "   ·   🎁 TAGESBELOHNUNG BEREIT (EXTRAS)"
-    if Rewards.path_tier(progression) > progression.path_claimed: hooks += "   ·   🏆 RUHMESPFAD-BELOHNUNG!"
-    if progression.chests > 0: hooks += "   ·   🎁 %d FREIE TRUHE(N)" % progression.chests
-    if Rewards.wheel_free(progression, Progression.today()): hooks += "   ·   🎡 GRATIS-DREH"
-    if not FunModes.daily_done(progression, Progression.today()): hooks += "   ·   🎯 TAGES-HERAUSFORDERUNG"
-    if not progression.event.is_empty(): hooks += "   ·   %s %s" % [progression.event.icon, progression.event.name]
-    if not comeback_gift.is_empty(): hooks = "   ·   🎉 WILLKOMMEN ZURÜCK! %d Tage weg: +%d 🪙 + 🎁" % [int(comeback_gift.days), int(comeback_gift.coins)] + hooks
-    title_info.text = "🪙 %d   ·   LEVEL %d »%s«   ·   🏅 %s   ·   🔥 SERIE %d   ·   📚 %d %%%s" % [progression.coins, lv, Rewards.title_name(progression),
+    if Rewards.login_ready(progression, Progression.today()): hooks = "   ·   🎁 TAGESBELOHNUNG BEREIT"
+    elif Rewards.path_tier(progression) > progression.path_claimed: hooks = "   ·   🏆 RUHMESPFAD-BELOHNUNG!"
+    elif Rewards.wheel_free(progression, Progression.today()): hooks = "   ·   🎡 GRATIS-DREH"
+    elif not FunModes.daily_done(progression, Progression.today()): hooks = "   ·   🎯 TAGES-HERAUSFORDERUNG"
+    elif not progression.event.is_empty(): hooks = "   ·   %s %s" % [progression.event.icon, progression.event.name]
+    if not comeback_gift.is_empty(): hooks = "   ·   🎉 WILLKOMMEN ZURÜCK! (+%d🪙)" % int(comeback_gift.coins)
+    title_info.text = "🪙 %d   ·   LEVEL %d »%s«   ·   🏅 %s   ·   🔥 SERIE %d   ·   📚 %d%%%s" % [progression.coins, lv, Rewards.title_name(progression),
         Rewards.league_name(progression.rank_points), progression.win_streak, int(Rewards.collection(progression, Backgrounds.LIST) * 100), hooks]
 
-## Logo at the top, menu on the left, "press start" under the logo.
+## Start screen layout. Splash: big centered logo and a press-start plate.
+## Menu: small logo top left, the entries in a column on the dark band, the live arena
+## and its fighters stay visible on the right; a selection plate glides between entries.
 func _layout_title() -> void:
     if title_screen == null: return
     var bg: Dictionary = _current_bg()
     var area: Vector2 = title_screen.size if title_screen.size.x > 10 else Vector2(1280, 720)
     var s: float = clampf(area.y / 720.0, 0.5, 2.0)
-    title_logo.scale = Vector2.ONE * s * 0.82
+    var splash: bool = title_stage == "splash"
+    var trim: Color = bg.trim
+
+    var logo_scale: float = 0.86 if splash else 0.38
+    title_logo.scale = Vector2.ONE * s * logo_scale
     title_logo.size = title_logo.get_combined_minimum_size()
     var logo_w: float = title_logo.size.x * title_logo.scale.x
-    var splash: bool = title_stage == "splash"
-    # Centered on the splash screen, top right in the menu (the menu takes the left side).
-    var logo_x: float = (area.x - logo_w) * 0.5 if splash else area.x - logo_w - 40.0 * s
-    title_logo.position = Vector2(logo_x, 26.0 * s)
+    if splash:
+        title_logo.position = Vector2((area.x - logo_w) * 0.5, 56.0 * s)
+    else:
+        title_logo.position = Vector2(44.0 * s, 16.0 * s)
+
+    # Menu column on the left.
+    var menu_x: float = 56.0 * s
+    var menu_y: float = 176.0 * s
+    var menu_w: float = 430.0
     title_menu.scale = Vector2.ONE * s
+    title_menu.add_theme_constant_override("separation", int(TITLE_ITEM_GAP))
     title_menu.size = title_menu.get_combined_minimum_size()
-    title_menu.position = Vector2(70.0 * s, area.y * 0.34)
-    var trim: Color = bg.trim
-    if title_index < title_hotspots.size():
-        var b: Control = title_hotspots[title_index]
-        title_highlight.position = title_menu.position + (b.position + Vector2(-26, 8)) * s
-        title_highlight.size = Vector2(380, b.size.y - 14) * s
-        for k in range(title_hotspots.size()):
-            var on: bool = k == title_index
-            title_hotspots[k].add_theme_color_override("font_color", Color.WHITE if on else Color(0.85, 0.88, 0.94, 0.78))
-    var hs := StyleBoxFlat.new()
-    hs.bg_color = Color(trim.r, trim.g, trim.b, 0.0)
-    hs.border_color = trim.lightened(0.25)
-    hs.border_width_left = int(6 * s)
-    hs.shadow_color = Color(trim.r, trim.g, trim.b, 0.35)
-    hs.shadow_size = int(14 * s)
-    hs.bg_color = Color(trim.r, trim.g, trim.b, 0.18)
-    title_highlight.add_theme_stylebox_override("panel", hs)
+    title_menu.position = Vector2(menu_x, menu_y)
+    for k in range(title_hotspots.size()):
+        var on: bool = k == title_index
+        var hb: Button = title_hotspots[k]
+        hb.custom_minimum_size = Vector2(menu_w, TITLE_ITEM_H)
+        hb.add_theme_color_override("font_color", Color("fffbeb") if on else Color(0.80, 0.85, 0.93, 0.74))
+
+    # Selection plate: slanted, edged in the background's trim color, glides to the entry.
+    var hl_rect := Rect2(Vector2(menu_x - 8.0 * s, menu_y + title_index * (TITLE_ITEM_H + TITLE_ITEM_GAP) * s), Vector2((menu_w + 16.0) * s, TITLE_ITEM_H * s))
+    var hl: FrameBox = title_highlight.get_theme_stylebox("panel") as FrameBox
+    if hl == null:
+        hl = UiStyle.frame(Color(0.05, 0.07, 0.12, 0.9), trim, 1, 12)
+        hl.border_width_left = 5
+        hl.slant = 12.0
+        hl.shadow_offset = Vector2.ZERO
+        title_highlight.add_theme_stylebox_override("panel", hl)
+    hl.bg_color = Color(trim.r * 0.22, trim.g * 0.22, trim.b * 0.26, 0.92)
+    hl.border_color = trim.lightened(0.2)
+    hl.underglow = Color(trim.r, trim.g, trim.b, 0.30)
+    hl.shadow_color = Color(trim.r, trim.g, trim.b, 0.35)
+    hl.shadow_size = int(14 * s)
+    var was_visible: bool = title_highlight.visible
+    title_highlight.visible = not splash
+    if title_hl_tween: title_hl_tween.kill()
+    if was_visible and not splash and UiStyle.animations_on() and title_highlight.size.x > 1.0:
+        title_hl_tween = create_tween().set_parallel()
+        title_hl_tween.tween_property(title_highlight, "position", hl_rect.position, 0.16).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+        title_hl_tween.tween_property(title_highlight, "size", hl_rect.size, 0.16).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+    else:
+        title_highlight.position = hl_rect.position
+        title_highlight.size = hl_rect.size
+
+    # One line about the selected entry under the column.
+    if title_item_hint:
+        title_item_hint.visible = not splash
+        var item_id: String = Backgrounds.MENU_ITEMS[clampi(title_index, 0, Backgrounds.MENU_ITEMS.size() - 1)]
+        title_item_hint.text = MENU_HINTS.get(item_id, "")
+        title_item_hint.add_theme_color_override("font_color", trim.lightened(0.45))
+        title_item_hint.scale = Vector2.ONE * s
+        title_item_hint.position = Vector2(menu_x + 26.0 * s, menu_y + Backgrounds.MENU_ITEMS.size() * (TITLE_ITEM_H + TITLE_ITEM_GAP) * s + 12.0 * s)
+
     splash_cover.visible = splash
     splash_label.visible = splash
-    title_highlight.visible = not splash
     title_menu.visible = not splash
     for h in title_hotspots: h.visible = not splash
     var click: Control = title_screen.get_node_or_null("SplashClick")
     if click: click.visible = splash
-    splash_label.size = Vector2(620, 70) * s
-    splash_label.position = Vector2((area.x - splash_label.size.x) * 0.5, area.y * 0.78)
-    splash_cover.size = Vector2(260, 3) * s
-    splash_cover.position = Vector2((area.x - splash_cover.size.x) * 0.5, splash_label.position.y + splash_label.size.y)
-    (splash_cover.get_theme_stylebox("panel") as StyleBoxFlat).bg_color = trim.lightened(0.2)
-    title_hint.position = Vector2(20, area.y - 30)
+
+    # Press-start plate.
+    if splash_box:
+        splash_box.visible = splash
+        var sp_sb: FrameBox = UiStyle.window(Color(0.03, 0.045, 0.08, 0.9), UiStyle.GOLD, 2)
+        sp_sb.slant = 18.0
+        sp_sb.shadow_color = Color(0.96, 0.62, 0.15, 0.40)
+        sp_sb.shadow_size = int(22 * s)
+        sp_sb.shadow_offset = Vector2.ZERO
+        sp_sb.underglow = Color(1.0, 0.55, 0.15, 0.22)
+        splash_box.add_theme_stylebox_override("panel", sp_sb)
+        splash_box.custom_minimum_size = Vector2(560, 84) * s
+        splash_box.position = Vector2((area.x - 560.0 * s) * 0.5, area.y * 0.73)
+
+    # Player status, top right (centered on the splash screen).
+    if title_info_panel:
+        title_info_panel.custom_minimum_size = Vector2(0, 34.0 * s)
+        title_info_panel.size = title_info_panel.get_combined_minimum_size()
+        var tip_w: float = title_info_panel.size.x
+        var tip_x: float = (area.x - tip_w) * 0.5 if splash else area.x - tip_w - 24.0 * s
+        title_info_panel.position = Vector2(maxf(12.0, tip_x), 14.0 * s)
+
+    # Control hints, bottom left under the menu (centered on the splash screen).
+    if title_hint_panel:
+        if title_hint:
+            title_hint.text = "DRÜCKE START ZUM WEITERGEHEN" if splash else "↑ ↓  WÄHLEN      ENTER / A  BESTÄTIGEN      ESC / B  ZURÜCK"
+        title_hint_panel.custom_minimum_size = Vector2(0, 28.0 * s)
+        title_hint_panel.size = title_hint_panel.get_combined_minimum_size()
+        var thp_x: float = (area.x - title_hint_panel.size.x) * 0.5 if splash else menu_x
+        title_hint_panel.position = Vector2(thp_x, area.y - title_hint_panel.size.y - 16.0 * s)
 
 ## Live arena of the chosen background with a fighter line-up; skipped in headless runs.
 func _title_scene_on() -> void:
@@ -4398,6 +5614,10 @@ func _title_scene_on() -> void:
     if selection != null and selection.visible:
         title_hid_selection = true
         selection.hide()
+    for hn in hazard_nodes:
+        if is_instance_valid(hn): hn.visible = false
+    for dn in destructible_nodes:
+        if is_instance_valid(dn): dn.visible = false
     _title_clear_showcase()
     var lineup: Array = TITLE_LINEUPS[absi(hash(str(bg.id))) % TITLE_LINEUPS.size()]
     for k in range(lineup.size()):
@@ -4418,6 +5638,10 @@ func _title_clear_showcase() -> void:
 
 func _title_scene_off() -> void:
     _title_clear_showcase()
+    for hn in hazard_nodes:
+        if is_instance_valid(hn): hn.visible = true
+    for dn in destructible_nodes:
+        if is_instance_valid(dn): dn.visible = true
     for v in views:
         if is_instance_valid(v): v.visible = true
     if title_hid_selection and selection != null: selection.show()
@@ -4426,8 +5650,9 @@ func _title_scene_off() -> void:
         apply_arena(title_prev_arena)
     title_prev_arena = ""
 
-## Slow drift past the line-up; now and then one of them powers up.
+## Optimized smooth camera drift with zero per-frame dictionary allocations
 func _title_camera(delta: float) -> void:
+    if title_panel != null and title_panel.visible: return # Pause 3D animation when modal panel is open
     title_time += delta
     var n: int = title_showcase.size()
     for k in range(n):
@@ -4436,7 +5661,12 @@ func _title_camera(delta: float) -> void:
         var x: float = 1.6 + (k - (n - 1) * 0.5) * 2.1
         var beat: float = fmod(title_time + k * 2.7, 8.1)
         var pose: String = "Charge" if beat > 6.6 else "Idle"
-        v.update_state({"x": x, "y": 0.0, "facing": -1 if k == n - 1 else 1, "pose": pose, "state": "Attack" if pose == "Charge" else "Idle", "blocking": false}, delta)
+        _title_cached_state["x"] = x
+        _title_cached_state["y"] = 0.0
+        _title_cached_state["facing"] = -1 if k == n - 1 else 1
+        _title_cached_state["pose"] = pose
+        _title_cached_state["state"] = "Attack" if pose == "Charge" else "Idle"
+        v.update_state(_title_cached_state, delta)
         v.position.z = -0.6 * absf(k - (n - 1) * 0.5)
     var a: float = sin(title_time * 0.11) * 0.32
     var look := Vector3(1.1, 1.55, 0.0)
@@ -4445,20 +5675,24 @@ func _title_camera(delta: float) -> void:
 
 ## stage: "splash" (press start, at launch) or "menu" (straight into the main menu).
 func show_title(stage: String = "menu") -> void:
+    if intro_layer != null:
+        _finish_startup_intro()
     music("menu")
     title_stage = stage
     if title_screen == null: _build_title_screen()
     _title_scene_on()
     _close_title_panel()
     _refresh_title_info()
+    if not title_screen.visible: UiStyle.fade_in(title_screen)
     title_screen.show()
     menu_return_title = false
     _layout_title.call_deferred()
     if splash_tween: splash_tween.kill()
     if title_stage == "splash":
         splash_tween = create_tween().set_loops()
-        splash_tween.tween_property(splash_label, "modulate:a", 0.25, 0.7)
-        splash_tween.tween_property(splash_label, "modulate:a", 1.0, 0.7)
+        var trg: Control = splash_box if splash_box else splash_label
+        splash_tween.tween_property(trg, "modulate:a", 0.78, 0.9).set_ease(Tween.EASE_IN_OUT)
+        splash_tween.tween_property(trg, "modulate:a", 1.0, 0.9).set_ease(Tween.EASE_IN_OUT)
 
 func _enter_main_menu() -> void:
     title_stage = "menu"
@@ -4469,6 +5703,16 @@ func _enter_main_menu() -> void:
     flash_screen(_current_bg().trim, 0.25)
     sound("start")
     _layout_title()
+    # The entries arrive one after another; the selection plate fades in with the first.
+    if UiStyle.animations_on():
+        var items: Array = [title_highlight, title_item_hint] + title_hotspots
+        for k in range(items.size()):
+            var c: CanvasItem = items[k]
+            if c == null: continue
+            c.modulate.a = 0.0
+            var tw := c.create_tween()
+            tw.tween_interval(0.03 * maxi(0, k - 1))
+            tw.tween_property(c, "modulate:a", 1.0, 0.2).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 
 func hide_title() -> void:
     comeback_gift = {}
@@ -4511,23 +5755,42 @@ func _title_pad(b: int) -> void:
     _layout_title()
     sound("jump")
 
-func _close_title_panel() -> void:
+func _close_title_panel(animate: bool = true) -> void:
     if title_panel:
-        title_panel.queue_free()
+        if animate: UiStyle.fade_free(title_panel)
+        else: title_panel.queue_free()
         title_panel = null
     title_panel_kind = ""
 
+## Window over the start screen. Content scrolls; the back button stays at the bottom.
+## Switching tabs inside the same window rebuilds it in place without the open animation.
 func _open_title_panel(kind: String) -> void:
-    _close_title_panel()
+    var same_window: bool = title_panel != null and title_panel_kind == kind
+    var scroll_keep: int = 0
+    if same_window:
+        var old_scroll: ScrollContainer = title_panel.get_node_or_null("Frame/Scroll")
+        if old_scroll: scroll_keep = old_scroll.scroll_vertical
+    _close_title_panel(false)
     title_panel_kind = kind
     title_panel = PanelContainer.new()
-    title_panel.position = Vector2(90, 50)
-    title_panel.custom_minimum_size = Vector2(1100, 620)
-    title_panel.add_theme_stylebox_override("panel", panel_style(Color(0.02, 0.03, 0.05, 0.96), _current_bg().trim, 2, 12))
+    title_panel.position = Vector2(90, 58)
+    title_panel.custom_minimum_size = Vector2(1100, 630)
+    title_panel.size = title_panel.custom_minimum_size
+    title_panel.add_theme_stylebox_override("panel", UiStyle.window(Color(0.025, 0.035, 0.06, 0.97), _current_bg().trim, 2))
     title_screen.add_child(title_panel)
+    var frame_v := VBoxContainer.new()
+    frame_v.name = "Frame"
+    frame_v.add_theme_constant_override("separation", 12)
+    title_panel.add_child(frame_v)
+    var scroll := ScrollContainer.new()
+    scroll.name = "Scroll"
+    scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+    scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    frame_v.add_child(scroll)
     var v := VBoxContainer.new()
+    v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     v.add_theme_constant_override("separation", 10)
-    title_panel.add_child(v)
+    scroll.add_child(v)
     match kind:
         "shop": _fill_shop(v)
         "adventure": _fill_adventure(v)
@@ -4542,23 +5805,37 @@ func _open_title_panel(kind: String) -> void:
         "league": _fill_league(v)
         "wheel": _fill_wheel(v)
         "titles": _fill_titles(v)
-    var back := button("ZURÜCK  ·  ESC / B", Color("64748b"), _close_title_panel)
-    v.add_child(back)
+    var back := button("ZURÜCK      ESC / B", Color("64748b"), _close_title_panel)
+    frame_v.add_child(back)
+    if same_window:
+        if scroll_keep > 0: (func(): scroll.scroll_vertical = scroll_keep).call_deferred()
+    else:
+        UiStyle.reveal(title_panel, 18.0)
 
 func _fill_shop(v: VBoxContainer) -> void:
-    v.add_child(label("🛒 SHOP  ·  🪙 %d MÜNZEN  ·  🎁 %d FREIE TRUHEN" % [progression.coins, progression.chests], 22, Color("fbbf24")))
+    if progression.chests > 0:
+        progression.coins += progression.chests * 250
+        progression.chests = 0
+        progression.save_progress()
+    var head := HBoxContainer.new()
+    v.add_child(head)
+    var shop_title := label("KAMPF-SHOP", 24, UiStyle.GOLD)
+    shop_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    head.add_child(shop_title)
+    head.add_child(label("🪙 %d MÜNZEN" % progression.coins, 22, Color("fde68a")))
     var tabs := HBoxContainer.new()
     tabs.add_theme_constant_override("separation", 8)
     v.add_child(tabs)
-    var tab_list: Array = [["backgrounds", "🖼 HINTERGRÜNDE & ARENEN"], ["weapons", "⚔ WAFFEN"], ["skins", "✨ SKINS"], ["chest", "🎁 GLÜCKSTRUHE"]]
-    if premium_visible(): tab_list.append(["premium", "💎 PREMIUM"])
+    var tab_list: Array = [["backgrounds", "HINTERGRÜNDE & ARENEN"], ["weapons", "WAFFEN"], ["skins", "SKINS"]]
+    if premium_visible(): tab_list.append(["premium", "PREMIUM"])
     for t in tab_list:
         var tab_id: String = t[0]
-        var tb := button(("▶ " if shop_tab == tab_id else "") + str(t[1]), Color("fbbf24") if shop_tab == tab_id else Color("64748b"), func():
+        var tb := tab_button(str(t[1]), shop_tab == tab_id, func():
             shop_tab = tab_id
             _open_title_panel("shop"))
-        tb.custom_minimum_size = Vector2(250 if tab_list.size() <= 4 else 205, 36)
-        tb.add_theme_font_size_override("font_size", 13)
+        tb.custom_minimum_size = Vector2(0, 38)
+        tb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+        tb.add_theme_font_size_override("font_size", 14)
         tabs.add_child(tb)
     match shop_tab:
         "weapons": _fill_shop_items(v, "weapons")
@@ -4807,7 +6084,7 @@ func _fill_daily(v: VBoxContainer) -> void:
     var day: int = Progression.today()
     var ready: bool = Rewards.login_ready(progression, day)
     v.add_child(label("🎁 TÄGLICHE BELOHNUNG", 24, Color("fbbf24")))
-    v.add_child(label("Komm jeden Tag wieder! Sieben Tage am Stück – am 7. Tag gibt es zusätzlich eine Glückstruhe. Ein verpasster Tag beginnt von vorn.", 13, Color("cbd5e1")))
+    v.add_child(label("Komm jeden Tag wieder! Sieben Tage am Stück – am 7. Tag gibt es einen RIESEN-BONUS von +500 Münzen! Ein verpasster Tag beginnt von vorn.", 13, Color("cbd5e1")))
     var row := HBoxContainer.new()
     row.add_theme_constant_override("separation", 8)
     v.add_child(row)
@@ -4826,14 +6103,14 @@ func _fill_daily(v: VBoxContainer) -> void:
         cell.add_child(cv)
         cv.add_child(label("TAG %d" % (k + 1), 18, Color("fde68a")))
         cv.add_child(label("%d 🪙" % Rewards.LOGIN[k], 22, Color("ffffff")))
-        if k == Rewards.LOGIN.size() - 1: cv.add_child(label("+ 🎁 TRUHE", 14, Color("fbbf24")))
+        if k == Rewards.LOGIN.size() - 1: cv.add_child(label("+ 🪙 500", 14, Color("fbbf24")))
         cv.add_child(label("✓" if done else ("HEUTE" if today else ""), 20, Color("4ade80") if done else Color("fbbf24")))
     var claim := button("ABHOLEN!" if ready else "Heute schon abgeholt – bis morgen!", Color("fbbf24") if ready else Color("475569"), func():
         var r: Dictionary = Rewards.claim_login(progression, Progression.today())
         if not r.is_empty():
             sound("victory")
             flash_screen(Color("fbbf24"), 0.5)
-            show_status("🎁 TAG %d: +%d 🪙%s" % [r.day, r.coins, "  + GLÜCKSTRUHE!" if r.chest else ""], 2.5)
+            show_status("🎁 TAG %d: +%d 🪙%s" % [r.day, r.coins, "  + 500 BONUS-MÜNZEN!" if r.chest else ""], 2.5)
             _refresh_title_info()
         _open_title_panel("daily"))
     claim.custom_minimum_size.y = 56
@@ -5225,7 +6502,7 @@ func _fill_challenge(v: VBoxContainer) -> void:
     var idx: int = (next_streak - 1) % FunModes.DAILY_REWARD.size()
     var reward: int = int(FunModes.DAILY_REWARD[idx] * float(progression.event.get("daily_mult", 1.0)))
     v.add_child(label("🎯 TAGES-HERAUSFORDERUNG", 26, Color("fb923c")))
-    v.add_child(label("Jeden Tag ein neuer Kampf – für alle gleich. Schaffe ihn an mehreren Tagen hintereinander: Die Belohnung steigt, am 7. Tag gibt es eine Glückstruhe.", 14, Color("cbd5e1")))
+    v.add_child(label("Jeden Tag ein neuer Kampf – für alle gleich. Schaffe ihn an mehreren Tagen hintereinander: Die Belohnung steigt, am 7. Tag gibt es +500 Bonus-Münzen.", 14, Color("cbd5e1")))
     var foes: Array = c.foes.map(func(o): return str(o.name))
     var row := HBoxContainer.new()
     row.add_theme_constant_override("separation", 14)
@@ -5242,7 +6519,7 @@ func _fill_challenge(v: VBoxContainer) -> void:
     info.add_child(label("GEGNER: %s  ·  KI-Stufe %d" % [" + ".join(foes), int(c.ai)], 18, Color("f87171")))
     info.add_child(label("REGELN: %s" % FunModes.mutator_text(c.mutators), 18, Color("f472b6")))
     info.add_child(label("ZIEL: %s" % c.goal.text, 18, Color("4ade80")))
-    info.add_child(label("BELOHNUNG: %d 🪙%s  ·  🔥 Serie: %d Tage (Rekord %d)" % [reward, "  + 🎁 GLÜCKSTRUHE" if idx == FunModes.DAILY_REWARD.size() - 1 else "",
+    info.add_child(label("BELOHNUNG: %d 🪙%s  ·  🔥 Serie: %d Tage (Rekord %d)" % [reward, "  + 🪙 500 BONUS" if idx == FunModes.DAILY_REWARD.size() - 1 else "",
         streak, int(progression.challenge.get("best_streak", 0))], 16, Color("fbbf24")))
     var days := HBoxContainer.new()
     days.add_theme_constant_override("separation", 6)
@@ -5277,6 +6554,7 @@ func start_daily() -> void:
     if p_list.size() == 3: sim.set_teams([0, 1, 1])
     sim.ai_level = int(daily_info.ai)
     FunModes.apply(sim, views, daily_info.mutators)
+    progression.note_mutators(daily_info.mutators)
     daily_time0 = sim.time_left
     status.text = "TAGES-HERAUSFORDERUNG  ·  %s  ·  %s" % [daily_info.goal.text, FunModes.mutator_text(daily_info.mutators)]
     announce("TAGES-HERAUSFORDERUNG\n%s" % daily_info.goal.text, Color("fb923c"), 1.4)
@@ -5300,12 +6578,10 @@ func _challenger_after_match() -> void:
     if challenger_active:
         challenger_active = false
         if sim.result == 0:
-            var coins := 150
-            var chest: bool = randf() < 0.25
+            var coins := 250
             progression.coins += coins
-            if chest: progression.chests += 1
             progression.save_progress()
-            result_label.text = "⚔ HERAUSFORDERER BESIEGT!\n+%d 🪙%s\n%s" % [coins, "  + 🎁 GLÜCKSTRUHE" if chest else "", result_label.text]
+            result_label.text = "⚔ HERAUSFORDERER BESIEGT!\n+%d 🪙\n%s" % [coins, result_label.text]
         return
     if sim.mode != "pve" or sim.result != 0 or boss_active or player_count != 2 or smoke: return
     if randf() >= FunModes.challenger_chance(Progression.today()): return
@@ -5326,6 +6602,7 @@ func _start_challenger() -> void:
     begin_match([me, Prompt.interpret(str(foe.prompt), 1)], "pve", 1)
     sim.ai_level = mini(9, ai_level + 2)
     FunModes.apply(sim, views, [mut])
+    progression.note_mutators([mut])
     status.text = "⚔ HERAUSFORDERER: %s  ·  %s" % [foe.name, FunModes.mutator_text([mut])]
     announce("HERAUSFORDERER!\n%s" % foe.name, Color("f87171"), 1.4)
     flash_screen(Color("f87171"), 0.4)
@@ -5436,10 +6713,9 @@ func _adventure_finished() -> void:
         sound("victory")
         var cleared: int = adv.wave - 1
         if adv.is_milestone(cleared):
-            progression.coins += 250
-            progression.chests += 1
+            progression.coins += 500
             progression.save_progress()
-            result_label.text += "\n🏅 MEILENSTEIN %d: +250 Münzen · Glückstruhe" % cleared
+            result_label.text += "\n🏅 MEILENSTEIN %d: +500 Münzen Bonus!" % cleared
             _adventure_cinematic(0, ["MEILENSTEIN", "%d WELLEN" % cleared, str(adv.preset.name)], Color("fbbf24"))
     else:
         var best: bool = adv.finish(progression)
@@ -5628,21 +6904,12 @@ func _on_card_hovered(idx: int) -> void:
     if idx < 0 or idx >= mk_presets.size(): return
     var preset: Dictionary = mk_presets[idx]
     if preset.id == "fusionskammer":
-        mk_p1_name_label.text = "FUSIONSKAMMER"
-        mk_p1_sub_label.text = "⚡ KREATIV-STUDIO · MODULARE 3D-KÄMPFER FUSIONIEREN"
-        mk_p1_stats_label.text = "KLICKE HIER, UM EIGENE KÄMPFER AUS PROMPTS & ASSETS ZU ERSCHAFFEN"
+        if mk_p1_name_label: mk_p1_name_label.text = "FUSIONSKAMMER"
+        if mk_p1_sub_label: mk_p1_sub_label.text = "⚡ KREATIV-STUDIO · MODULARER KÄMPFER"
+        if mk_p1_special_lbl: mk_p1_special_lbl.text = "✦ EIGENE ASSETS & PROMPTS FUSIONIEREN"
         return
-    mk_p1_name_label.text = preset.name
-    var p0 = Prompt.interpret(preset.prompt, 0)
-    if p0.has("archetype"):
-        mk_p1_sub_label.text = "%s · %s · GEWICHT %.2f" % [str(p0.archetype).to_upper(), p0.element.to_upper(), p0.weight]
-    else:
-        mk_p1_sub_label.text = "%s · %s" % [p0.element.to_upper(), preset.prompt.left(35)]
-    var stars: int = progression.stars(p0.family)
-    mk_p1_stats_label.text = "HP %d · KRAFT %d · RÜSTUNG %d · TEMPO %d · TECHNIK %d   ·   %s%s" % [
-        p0.stats.vitality, p0.stats.power, p0.stats.defense, p0.stats.speed, p0.stats.technique,
-        "★".repeat(stars) + "☆".repeat(5 - stars), "   ·   💰 KOPFGELD HEUTE!" if p0.family == _bounty() else ""
-    ]
+    var p0 := Prompt.interpret(preset.prompt, 0)
+    _update_showcase_profile(0, p0)
     # Hover only previews the info text. Selection happens on click, so hovering no longer
     # changes P1's fighter or reloads 3D models (the main cause of menu stutter).
 
@@ -5666,64 +6933,211 @@ func _cycle_combat_mode() -> void:
     var btn = root_ui.find_child("BtnCombatMode", true, false)
     if btn is Button:
         if current_combat_mode == "pve":
-            btn.text = "⚔ SPIELER vs KI"
+            btn.text = "SPIELER vs KI"
             btn.add_theme_color_override("font_color", Color("4ae371"))
         elif current_combat_mode == "manual":
-            btn.text = "⚔ SPIELER vs SPIELER"
+            btn.text = "SPIELER vs SPIELER"
             btn.add_theme_color_override("font_color", CYAN)
         else:
-            btn.text = "🤖 KI vs KI"
+            btn.text = "KI vs KI"
             btn.add_theme_color_override("font_color", ORANGE)
     sound("jump")
 
+func _update_showcase_profile(slot: int, p: Dictionary) -> void:
+    var is_p1 := (slot == 0)
+    var name_lbl: Label = mk_p1_name_label if is_p1 else mk_p2_name_label
+    var sub_lbl: Label = mk_p1_sub_label if is_p1 else mk_p2_sub_label
+    var stats_lbl: Label = mk_p1_stats_label if is_p1 else mk_p2_stats_label
+    var port_rect: TextureRect = mk_p1_portrait if is_p1 else mk_p2_portrait
+    var bars: Dictionary = mk_p1_bars if is_p1 else mk_p2_bars
+    var spec_lbl: Label = mk_p1_special_lbl if is_p1 else mk_p2_special_lbl
+    var stars_lbl: Label = mk_p1_stars_lbl if is_p1 else mk_p2_stars_lbl
+
+    if name_lbl == null: return
+    var shown: String = p.get("name", "")
+    for preset in mk_presets:
+        if preset.prompt == p.get("prompt", "") or preset.id == p.get("family", ""):
+            shown = preset.name
+            break
+    name_lbl.text = shown
+
+    var elem_str: String = str(p.get("element", "neutral")).to_upper()
+    var arch_str: String = str(p.get("archetype", "")).to_upper()
+    if not arch_str.is_empty():
+        sub_lbl.text = "%s · %s" % [elem_str, arch_str]
+    else:
+        sub_lbl.text = "%s · %s" % [elem_str, str(p.get("family", "")).to_upper()]
+
+    var p_stats: Dictionary = p.get("stats", {})
+    var vit: int = int(p_stats.get("vitality", 100))
+    var pwr: int = int(p_stats.get("power", 20))
+    var defn: int = int(p_stats.get("defense", 14))
+    var spd: int = int(p_stats.get("speed", 20))
+    var tech: int = int(p_stats.get("technique", 20))
+
+    if stats_lbl:
+        stats_lbl.text = "HP %d · KRAFT %d · RÜST %d · TEMPO %d · TECH %d" % [vit, pwr, defn, spd, tech]
+
+    if bars.has("hp"):
+        bars["hp"].bar.value = vit
+        bars["hp"].val.text = str(vit)
+    if bars.has("pwr"):
+        bars["pwr"].bar.value = pwr * 3.5
+        bars["pwr"].val.text = str(pwr)
+    if bars.has("def"):
+        bars["def"].bar.value = defn * 3.5
+        bars["def"].val.text = str(defn)
+    if bars.has("spd"):
+        bars["spd"].bar.value = spd * 3.5
+        bars["spd"].val.text = str(spd)
+    if bars.has("tech"):
+        bars["tech"].bar.value = tech * 3.5
+        bars["tech"].val.text = str(tech)
+
+    if spec_lbl:
+        var spec_name: String = str(p.get("special", {}).get("name", "ANGRIFF")).to_upper()
+        spec_lbl.text = "✦ SPEZIAL: %s" % spec_name
+
+    if stars_lbl:
+        var fam: String = str(p.get("family", ""))
+        var st: int = progression.stars(fam)
+        stars_lbl.text = "%s MEISTERSCHAFT" % ("★".repeat(st) + "☆".repeat(5 - st))
+
+    if port_rect:
+        var fid: String = str(p.get("family", ""))
+        var port_tex: Texture2D = null
+        var rendered_port := "res://assets/textures/characters/portraits/portrait_%s.png" % fid
+        if ResourceLoader.exists(rendered_port):
+            port_tex = load(rendered_port)
+        elif PORTRAITS.has(fid):
+            port_tex = PORTRAITS[fid]
+        elif ResourceLoader.exists("res://assets/textures/characters/thumbs/thumb_%s.png" % fid):
+            port_tex = load("res://assets/textures/characters/thumbs/thumb_%s.png" % fid)
+        if port_tex != null and port_rect.has_meta("crop_aspect"):
+            # Banner portraits: crop from the top so the head stays in view.
+            var at := AtlasTexture.new()
+            at.atlas = port_tex
+            var w: float = port_tex.get_width()
+            at.region = Rect2(0, w * 0.04, w, minf(w * 0.96, w / float(port_rect.get_meta("crop_aspect"))))
+            port_tex = at
+        port_rect.texture = port_tex
+
 ## Big name / element / stats of the chosen fighters for P1 (left) and P2 (right).
 func refresh_selected_labels() -> void:
-    if mk_p1_name_label == null: return
-    var sets := [[mk_p1_name_label, mk_p1_sub_label, mk_p1_stats_label], [mk_p2_name_label, mk_p2_sub_label, mk_p2_stats_label]]
     for slot in range(2):
         if slot >= prompts.size(): continue
         var p: Dictionary = remix_profiles[slot] if not remix_profiles[slot].is_empty() else Prompt.interpret(prompts[slot].text, slot)
-        var shown: String = p.get("name", "")
-        for preset in mk_presets:
-            if preset.prompt == prompts[slot].text: shown = preset.name
-        sets[slot][0].text = shown
-        sets[slot][1].text = "%s · %s" % [str(p.element).to_upper(), p.special.name]
-        sets[slot][2].text = "HP %d · KRAFT %d · RÜSTUNG %d · TEMPO %d · TECHNIK %d" % [p.stats.vitality, p.stats.power, p.stats.defense, p.stats.speed, p.stats.technique]
+        _update_showcase_profile(slot, p)
 
 func update_mk_grid_visuals() -> void:
     refresh_selected_labels()
+    var p1_prompt: String = prompts[0].text if prompts.size() > 0 else ""
+    var p2_prompt: String = prompts[1].text if prompts.size() > 1 else ""
+    var pads: Array = Input.get_connected_joypads()
     for k in range(mini(mk_card_buttons.size(), mk_presets.size())):
         var item: Dictionary = mk_card_buttons[k]
         var btn: Button = item.button
-        var b_p1: Label = item.badge_p1
-        var b_p2: Label = item.badge_p2
-        var is_p1: bool = (prompts.size() > 0 and prompts[0].text == mk_presets[k].prompt)
-        var is_p2: bool = (prompts.size() > 1 and prompts[1].text == mk_presets[k].prompt)
-        b_p1.visible = is_p1
-        b_p2.visible = is_p2
-        if mk_presets[k].id == "fusionskammer":
-            btn.add_theme_stylebox_override("normal", panel_style(Color("1e0c2e"), Color("a855f7"), 2, 6))
-            btn.add_theme_stylebox_override("hover", panel_style(Color("3b1858"), Color("d946ef"), 2, 6))
-        elif is_p1 and is_p2:
-            btn.add_theme_stylebox_override("normal", panel_style(Color("331a10"), Color("ff9900"), 2, 6))
-        elif is_p1:
-            btn.add_theme_stylebox_override("normal", panel_style(Color("381d06"), Color("ff9900"), 2, 6))
-            btn.add_theme_stylebox_override("hover", panel_style(Color("4a2808"), Color("ffbb33"), 2, 6))
-        elif is_p2:
-            btn.add_theme_stylebox_override("normal", panel_style(Color("082030"), CYAN, 2, 6))
-            btn.add_theme_stylebox_override("hover", panel_style(Color("0c3048"), CYAN, 2, 6))
-        else:
-            btn.add_theme_stylebox_override("normal", panel_style(Color("0d131c"), Color("1f2c3d"), 1, 6))
-            btn.add_theme_stylebox_override("hover", panel_style(Color("1c2838"), Color("385070"), 1, 6))
+        var is_p1: bool = p1_prompt == mk_presets[k].prompt
+        var is_p2: bool = p2_prompt == mk_presets[k].prompt
+        (item.badge_p1 as Label).visible = is_p1
+        (item.badge_p2 as Label).visible = is_p2
+        var kind := "idle"
+        if mk_presets[k].id == "fusionskammer": kind = "fusion"
+        elif is_p1 and is_p2: kind = "both"
+        elif is_p1: kind = "p1"
+        elif is_p2: kind = "p2"
+        btn.add_theme_stylebox_override("normal", _card_style(kind))
+        btn.add_theme_stylebox_override("hover", _card_style(kind + "_hi"))
+        btn.add_theme_stylebox_override("pressed", _card_style(kind + "_hi"))
+        btn.add_theme_stylebox_override("hover_pressed", _card_style(kind + "_hi"))
+        if not _card_cache.has("empty"): _card_cache["empty"] = StyleBoxEmpty.new()
+        btn.add_theme_stylebox_override("focus", _card_cache["empty"])
         # Gamepad cursors: a thick frame in the pad's player color.
         var frame: Panel = item.get("cursor")
         if frame != null:
             frame.visible = false
-            for dev in Input.get_connected_joypads():
+            for dev in pads:
                 if dev < pad_cursor.size() and pad_cursor[dev] == k:
                     frame.visible = true
-                    frame.add_theme_stylebox_override("panel", panel_style(Color(0, 0, 0, 0), [Color("ff9900"), CYAN, Color("ef4444"), Color("22c55e")][dev % 4], 3, 6))
+                    frame.add_theme_stylebox_override("panel", _cursor_style([UiStyle.P1, UiStyle.P2, Color("ef4444"), Color("22c55e")][dev % 4]))
                     break
+
+const ROSTER_COLUMNS := 15
+var _card_cache: Dictionary = {}
+
+## Element-colored plate behind a roster portrait (one shared style per color).
+func _card_backdrop(col: Color) -> FrameBox:
+    var key := "bd_" + col.to_html()
+    if _card_cache.has(key): return _card_cache[key]
+    var sb: FrameBox = UiStyle.frame(Color(col.r * 0.42, col.g * 0.42, col.b * 0.48, 1.0), Color(0, 0, 0, 0), 0, 4)
+    sb.shadow_size = 0
+    sb.seam = 0.0
+    sb.sheen = 0.12
+    _card_cache[key] = sb
+    return sb
+
+## Small "1P" / "2P" tag on a roster card.
+func _player_badge(text: String, col: Color) -> Label:
+    var b := Label.new()
+    b.text = text
+    b.visible = false
+    b.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    b.add_theme_font_override("font", UiStyle.display_font(700, 1))
+    b.add_theme_font_size_override("font_size", 12)
+    b.add_theme_color_override("font_color", Color("06121c"))
+    var key := "badge_" + col.to_html()
+    if not _card_cache.has(key):
+        var sb: FrameBox = UiStyle.frame(col, col.lightened(0.3), 0, 3)
+        sb.shadow_size = 2
+        sb.shadow_offset = Vector2(0, 1)
+        sb.seam = 0.0
+        sb.content_margin_left = 4
+        sb.content_margin_right = 4
+        sb.content_margin_top = -1
+        sb.content_margin_bottom = -2
+        _card_cache[key] = sb
+    b.add_theme_stylebox_override("normal", _card_cache[key])
+    return b
+
+## Frame of a roster card per state: "idle", "p1", "p2", "both", "fusion"; hover variants
+## end in "_hi". Cached, so moving the cursor does not allocate new style boxes.
+func _card_style(kind: String) -> FrameBox:
+    if _card_cache.has(kind): return _card_cache[kind]
+    var hi: bool = kind.ends_with("_hi")
+    var base: String = kind.trim_suffix("_hi")
+    var edge: Color = {"idle": Color(0.24, 0.31, 0.43), "p1": UiStyle.P1, "p2": UiStyle.P2, "both": UiStyle.GOLD, "fusion": Color("a855f7")}.get(base, UiStyle.RIM)
+    var width: int = 1 if base == "idle" else 2
+    if hi:
+        edge = edge.lightened(0.35)
+        width = 2
+    var sb: FrameBox = UiStyle.frame(Color(0.03, 0.045, 0.075, 1.0), edge, width, 5)
+    sb.seam = 0.0
+    sb.content_margin_left = 0
+    sb.content_margin_right = 0
+    sb.content_margin_top = 0
+    sb.content_margin_bottom = 0
+    if base == "idle" and not hi:
+        sb.shadow_size = 3
+        sb.shadow_offset = Vector2(0, 2)
+    else:
+        var glow: Color = Color(0.7, 0.85, 1.0) if base == "idle" else edge
+        sb.shadow_color = Color(glow.r, glow.g, glow.b, 0.55 if base != "idle" else 0.3)
+        sb.shadow_size = 7
+        sb.shadow_offset = Vector2.ZERO
+    _card_cache[kind] = sb
+    return sb
+
+## Gamepad cursor frame in the pad's player color (cached per color).
+func _cursor_style(col: Color) -> FrameBox:
+    var key := "cur_" + col.to_html()
+    if _card_cache.has(key): return _card_cache[key]
+    var sb: FrameBox = UiStyle.frame(Color(col.r, col.g, col.b, 0.10), col, 3, 6)
+    sb.shadow_color = Color(col.r, col.g, col.b, 0.6)
+    sb.shadow_size = 8
+    sb.shadow_offset = Vector2.ZERO
+    sb.seam = 0.5
+    _card_cache[key] = sb
+    return sb
 
 func _setup_fusionskammer_modal() -> void:
     fusionskammer_modal = PanelContainer.new()
@@ -5910,6 +7324,9 @@ func _on_fusion_save() -> void:
 
 func _unhandled_key_input(event: InputEvent) -> void:
     if not event.is_pressed() or event.is_echo(): return
+    if intro_player != null and intro_player.is_playing():
+        _finish_startup_intro()
+        return
     if event is InputEventKey and title_screen != null and title_screen.visible:
         if title_stage == "splash":
             _enter_main_menu() # any key starts
@@ -5950,6 +7367,10 @@ func _unhandled_key_input(event: InputEvent) -> void:
 
 ## Gamepad buttons reach the same input buffer as keys.
 func _unhandled_input(event: InputEvent) -> void:
+    if intro_player != null and intro_player.is_playing():
+        if (event is InputEventJoypadButton and event.pressed) or (event is InputEventMouseButton and event.pressed):
+            _finish_startup_intro()
+            return
     if event is InputEventJoypadButton and event.pressed:
         if _pad_menu_button(event.device, event.button_index): return
         buffer_press(event)
@@ -6064,7 +7485,7 @@ func _pad_menu_stick(ev: InputEventJoypadMotion) -> void:
     pad_stick_latch[ev.device] = latch
 
 func _move_pad_cursor(dev: int, d: Vector2i) -> void:
-    var cols: int = 17
+    var cols: int = ROSTER_COLUMNS
     var count: int = mk_presets.size()
     var idx: int = clampi(int(pad_cursor[dev]), 0, count - 1)
     if d.x != 0: idx = wrapi(idx + d.x, 0, count)
@@ -6261,6 +7682,88 @@ func _physics_process(delta: float) -> void:
                 sound("lava")
                 sound("hit")
                 show_status("EXPLOSION! %s DETONIERT MIT GEWALTIGEM FLÄCHENSCHADEN!" % [event.item_name])
+            elif event.type == "destructible_hit":
+                for dn in destructible_nodes:
+                    if is_instance_valid(dn) and dn.has_meta("destructible_id") and dn.get_meta("destructible_id") == event.id:
+                        var tw := create_tween()
+                        tw.tween_property(dn, "scale", Vector3(1.18, 0.82, 1.18), 0.04)
+                        tw.tween_property(dn, "scale", Vector3.ONE, 0.12).set_ease(Tween.EASE_OUT)
+                        spark_burst(Vector3(event.x, event.y + 0.9, 0.35), Color("ffd27a"), 14, 5.0, 0.08)
+                        sound("hit")
+                        break
+            elif event.type == "destructible_destroyed":
+                for dn in destructible_nodes:
+                    if is_instance_valid(dn) and dn.has_meta("destructible_id") and dn.get_meta("destructible_id") == event.id:
+                        dn.visible = false
+                        break
+                camera_shake = 0.95
+                spawn_debris_explosion(Vector3(event.x, event.y + 0.7, 0.2), 12, Color("d1d5db") if event.kind != "crystal" else Color("38bdf8"))
+                shock_ring(Vector3(event.x, event.y + 0.7, 0.3), Color("ffd700"), 3.2)
+                spark_burst(Vector3(event.x, event.y + 0.8, 0.3), Color("fff7cc"), 38, 8.5, 0.12)
+                sound("ko")
+                sound("hit")
+                show_status("ZERSTÖRT! %s WURDE ZERSCHLAGEN!" % event.kind.to_upper())
+            elif event.type == "destructible_respawn":
+                for dn in destructible_nodes:
+                    if is_instance_valid(dn) and dn.has_meta("destructible_id") and dn.get_meta("destructible_id") == event.id:
+                        dn.visible = true
+                        dn.scale = Vector3.ZERO
+                        var tw := create_tween()
+                        tw.tween_property(dn, "scale", Vector3.ONE, 0.35).set_ease(Tween.EASE_OUT)
+                        shock_ring(Vector3(event.x, event.y + 0.5, 0.3), Color("3bfac8"), 2.2)
+                        break
+            elif event.type == "hazard_warning":
+                for hn in hazard_nodes:
+                    if is_instance_valid(hn) and hn.has_meta("hazard_id") and hn.get_meta("hazard_id") == event.id:
+                        var tw := create_tween()
+                        tw.tween_property(hn, "position:y", float(event.y) + 0.06, 0.08)
+                        tw.tween_property(hn, "position:y", float(event.y), 0.08)
+                        spark_burst(Vector3(event.x, event.y + 0.2, 0.3), event.color.darkened(0.2), 6, 2.0, 0.04)
+                        break
+            elif event.type == "hazard_active":
+                camera_shake = maxf(camera_shake, 0.45)
+                for hn in hazard_nodes:
+                    if is_instance_valid(hn) and hn.has_meta("hazard_id") and hn.get_meta("hazard_id") == event.id:
+                        var hp: CPUParticles3D = hn.get_meta("particles") if hn.has_meta("particles") else null
+                        if hp:
+                            hp.restart()
+                            hp.emitting = true
+                        var spk_n: Node3D = hn.get_meta("spikes_node") if hn.has_meta("spikes_node") else null
+                        if spk_n:
+                            var tw := create_tween()
+                            tw.tween_property(spk_n, "position:y", 0.55, 0.06).set_ease(Tween.EASE_OUT)
+                            tw.tween_interval(0.4)
+                            tw.tween_property(spk_n, "position:y", -0.55, 0.18)
+                        shock_ring(Vector3(event.x, event.y + 0.1, 0.3), event.color, 2.4)
+                        break
+                if event.kind == "fire_vent":
+                    sound("lava")
+                elif event.kind == "tesla_shock":
+                    sound("electric")
+                else:
+                    sound("hit")
+            elif event.type == "hazard_hit":
+                if event.target < views.size():
+                    views[event.target].flash()
+                    hit_effect(event.target, true, true)
+                show_status("FALLE! %s GETROFFEN VON %s!" % [sim.fighters[event.target].profile.name, event.kind.to_upper()])
+            elif event.type == "crown_shift":
+                var cmode: String = str(event.mode)
+                sound("crown_glut" if cmode == "glut" else "crown_frost")
+                announce("GLUT!" if cmode == "glut" else "FROST!", Color("ff5a1f") if cmode == "glut" else Color("7dd3fc"), 0.3)
+                if event.actor < views.size():
+                    spark_burst(Vector3(sim.fighters[event.actor].x, sim.fighters[event.actor].y + 1.9, 0.4), Color("ff5a1f") if cmode == "glut" else Color("7dd3fc"), 30, 5.0, 0.08)
+            elif event.type == "anchor_zip":
+                sound("block")
+                if event.actor < sim.fighters.size():
+                    _fade_free(_beam(Vector3(sim.fighters[event.actor].x, sim.fighters[event.actor].y + 1.1, 0.35), Vector3(event.x, event.y, 0.35), Color("a8a29e"), 0.03), 0.35)
+            elif event.type == "bomb_warning":
+                sound("electric")
+            elif event.type == "rule_swap_warning":
+                announce("PLATZTAUSCH IN 2 …", Color("c4b5fd"), 0.5)
+            elif event.type == "rule_swap":
+                announce("PLATZTAUSCH!", Color("c4b5fd"), 0.6)
+                flash_screen(Color("c4b5fd"), 0.25)
             elif event.type == "ring_out":
                 ko_blast(event.actor, float(event.get("x", sim.fighters[event.actor].x)), float(event.get("y", 0.0)))
                 if int(event.lives) == 1:
@@ -6303,7 +7806,12 @@ func _physics_process(delta: float) -> void:
                 sound("electric")
             elif event.type == "signature":
                 signature_effect(event.actor, str(event.mech), event.color)
+                # Own sounds of the newer signatures (synthesized, tools/synth_sfx.py).
+                var sig_snd: String = {"lasso": "lasso", "pack_hound": "hound", "anchor_chain": "chain", "chain_leash": "chain", "anvil": "lasso"}.get(str(event.mech), "")
+                if sig_snd != "": sound(sig_snd)
             elif event.type == "blast":
+                if int(event.get("actor", -1)) >= 0 and int(event.actor) < sim.fighters.size() and str(sim.fighters[event.actor].profile.get("family", "")) == "konrad":
+                    sound("anvil")
                 spark_burst(Vector3(event.x, event.y, 0.4), event.color, 60, 10.0, 0.14)
                 shock_ring(Vector3(event.x, event.y, 0.4), event.color, float(event.radius) * 2.2)
                 flash_screen(event.color, 0.3)
@@ -6759,36 +8267,37 @@ func update_hud() -> void:
         status.text = "%s  /  %s" % [aname, mode_name]
 
 func hit_effect(index: int, special: bool, is_super_hit: bool = false) -> void:
-    camera_shake = 0.70 if is_super_hit else (0.42 if special else 0.16)
+    camera_shake = 0.85 if is_super_hit else (0.48 if special else 0.22)
     if index < sim.fighters.size():
         var hp := Vector3(sim.fighters[index].x, sim.fighters[index].y + 1.15, 0.45)
-        var hc: Color = Color("9d7bff") if is_super_hit else (Color("49def4") if special else Color("ffd27a"))
-        spark_burst(hp, hc, 34 if is_super_hit else (22 if special else 12), 9.0 if special else 6.0)
-        if special or is_super_hit: shock_ring(hp, hc, 3.5 if is_super_hit else 2.2)
+        var hc: Color = Color("ff2a2a") if is_super_hit else (Color("38bdf8") if special else Color("ffd27a"))
+        spark_burst(hp, hc, 40 if is_super_hit else (26 if special else 14), 11.0 if is_super_hit else (8.0 if special else 6.0), 0.09 if is_super_hit else 0.07)
+        if special or is_super_hit: shock_ring(hp, hc, 3.8 if is_super_hit else 2.5)
+        if is_super_hit: flash_screen(Color.WHITE, 0.08)
     var spark := Sprite3D.new()
     spark.texture = ELECTRIC_SPARK if (special or is_super_hit) else HIT_SPARK
-    spark.pixel_size = 0.022 if is_super_hit else (0.016 if special else 0.009)
+    spark.pixel_size = 0.026 if is_super_hit else (0.018 if special else 0.011)
     spark.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-    spark.modulate = Color("ff3300") if is_super_hit else (ORANGE if special else CYAN)
+    spark.modulate = Color("ff2200") if is_super_hit else (ORANGE if special else CYAN)
     add_child(spark)
     var hit_pos := Vector3(sim.fighters[index].x, 1.18 + randf_range(-0.1, 0.2), 0.5)
     spark.position = hit_pos
     var tween := create_tween()
-    tween.tween_property(spark, "scale", Vector3.ONE * (4.5 if is_super_hit else 2.2), 0.04)
-    tween.parallel().tween_property(spark, "modulate:a", 0.0, 0.28 if is_super_hit else 0.22)
+    tween.tween_property(spark, "scale", Vector3.ONE * (5.2 if is_super_hit else 2.6), 0.04)
+    tween.parallel().tween_property(spark, "modulate:a", 0.0, 0.30 if is_super_hit else 0.22)
     tween.tween_callback(spark.queue_free)
     if is_super_hit:
-        for k in range(5):
+        for k in range(7):
             var s2 := Sprite3D.new()
             s2.texture = HIT_SPARK
-            s2.pixel_size = 0.010
+            s2.pixel_size = 0.012
             s2.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-            s2.modulate = Color(1.0, randf_range(0.2, 0.6), 0.0)
+            s2.modulate = Color(1.0, randf_range(0.3, 0.8), 0.1)
             add_child(s2)
-            s2.position = hit_pos + Vector3(randf_range(-0.3, 0.3), randf_range(-0.2, 0.35), 0)
+            s2.position = hit_pos + Vector3(randf_range(-0.4, 0.4), randf_range(-0.3, 0.45), 0)
             var t2 := create_tween()
-            t2.tween_property(s2, "scale", Vector3.ONE * randf_range(1.5, 3.0), 0.08)
-            t2.parallel().tween_property(s2, "modulate:a", 0.0, 0.35)
+            t2.tween_property(s2, "scale", Vector3.ONE * randf_range(2.0, 3.8), 0.09)
+            t2.parallel().tween_property(s2, "modulate:a", 0.0, 0.38)
             t2.tween_callback(s2.queue_free)
 
 ## Short afterimage streak behind a fighter using the air dash.

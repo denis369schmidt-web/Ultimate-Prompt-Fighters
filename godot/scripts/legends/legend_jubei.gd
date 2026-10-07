@@ -154,6 +154,6 @@ static func chapters() -> Array:
 			S._cam("sky", 0, 3.0),
 			S._pose(0, "Victory", 1.4),
 			{"t": "title", "text": "LEGENDE VOLLENDET", "sub": "Jubei · Die dritte Klinge"},
-			S._narr("Relikt erhalten: Die stumpfe dritte Klinge  ·  +400 Münzen  ·  Glückstruhe  ·  Goldrahmen  ·  +15 % Heilung im Abenteuer"),
+			S._narr("Relikt erhalten: Die stumpfe dritte Klinge  ·  +400 Münzen  ·  Legenden-Truhe  ·  Goldrahmen  ·  +15 % Heilung im Abenteuer"),
 		]},
 	]
