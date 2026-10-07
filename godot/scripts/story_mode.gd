@@ -566,6 +566,7 @@ func _realm_target(realm: String) -> int:
 	return first
 
 func open_menu() -> void:
+	if main != null: main.announcer("story_mode")
 	_refresh_menu()
 	menu_panel.show()
 	main.sound("jump")

@@ -1,0 +1,91 @@
+STEAM STORE PAGE LISTING (ENGLISH)
+Game Version: 0.9.1 (Matches game code: 58 fighters, 58 legends, 19 bosses, 32 versus arenas + 8 story arenas, 13 mutators, 29 achievements).
+Steamworks fields: App Admin → Edit Store Page → Description / Basic Info.
+
+────────────────────────────────────────────────────────────────────
+NAME (Steam)
+────────────────────────────────────────────────────────────────────
+Prompt Fighters Ultimate
+
+────────────────────────────────────────────────────────────────────
+SHORT DESCRIPTION (Steam Limit: 300 chars — Length: 263 chars)
+────────────────────────────────────────────────────────────────────
+A high-impact platform fighter where hits launch opponents instead of depleting health bars. 58 unique fighters with signature mechanics and cinematic finishers, 19 colossal bosses, two story campaigns, offline fusion chamber, and up to 4-player local couch brawls.
+
+────────────────────────────────────────────────────────────────────
+DETAILED DESCRIPTION (BBCode format)
+────────────────────────────────────────────────────────────────────
+[h2]The Higher the Damage, The Further They Fly[/h2]
+There are no traditional health bars here. Every strike drives up your opponent's damage percentage. The higher the percentage climbs, the further each hit sends them flying across the stage. Knock your rival past the arena blast zones to take a life. A high-stakes clash can turn in a split second: land a charged Smash attack at 120%, and victory is yours.
+
+[h2]58 Fighters with Truly Distinct Playstyles[/h2]
+Every warrior features custom weight physics, distinct jump arcs, 15 dedicated attacks, and an exclusive signature ability:
+[list]
+[*][b]Vlad[/b] disperses into a swarm of invulnerable bats, phasing directly through strikes while siphoning vitality.
+[*][b]Grimbolt[/b] attaches a ticking chronal bomb to opponents—running away only delays the blast.
+[*][b]Echo[/b] fires a glitch projectile that instantly swaps positions with the target on impact.
+[*][b]Kettenwart[/b] ensnares rivals with soul chains, pulling them in for inescapable close-quarters punishment.
+[*][b]Vanguard[/b] marks stage coordinates for an orbital plasma bombardment from the skies.
+[/list]
+Each round concludes with a dramatic cinematic [b]Finisher execution[/b] triggered via button combination when the opponent is dazed. (Gore effects can be toggled on or off at any time).
+
+[h2]Forge New Warriors in the Fusion Chamber[/h2]
+In the [b]Fusion Chamber[/b], simply enter any concept—such as [i]"Cyber-Samurai with dragon wings and flaming katana"[/i]—and instantly receive a fully playable fighter equipped with matching procedural gear, elemental attunement, and balanced competitive stats. This system runs completely local and rule-based directly on your PC: no online connection required, no cloud AI latency, and zero wait times.
+
+[h2]Deep Stories & Epic Campaigns[/h2]
+[list]
+[*][b]The Divine Trial[/b] – Inspired by Dante’s Divine Comedy: ascend from the earthly realm through the nine circles of the Underworld to the celestial heavens. 21 intense chapters facing ten demonic lords and nine angelic choirs, complete with full voice acting.
+[*][b]The Dimensional Rift[/b] – A 14-chapter cinematic saga featuring dynamic Quick-Time Events and epic 2v2 tag confrontations.
+[*][b]58 Fighter Legends[/b] – Every single fighter possesses a 4-part individual lore storyline detailing their origins, rivalries, inner conflicts, and ascension.
+[/list]
+
+[h2]4-Player Couch Brawls & Versus Battles[/h2]
+Duke it out with up to four players on a single screen—Free-For-All, 2v2 teams, or 3v1 handicap matches, with friends or challenging AI opponents. Turn every match upside down with 13 chaotic mutators: Low Gravity, Giant Mode, Miniature Brawlers, Bomb Rain, Position Swap, Sudden Death, and more.
+
+[h2]Endless Replayability[/h2]
+[list]
+[*][b]Adventure Tower[/b]: Survive escalating waves of enemies and post high-score records for each fighter.
+[*][b]Boss Rush[/b]: Conquer all 19 colossal bosses in a test of endurance.
+[*][b]Daily Challenges & Events[/b]: Daily trials with streak bonuses and surprise challenger encounters.
+[*][b]32 Unique Arenas[/b]: Dynamic stage hazards, interactive destructible objects, and day/night weather cycles, plus 8 mythological story arenas.
+[*][b]29 Steam Achievements[/b], Fighter Mastery progressions, and an in-game vault for skins, weapons, and arenas.
+[/list]
+
+[h2]Transparent & Fair[/h2]
+Buy the game once, enjoy everything forever. All items in the in-game shop are unlocked exclusively through coins earned by playing. No loot boxes, no microtransactions, no pay-to-win mechanics.
+
+[h2]Controls & Accessibility[/h2]
+Full gamepad controller support (Xbox, PlayStation, Switch Pro layout), customizable keyboard controls, and optional on-screen touch overlay—fully playable on desktop and Steam Deck.
+
+────────────────────────────────────────────────────────────────────
+TAGS & CATEGORIES
+────────────────────────────────────────────────────────────────────
+Primary Genre: Action / Fighting
+Tags: 2D Fighter, Fighting, Party Game, Local Multiplayer, Controller, Beat 'em up, Sci-fi, Fantasy, Cyberpunk, Difficult, Singleplayer, 4 Player Local, Fast-Paced.
+
+────────────────────────────────────────────────────────────────────
+SYSTEM REQUIREMENTS (Windows)
+────────────────────────────────────────────────────────────────────
+MINIMUM:
+OS: Windows 10 (64-bit)
+Processor: Intel Core i3-4160 / AMD FX-6300
+Memory: 4 GB RAM
+Graphics: Intel HD Graphics 4000 / NVIDIA GeForce GTX 650 / AMD Radeon HD 7750 (OpenGL 3.3 / Vulkan compatible)
+Storage: 4 GB available space
+Sound Card: DirectSound compatible sound card
+Additional Notes: Gamepad recommended for optimal local multiplayer experience.
+
+RECOMMENDED:
+OS: Windows 10 / Windows 11 (64-bit)
+Processor: Intel Core i5-6600K / AMD Ryzen 5 1600
+Memory: 8 GB RAM
+Graphics: NVIDIA GeForce GTX 1060 (3GB) / AMD Radeon RX 580
+Storage: 4 GB available space (SSD recommended)
+Sound Card: DirectSound compatible sound card
+
+────────────────────────────────────────────────────────────────────
+AI CONTENT DISCLOSURE (Steamworks Content Survey)
+────────────────────────────────────────────────────────────────────
+Does your game use AI-generated content?
+Answer: YES (Pre-generated AI content).
+Disclosure text: "Story mode voice lines were generated using offline open-source Piper Text-to-Speech synthesis tools during development. The game does not run live generative AI models during gameplay and does not connect to external AI services."

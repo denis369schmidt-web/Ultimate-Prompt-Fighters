@@ -1,0 +1,63 @@
+GOOGLE PLAY STORE PAGE LISTING (ENGLISH)
+Play Console → Growth → Store presence → Main store listing.
+All statistics verified against game code: 58 fighters, 58 legends, 19 bosses, 32 versus arenas + 8 story arenas, 13 mutators, 29 achievements.
+
+────────────────────────────────────────────────────────────────────
+APP NAME (Max. 30 chars — Current: 24 chars)
+────────────────────────────────────────────────────────────────────
+Prompt Fighters Ultimate
+
+────────────────────────────────────────────────────────────────────
+SHORT DESCRIPTION (Max. 80 chars — Current: 78 chars)
+────────────────────────────────────────────────────────────────────
+Smash rivals out of the arena: 58 fighters, 19 bosses, and two epic campaigns!
+
+────────────────────────────────────────────────────────────────────
+FULL DESCRIPTION (Max. 4000 chars — Current: 3072 chars)
+────────────────────────────────────────────────────────────────────
+Forget traditional health bars. Every strike drives up your opponent's damage percentage—and the higher the percentage climbs, the further each hit launches them across the stage. Blast your rivals out of the arena to take a life. Land a charged Smash attack at 120%, and victory is yours!
+
+★ 58 UNIQUE FIGHTERS WITH DISTINCT COMBAT STYLES
+Every brawler features custom movement physics, 15 individual attacks, and a signature ability exclusive to them:
+• Vlad turns into an invincible swarm of bats, phasing through attacks to drain enemy vitality.
+• Grimbolt plants a ticking chronal bomb on his target—running away won't stop the timer.
+• Echo fires a glitch projectile that instantly swaps positions with the victim.
+• Vanguard paints target coordinates from above, calling down a lethal orbital plasma strike.
+Each match concludes with a dramatic, cinematic Finisher execution. (Blood & gore effects can be toggled off at any time).
+
+★ CREATE CUSTOM FIGHTERS IN THE FUSION CHAMBER
+Type any character prompt—such as "Cyber-Samurai with dragon wings and fire blade"—and instantly receive a fully playable fighter with matching 3D equipment, elemental affinities, and balanced competitive attributes. Operates 100% offline directly on your mobile device, without requiring cloud AI or wait times.
+
+★ RICH STORY CAMPAIGNS & CHARACTER LORE
+• The Divine Trial: Inspired by Dante’s Divine Comedy. Battle your way from the mortal plane through the underworld to the heavens across 21 chapters, facing ten underworld lords and nine angelic guardians with full voice acting.
+• The Dimensional Rift: A 14-chapter saga featuring cinematic cutscenes and interactive Quick-Time Events.
+• 58 Character Legends: Four unlockable lore chapters for every single fighter in the game.
+
+★ 4-PLAYER BRAWLS & VERSUS BATTLES
+Compete in Free-For-All, 2v2 team clashes, or intense 3v1 handicap battles. Shake up every round with 13 wild mutators: Moon Gravity, Giants, Tiny Brawlers, Bomb Rain, Swap Positions, Sudden Death, and more.
+
+★ ENDLESS REPLAYABILITY
+• Adventure Tower: Battle endless waves of opponents and set fighter high scores.
+• Daily Challenges with login streaks and weekly special events.
+• 32 Arenas featuring interactive hazards, breakable objects, and weather atmospheres, plus 8 celestial story stages.
+• 29 Achievements, fighter mastery levels, and an in-game vault for skins, weapons, and stages—all unlockable using coins earned by playing!
+
+★ TAILORED FOR MOBILE TOUCHSCREENS
+Features responsive on-screen virtual joystick and action buttons optimized for landscape play, plus full support for external Bluetooth controllers.
+
+★ FAIR & HONEST: PLAY FREE, UNLOCK ONCE
+Enjoy all 58 fighters, Versus battles, Adventure mode, the full Dimensional Rift saga, all 58 Legends, the first three chapters of the Divine Trial, and three colossal bosses completely free. The Full Game unlock is a one-time purchase that unlocks the complete Divine Trial, all 19 bosses, and Boss Rush forever.
+No ads. No loot boxes. No pay-to-win mechanics.
+
+★ 100% OFFLINE
+Play anywhere, anytime without an internet connection or mandatory account. (Purchases are processed safely via Google Play).
+
+────────────────────────────────────────────────────────────────────
+CATEGORY & TAGS (Play Console → Store Settings)
+────────────────────────────────────────────────────────────────────
+App category: Games
+Game category: Action / Fighting
+Tags: Fighting, 2D Fighter, Action, Offline, Single player, Multi-player, Stylized.
+Target audience: 13+ (Teen)
+Content rating: USK 12 / PEGI 12 / ESRB Teen (Fantasy violence, mild blood optional)
+Contact: Support email required; Developer physical address required under EU DSA rules.

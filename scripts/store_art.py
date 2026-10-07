@@ -120,20 +120,33 @@ def main():
                              if logo.width / logo.height > 1280 / 720 else
                              logo.resize((round(logo.width * 720 / logo.height), 720), Image.LANCZOS))
     save(trim(lib_logo), os.path.join(steam, "library_logo_transparent.png"), rgb=False)
+    icon_path = os.path.join("godot", "icon_512.png")
+    if os.path.exists(icon_path):
+        face = Image.open(icon_path).convert("RGBA")
+    else:
+        face = load(a.raw, "icon_face.png")
+
     save(face.resize((184, 184), Image.LANCZOS), os.path.join(steam, "community_icon_184x184.jpg"))
     face.resize((256, 256), Image.LANCZOS).save(os.path.join(steam, "client_icon.ico"),
                                                 sizes=[(16, 16), (32, 32), (48, 48), (64, 64), (256, 256)])
     print("WROTE", os.path.join(steam, "client_icon.ico"))
-    for i, s in enumerate(shots, 1):
-        save(load(a.raw, os.path.basename(s)), os.path.join(steam, "screenshots", "screenshot_%02d_1920x1080.jpg" % i))
+    
+    # Process only canonical shots 01..08
+    shot_files = [os.path.join(a.raw, "shot_%02d.png" % i) for i in range(1, 9)]
+    for i, s in enumerate(shot_files, 1):
+        if not os.path.exists(s): continue
+        raw_img = Image.open(s).convert("RGBA")
+        if raw_img.size != (1920, 1080):
+            raw_img = raw_img.resize((1920, 1080), Image.LANCZOS)
+        save(raw_img, os.path.join(steam, "screenshots", "screenshot_%02d_1920x1080.jpg" % i), rgb=True, quality=94)
+        save(raw_img, os.path.join(play, "screenshots", "screenshot_%02d_1920x1080.png" % i), rgb=False)
 
     # ── Google Play (Play Console → Store-Eintrag → Grafiken) ──
     save(face.resize((512, 512), Image.LANCZOS), os.path.join(play, "app_icon_512x512.png"), rgb=False)  # 32-bit PNG
     feat = shade(cover(wide, (1024, 500), (0.5, 0.45)), "bottom", 0.8, 0.6)
     save(put_logo(feat, logo, (90, 270, 844, 200)), os.path.join(play, "feature_graphic_1024x500.png"))
-    for i, s in enumerate(shots, 1):
-        save(load(a.raw, os.path.basename(s)), os.path.join(play, "screenshots", "screenshot_%02d_1920x1080.png" % i))
 
 
 if __name__ == "__main__":
     main()
+

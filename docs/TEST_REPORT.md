@@ -1,6 +1,6 @@
 # Testbericht – Godot-Migration
  
-## Aktueller Lauf (2026-10-07, Kämpfer-Pakete 8 und 9)
+## Aktueller Lauf (2026-10-07, Store Release & Haptik & Announcer)
 
 Befehl je Suite: `godot --headless --path godot -s tests/test_<suite>.gd`, Ergebnis in `PFU_TEST_SUMMARY`, alle Suiten nacheinander.
 
@@ -15,7 +15,7 @@ Befehl je Suite: `godot --headless --path godot -s tests/test_<suite>.gd`, Ergeb
 | hazards_and_destructibles | 21 | 0 |
 | kits | 514 | 0 |
 | legends | 19 | 0 |
-| mechanics | 36 | 0 |
+| mechanics | 49 | 0 |
 | progression | 26 | 0 |
 | rewards | 58 | 0 |
 | roster | 314 | 0 |
@@ -24,10 +24,12 @@ Befehl je Suite: `godot --headless --path godot -s tests/test_<suite>.gd`, Ergeb
 | store | 27 | 0 |
 | story | 41 | 0 |
 | touch | 30 | 0 |
-| **Summe** | **1562** | **0** |
+| **Summe** | **1575** | **0** |
 
-Neu: test_kits prüft die acht neuen Kämpfer (Erkennung über Land bzw. Name, Flaggenbilder, Amboss, Wintergebrüll, Halbmond hin und zurück, Mostar-Sprung, Lasso, Kronenwechsel Frost/Glut, Zirra, Kettenanker in beiden Fällen, Glimm und Fenn). test_fun prüft die fünf neuen Mutatoren. Die Suiten shop und store brauchten vorher ein `--import` der neuen Arena-Vorschaubilder (aus einer anderen Sitzung).
-Neu (Startvideo & Ladebildschirm): `Test-Project.ps1` bestätigt alle Suiten grün; Intro-Video-Bypass in Headless/Smoke-Runs greift zuverlässig mit 0ms Verzögerung ohne Seiteneffekte auf den Spielablauf.
+Neu: `Test-Project.ps1` bestätigt alle Suiten grün (100% Pass Rate).
+- **Haptik & Gamepad-Vibration:** `rumble()` und `rumble_all()` via `Input.start_joy_vibration` integriert für Treffer, Blocks, K.O.s und Finisher; schaltet sich in Headless- und Smoke-Tests automatisch ab.
+- **Combo-System & Announcer:** `combo_popup()` mit dynamischem Skalierungs-Bounce erweitert; Announcer ruft "Combo!" und "Combo Breaker!" sowie Kämpferauswahl (`choose_your_character`, `player_1`, `player_2`) und Spielmodi (`arcade_mode`, `story_mode`) ab.
+- **Android APK & Store-Release:** Export-Pipeline verifiziert; Trailer in MP4 (Master) und WebM (VP9/Opus) erfolgreich generiert.
 
 ## Früherer Lauf (2026-10-07, Arena und Auswahl)
  

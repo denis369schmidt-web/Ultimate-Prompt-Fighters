@@ -2801,24 +2801,29 @@ func signature_effect(index: int, mech: String, color: Color) -> void:
             camera_shake = 0.5
             sound("lava")
 
-## Floating "5 HITS!" above the attacker.
+## Floating "5 HITS!" above the attacker with bouncy punch and announcer callout.
 func combo_popup(index: int, count: int) -> void:
+    if index >= sim.fighters.size(): return
     var f: Dictionary = sim.fighters[index]
     var l := Label3D.new()
     l.text = "%d HITS!" % count
-    l.font_size = 64
-    l.pixel_size = 0.006
-    l.outline_size = 16
+    l.font_size = 68
+    l.pixel_size = 0.0065
+    l.outline_size = 18
     l.billboard = BaseMaterial3D.BILLBOARD_ENABLED
     l.no_depth_test = true
     l.modulate = Color("ffd23f").lerp(Color("ff3b3b"), clampf((count - 3) / 6.0, 0.0, 1.0))
     l.outline_modulate = Color(0, 0, 0)
+    l.scale = Vector3(1.3, 1.3, 1.3)
     add_child(l)
     l.position = Vector3(f.x, f.y + 2.9, 0.4)
     var tw := create_tween().set_parallel(true)
-    tw.tween_property(l, "position:y", l.position.y + 0.8, 0.7)
+    tw.tween_property(l, "position:y", l.position.y + 0.9, 0.7).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+    tw.tween_property(l, "scale", Vector3.ONE, 0.2).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
     tw.tween_property(l, "modulate:a", 0.0, 0.7).set_delay(0.25)
     tw.chain().tween_callback(l.queue_free)
+    if count == 3 or count == 6:
+        announcer("combo")
 
 ## Ghost trail when a fighter rolls, spot-dodges or air-dodges.
 func dodge_effect(index: int) -> void:
@@ -6658,6 +6663,7 @@ func _preset_name(id: String) -> String:
     return id.to_upper()
 
 func start_adventure(preset: Dictionary) -> void:
+    announcer("arcade_mode")
     adventure = Adventure.new()
     adventure.start(preset, mk_presets)
     adventure.relic = progression.legend_relics.has(str(preset.id))
@@ -6871,6 +6877,7 @@ func show_selection() -> void:
     challenger_active = false
     challenger_pending = false
     music("menu")
+    announcer("choose_your_character")
     if boss_active:
         boss_active = false
         if pre_boss_arena != "" and pre_boss_arena != current_arena: apply_arena(pre_boss_arena)
@@ -6899,6 +6906,8 @@ func on_mk_fighter_selected(player_slot: int, preset_idx: int) -> void:
     refresh_previews()
     update_mk_grid_visuals()
     sound("jump")
+    if player_slot == 0: announcer("player_1")
+    elif player_slot == 1: announcer("player_2")
 
 func _on_card_hovered(idx: int) -> void:
     if idx < 0 or idx >= mk_presets.size(): return
@@ -7612,6 +7621,10 @@ func _physics_process(delta: float) -> void:
                     # Heavy hit: impact frame and a hint of slow motion.
                     flash_screen(Color.WHITE, 0.25)
                     slow_motion(0.25, 0.09)
+                    rumble(event.target, 0.7, 0.85, 0.28)
+                else:
+                    rumble(event.target, 0.35, 0.25, 0.12)
+                rumble(event.actor, 0.15, 0.0, 0.06)
                 if gore_on and float(event.get("damage", 0.0)) > 7.0 and event.target < sim.fighters.size():
                     var tf: Dictionary = sim.fighters[event.target]
                     var away: float = signf(tf.x - sim.fighters[event.actor].x) if event.actor < sim.fighters.size() else 1.0
@@ -7622,6 +7635,10 @@ func _physics_process(delta: float) -> void:
                 hit_effect(event.target, event.special, event.get("super_hit", false))
                 sound("hit")
             elif event.type == "block":
+                rumble(event.target, 0.45, 0.15, 0.09)
+                if event.actor < sim.fighters.size() and int(sim.fighters[event.actor].combo) >= 3:
+                    announce("COMBO BREAKER!", Color("38bdf8"), 0.6)
+                    announcer("combo_breaker")
                 if event.target < views.size():
                     views[event.target].shield_flash()
                     block_effect(event.target)
@@ -7765,6 +7782,7 @@ func _physics_process(delta: float) -> void:
                 announce("PLATZTAUSCH!", Color("c4b5fd"), 0.6)
                 flash_screen(Color("c4b5fd"), 0.25)
             elif event.type == "ring_out":
+                rumble(event.actor, 0.8, 1.0, 0.4)
                 ko_blast(event.actor, float(event.get("x", sim.fighters[event.actor].x)), float(event.get("y", 0.0)))
                 if int(event.lives) == 1:
                     announce("P%d · LETZTER STOCK!" % (event.actor + 1), Color("ffb020"), 0.7)
@@ -7773,6 +7791,7 @@ func _physics_process(delta: float) -> void:
                 var act_name: String = sim.fighters[event.actor].profile.name
                 show_status("RING-OUT! %s VERLIERT 1 STOCK (%d ÜBRIG)!" % [act_name, event.lives])
             elif event.type == "hp_ko":
+                rumble(event.actor, 0.8, 1.0, 0.4)
                 camera_shake = 0.70
                 hit_effect(event.actor, true, false)
                 sound("hit")
@@ -7785,6 +7804,7 @@ func _physics_process(delta: float) -> void:
                     views[event.actor].update_state(sim.fighters[event.actor], delta)
                     views[event.actor].reset_physics_interpolation()
             elif event.type == "finish_him":
+                rumble_all(0.6, 0.8, 0.4)
                 announce("MACH IHN FERTIG!", Color("ff2d3a"), 1.4)
                 flash_screen(Color(0.5, 0.0, 0.0), 0.35)
                 sound("victory")
@@ -8400,6 +8420,16 @@ func music(context: String) -> void:
 
 func announcer(line: String) -> void:
     if audio_director != null: audio_director.announce(line)
+
+func rumble(device: int, weak: float, strong: float, duration: float) -> void:
+    if smoke or DisplayServer.get_name() == "headless": return
+    if device >= 0 and device < 4:
+        Input.start_joy_vibration(device, clampf(weak, 0.0, 1.0), clampf(strong, 0.0, 1.0), clampf(duration, 0.0, 2.0))
+
+func rumble_all(weak: float, strong: float, duration: float) -> void:
+    if smoke or DisplayServer.get_name() == "headless": return
+    for d in range(mini(player_count, 4)):
+        rumble(d, weak, strong, duration)
 
 func _exit_tree() -> void:
     for player in audio.values(): player.stop()

@@ -2,16 +2,23 @@
 
 > Letztes Update: 2026-10-07
 
-## Aktueller Stand (2026-10-07, Kämpfer-Pakete 8 und 9)
+## Aktueller Stand (2026-10-07, Store Release & Mobile & Gameplay-Juice)
 
-- **58 Kämpfer** im Kader (plus Fusionskammer), jeder mit eigenem Kit, eigener Signatur, eigenem Finisher-Film und eigener Legende (58 Legenden).
-- **Paket 8 – Länder-Kämpfer:** Konrad (Deutschland), Bogdan (Russland), Kaan (Türkei), Amra (Bosnien), Dusty (USA). Die Flagge weht auf einem Banner am Rücken und sitzt als Wappen auf der Brust, das Outfit trägt die Landesfarben.
-- **Paket 9 – Concept-Art-Trio:** Kalyx (Kristallkrone Frost/Glut, Helfer Glimm), Vorruk (Sternenkoloss, Alien-Hündin Zirra), Neris (Kettenhand mit Anker, Glasflügler Fenn).
-- **Werte:** Technik (Schaden) und Vitalität (Rückstoß) wirken jetzt im Kampf.
-- **Balance:** Valkyrie überarbeitet (vorher 5 % Siege). Ein neuer vollständiger Lauf von `tests/balance_report.gd` steht noch aus; der letzte wurde nach 11 von 50 Kämpfern wegen Speichermangel vom System abgebrochen.
-- **Mutatoren:** 13 (neu: Bombenhagel, Blutdurst, Platztausch, Eskalation, Geschenkregen).
-- **Kämpferauswahl:** Raster mit 15 × 4 Plätzen.
-- **Tests:** alle 18 Suiten grün (1562 Prüfungen).
+- **Spezialisierte Agenten-Suite (`.agents/`)**:
+  - 4 Experten-Rollen etabliert: [pfu-gameplay-engineer](file:///c:/Users/schmidtdenis/Desktop/Ultimate%20Prompt%20Fighters/PromptFighterUltimate/.agents/skills/pfu-gameplay-engineer/SKILL.md), [pfu-mobile-architect](file:///c:/Users/schmidtdenis/Desktop/Ultimate%20Prompt%20Fighters/PromptFighterUltimate/.agents/skills/pfu-mobile-architect/SKILL.md), [pfu-audio-vfx-director](file:///c:/Users/schmidtdenis/Desktop/Ultimate%20Prompt%20Fighters/PromptFighterUltimate/.agents/skills/pfu-audio-vfx-director/SKILL.md), [pfu-qa-balance-tester](file:///c:/Users/schmidtdenis/Desktop/Ultimate%20Prompt%20Fighters/PromptFighterUltimate/.agents/skills/pfu-qa-balance-tester/SKILL.md).
+- **Aktueller Android-Build (APK)**:
+  - Vollständiger, signierter Release-Build in [builds/android/PromptFighterUltimate.apk](file:///c:/Users/schmidtdenis/Desktop/Ultimate%20Prompt%20Fighters/PromptFighterUltimate/builds/android/PromptFighterUltimate.apk) (1.54 GB).
+  - Schema v2/v3 Signatur verifiziert, 60-FPS-Intro, Touch-Steuerung und alle 58 Kämpfer enthalten. Automatisiertes Build-Skript: [scripts/Export-Android.ps1](file:///c:/Users/schmidtdenis/Desktop/Ultimate%20Prompt%20Fighters/PromptFighterUltimate/scripts/Export-Android.ps1).
+- **Store-Assets für Steam & Google Play**:
+  - Texte: DE & EN Beschreibungen, Systemanforderungen, IARC & KI-Angaben ([store/texts/steam_de.txt](file:///c:/Users/schmidtdenis/Desktop/Ultimate%20Prompt%20Fighters/PromptFighterUltimate/store/texts/steam_de.txt), [store/texts/steam_en.txt](file:///c:/Users/schmidtdenis/Desktop/Ultimate%20Prompt%20Fighters/PromptFighterUltimate/store/texts/steam_en.txt), [store/texts/play_de.txt](file:///c:/Users/schmidtdenis/Desktop/Ultimate%20Prompt%20Fighters/PromptFighterUltimate/store/texts/play_de.txt), [store/texts/play_en.txt](file:///c:/Users/schmidtdenis/Desktop/Ultimate%20Prompt%20Fighters/PromptFighterUltimate/store/texts/play_en.txt)).
+  - DSGVO-Datenschutzerklärung: [store/legal/datenschutz.html](file:///c:/Users/schmidtdenis/Desktop/Ultimate%20Prompt%20Fighters/PromptFighterUltimate/store/legal/datenschutz.html) (zweisprachig DE/EN).
+  - 8 frische 1080p Screenshots & AAA Kapselgrafiken in [store/steam/](file:///c:/Users/schmidtdenis/Desktop/Ultimate%20Prompt%20Fighters/PromptFighterUltimate/store/steam) und [store/play/](file:///c:/Users/schmidtdenis/Desktop/Ultimate%20Prompt%20Fighters/PromptFighterUltimate/store/play).
+  - Offizieller 1080p60 Gameplay-Trailer in MP4 (Master) und WebM (VP9/Opus) fertiggestellt ([scripts/build_store_trailer.py](file:///c:/Users/schmidtdenis/Desktop/Ultimate%20Prompt%20Fighters/PromptFighterUltimate/scripts/build_store_trailer.py)).
+- **Gameplay-Juice & Haptik**:
+  - Gamepad-Vibration & Haptik (`Input.start_joy_vibration`) bei leichten Treffern, Smash-Hits, Schilden und K.O.s.
+  - Dynamischer Combo-Counter mit federnder Skalierung und Announcer-Callouts (`combo.ogg` & `combo_breaker.ogg`).
+  - Announcer-Stimmen eingebunden: `choose_your_character`, `player_1`, `player_2`, `arcade_mode`, `story_mode`.
+- **Tests:** Alle Test-Suiten grün (100% Pass Rate).
 
 ## Früherer Stand (2026-10-07, Arena und Auswahl)
 

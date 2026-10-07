@@ -6,14 +6,17 @@ Stand 07.10.2026, Spielversion 0.9.0. Store-Regeln am selben Tag an den offiziel
 
 | Was | Wo |
 |---|---|
-| Steam-Texte (Kurz- und Langbeschreibung als BBCode, Tags, Sprachen, Funktionen, Inhalts- und KI-Angaben) | `store/texts/steam_de.txt` |
-| Google-Play-Texte (Name, Kurz- und Langbeschreibung, Kategorie, In-App-Produkte mit IDs und Texten) | `store/texts/play_de.txt` |
+| Steam-Texte (DE & EN: Kurz- und Langbeschreibung als BBCode, Tags, Sprachen, Funktionen, Inhalts- und KI-Angaben) | `store/texts/steam_de.txt`, `store/texts/steam_en.txt` |
+| Google-Play-Texte (DE & EN: Name, Kurz- und Langbeschreibung, Kategorie, Tags) | `store/texts/play_de.txt`, `store/texts/play_en.txt` |
 | Datenschutzerklärung DE/EN als fertige Webseite (nur Platzhalter ausfüllen) | `store/legal/datenschutz.html` |
-| Alle Store-Grafiken in den geforderten Pixelmaßen | `store/steam/`, `store/play/` |
-| Rohbilder aus dem echten Spiel (Key-Art 4K, Screenshots, Logo, Icon) | `store/raw/` |
+| Alle Store-Grafiken in den geforderten Pixelmaßen (inkl. neuem 512x512 AAA-Schild-Icon) | `store/steam/`, `store/play/` |
+| 8 hochauflösende 1080p In-Game Screenshots (Roster 15x4, Astral Nexus, Concept Trio, 4P Brawl, Finisher, Dante Boss, Fusionskammer, 60 FPS Intro) | `store/steam/screenshots/*.jpg`, `store/play/screenshots/*.png` |
+| Offizieller Gameplay-Trailer (1080p60 MP4 & WebM mit Musik, Announcer und Motion Graphics) | `store/trailer/`, `store/steam/`, `store/play/` |
 | Export-Preset „Google Play“ (AAB, Feature-Tag `play`) neben „Steam“ und „Android Mobile“ | `godot/export_presets.cfg` |
 | SteamPipe-Vorlagen und Upload-Skript | `store/steampipe/` |
 | Produkt-IDs und Preise im Spiel | `godot/scripts/products.gd` |
+| Automatisches Build-Skript für Android APK | `scripts/Export-Android.ps1` |
+| Automatisches Trailer-Erstellungs-Skript | `tools/build_store_trailer.py` |
 
 Grafiken neu erzeugen (nach Änderungen an Kämpfern oder Arenen):
 
