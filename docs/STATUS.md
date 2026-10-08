@@ -2,16 +2,33 @@
 
 > Letztes Update: 2026-10-08
 
-## Aktueller Stand (2026-10-08, Offizielle AAA-Gameplay-Trailer für Steam & Google Play)
+## Aktueller Stand (2026-10-08, Qualitätsdurchgang 3: kein Glücksspiel, Kämpfer freischalten, Sudden Death & Clash)
+
+- Details: `docs/CHANGELOG.md` Schritt 21.
+- Glücksrad, Glückstruhe und Zufalls-Legendentruhe entfernt; alle Belohnungen fest (Münzen bzw. nächstes fehlendes Item).
+- Release-Kader: 10 Startkämpfer, Rest durch Spielen (alle 3 Siege) oder Münzen (600/900/1200) freischaltbar (`scripts/roster_unlocks.gd`, Shop-Tab KÄMPFER).
+- Kampf: Sudden Death im Versus, Clash bei gleichzeitigen Angriffen, Funkenschweif und Gefahren-Glut ab 120 %.
+- Neue Android-APK: `builds/android/PromptFighterUltimate.apk` (alte Version gesichert als `PromptFighterUltimate_2026-10-07_alt.apk`).
+- **Tests:** 18 Suiten / 1616 Checks grün.
+
+## Früherer Stand (2026-10-08, Qualitätsdurchgänge 1+2: Stabilität, Desktop und Handy getrennt)
+
+- Details: `docs/CHANGELOG.md` Schritt 19 und 20.
+- Stabilität: Griff-/Respawn-Bug (doppelter Stock-Verlust), Respawn räumt Statuseffekte auf, Coyote-Time 0,1 s, Pause bei Fokusverlust auch gegen KI, keine Pause nach GAME!, R-Neustart nur aus Pause/Ergebnis, Zeitlupen- und Kamera-Shake-Überlagerung, Trefferfunken in richtiger Höhe, bildratenunabhängige Kamera.
+- Handy: gerätegerechte Eingabehinweise (`scripts/input_glyphs.gd`), Touch-QTEs, Story-Niederlage per Touch lösbar, Handy-Intro `intro_mobile.ogv` ohne Tastaturtexte, Vibration, Tap-Sprung, nähere Kamera, weniger Partikel.
+- Desktop/Steam: Pause-Menü, Pad-/Tastaturnamen in QTEs und Finisher-Codes, korrigierte Tastenhilfe, weiches Respawn-Pulsieren, Funken-Pool.
+- **Tests:** 18 Suiten / 1605 Checks grün.
+
+## Früherer Stand (2026-10-08, Offizielle AAA-Gameplay-Trailer für Steam & Google Play)
 
 - **Offizielle Trailer-Suite (`trailer_output/`)**:
-  - **Steam Gameplay-Trailer (`trailer_steam.mp4`)**: 70.0s, 1920x1080 @ 60 FPS, H.264 High Profile, 23.2 Mbps, AAC Stereo 48 kHz (-14 LUFS). Unmittelbarer Gameplay-Start in den ersten 5s ohne Studio-Logos, beat-synchrone Cuts, 7 dynamische Frosted-Obsidian Text-Banner, Boss-Duelle, Finisher und 3D-Outro-Card (*„Wishlist Now on Steam · Coming 2026“*).
-  - **Google Play Trailer (`trailer_playstore.mp4`)**: 40.0s, 1920x1080 @ 60 FPS, H.264 High Profile, AAC Stereo (-14 LUFS). Optimiert für mobile Betrachtung ohne Ton (große kontraststarke Typografie), Hook in Sekunde 0–5, 4-Spieler-Brawl, Roster-Übersicht und Outro (*„Pre-Register & Play Free on Google Play“*).
+  - **Steam Gameplay-Trailer (`trailer_steam.mp4`)**: 70.0s, 1920x1080 @ 60 FPS, H.264 High Profile, ~20.5 Mbps, AAC Stereo 48 kHz (-14 LUFS). Unmittelbarer Gameplay-Start in den ersten 5s ohne Logos. Fehlerhafte Pferdeszene/Menübalken komplett entfernt und durch saubere Sonnenarena-Kampfaction mit Fallen/Waffen ersetzt. Alle gezeigten Features prominent mit leuchtenden Frosted-Obsidian-Bannern beschriftet (`/// FEATURE: ... ///`: Echtes 3D Gameplay, Combat Engine & Combos, 4-Spieler Multiplayer, Interaktive Arenen, Titanische Boss-Raids, Cinematic Finisher) plus 3D-Outro-Card (*„Wishlist Now on Steam · Coming 2026“*).
+  - **Google Play Trailer (`trailer_playstore.mp4`)**: 40.0s, 1920x1080 @ 60 FPS, H.264 High Profile, AAC Stereo (-14 LUFS). Optimiert für mobile Betrachtung ohne Ton (große kontraststarke Typografie), Hook in Sekunde 0–5, 4-Spieler-Brawl, Roster-Übersicht, beschriftete Elementar-Specials & Bosses und Outro (*„Pre-Register & Play Free on Google Play“*).
   - **Begleitgrafiken**: `poster_steam.jpg` (1920x1080), `thumbnail_steam.jpg` (232x130) und `feature_graphic_play.png` (1024x500 RGB ohne Alpha, unter 1 MB, Play-Button-sicheres Zentrum).
   - **Lizenzen & Reproduzierbarkeit**: `LIZENZEN.md` mit vollständigen CC0/Projekt-Nachweisen sowie `trailer_output/scripts/` mit allen Capture- und Render-Skripten.
   - **QA-Audit**: `QA_REPORT.md` bestätigt alle technischen Parameter (`ffprobe 9.0.2`) und inhaltlichen Kriterien zu 100% bestanden.
-- **Stabilität & Spielgefühl:** Alle 18 Suiten / 1591 Checks grün (100% Pass Rate).
-- **Tests:** 18 Suiten / 1591 Checks grün (`scripts/Test-Project.ps1`).
+- **Stabilität & Spielgefühl:** Alle 18 Suiten / 1616 Checks grün (100% Pass Rate).
+- **Tests:** 18 Suiten / 1616 Checks grün (`scripts/Test-Project.ps1`).
 
 ## Früherer Stand (2026-10-07, Store Release & Mobile & Gameplay-Juice)
 

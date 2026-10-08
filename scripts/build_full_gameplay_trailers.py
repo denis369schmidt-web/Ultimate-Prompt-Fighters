@@ -109,13 +109,18 @@ def make_banner(tag, title, subtitle, accent=(56, 189, 248)):
     return img
 
 banners = {
-    "hook": make_banner("/// INSTANT ACTION ///", "NEXT-GEN 3D PLATFORM COMBAT", "FAST-PACED PHYSICS & RESPONSIVE HAPTICS", (56, 189, 248)),
-    "combos": make_banner("/// 58 KÄMPFER ///", "CYBER NINJA VS. MOLTEN GOLEM", "FLUID JUGGLES, DIRECTIONAL COMBOS & SHIELD PARRY", (255, 176, 32)),
-    "brawl": make_banner("/// MULTIPLAYER BRAWL ///", "LOCAL 4-PLAYER VERSUS & COUCH COMBAT", "BATTLE YOUR FRIENDS OR COMPETE AGAINST SMARTE KI", (74, 222, 128)),
-    "roster": make_banner("/// EXPANDED ROSTER ///", "15x4 FIGHTING GAME CHARACTER GRID", "SAMURAI · NINJAS · VALKYRIES · GOLEMS · DEMONS", (192, 132, 252)),
-    "fusion": make_banner("/// CREATIVE STUDIO ///", "THE FUSION CHAMBER · PROMPT TO FIGHTER", "CUSTOMIZE WEAPONS, WINGS & RUNIC ATTRIBUTES", (244, 114, 182)),
-    "boss": make_banner("/// TITANIC BOSSES ///", "DANTE INFERNUS · THE UNYIELDING FLAME", "COLOSSAL SLAMS, EARTHQUAKES & 80+ STORY CHAPTERS", (239, 68, 68)),
-    "finisher": make_banner("/// PURE SKILL ///", "CINEMATIC EXECUTIONS & K.O. FINISHERS", "100% FAIR PROGRESSION · ZERO GACHA & ZERO LOOTBOXES", (255, 215, 0))
+    "hook": make_banner("/// FEATURE: ECHTES 3D GAMEPLAY ///", "NEXT-GEN 3D PLATFORM COMBAT", "FAST-PACED PHYSICS · DIRECTIONAL ATTACKS · 60 FPS", (56, 189, 248)),
+    "combos": make_banner("/// FEATURE: COMBAT ENGINE & COMBOS ///", "DYNAMIC COMBOS & SHIELD PARRY", "AIR DASH · METEOR SMASH · DIRECTIONAL INFLUENCE", (255, 176, 32)),
+    "brawl": make_banner("/// FEATURE: 4-SPIELER MULTIPLAYER ///", "CHAOS BRAWL FÜR BIS ZU 4 SPIELER", "LOCAL COUCH VERSUS · TEAM BATTLES · SMARTE KI", (74, 222, 128)),
+    "arenas": make_banner("/// FEATURE: INTERAKTIVE ARENEN ///", "ARENA-FALLEN & DYNAMISCHE WAFFEN", "WEAPON DROPS · MAGMA-GEYSIRE · QUANTUM-RISSE", (244, 114, 182)),
+    "boss": make_banner("/// FEATURE: TITANISCHE BOSS-RAIDS ///", "MYTHIC BOSS BATTLE: DANTE INFERNUS", "COLOSSAL SLAMS, EARTHQUAKES & 80+ STORY CHAPTERS", (239, 68, 68)),
+    "finisher": make_banner("/// FEATURE: CINEMATIC FINISHER ///", "HINRICHTUNGEN & K.O. FINISHERS", "100% FAIR PROGRESSION · ZERO GACHA & ZERO LOOTBOXES", (255, 215, 0)),
+    
+    # Play Store specific banners:
+    "play_hook": make_banner("/// FEATURE: MOBILE 3D ACTION ///", "CONSOLE QUALITY COMBAT ON MOBILE", "FLUID 60 FPS · DUAL CONTROLLER & TOUCH CONTROLS", (56, 189, 248)),
+    "play_brawl": make_banner("/// FEATURE: 4-SPIELER BRAWL ///", "4-PLAYER MULTIPLAYER COMBAT", "BATTLE FRIENDS & AI IN DESTRUCTIBLE 3D ARENAS", (74, 222, 128)),
+    "play_specials": make_banner("/// FEATURE: SPEZIAL-ANGRIFFE ///", "ELEMENTAR-SPEZIALS & WAFFEN-DROPS", "BLITZE · FEUERBÄLLE · SCHWERTER & BOOMERANGS", (244, 114, 182)),
+    "play_boss": make_banner("/// FEATURE: BOSSES & FINISHERS ///", "TITANIC BOSSES & CINEMATIC K.O.S", "COLOSSAL RAIDS · FAIR PROGRESSION · 100% FREE TO PLAY", (255, 215, 0))
 }
 
 for name, b_img in banners.items():
@@ -125,78 +130,85 @@ for name, b_img in banners.items():
 print("\n=== RENDERING STEAM TRAILER (70.0s, 1080p60) ===")
 steam_mp4 = os.path.join(OUT_DIR, "trailer_steam.mp4")
 
-# Segment plan (total 70.0s):
-# 0.0 - 6.0s (6s): Astral Nexus 1v1 Hook (raw master 0.0 - 6.0) + banner hook (1.0-5.0)
-# 6.0 - 16.0s (10s): Ninja vs Golem (raw master 6.0 - 16.0) + banner combos (7.0-14.0)
-# 16.0 - 26.0s (10s): 4-Player Chaos Brawl (raw master 16.0 - 26.0) + banner brawl (17.0-24.0)
-# 26.0 - 34.0s (8s): Roster Selection Screen (raw master 26.0 - 34.0) + banner roster (27.0-33.0)
-# 34.0 - 43.0s (9s): Fusion Chamber (raw master 34.0 - 43.0) + banner fusion (35.0-41.0)
-# 43.0 - 54.0s (11s): Boss Dante Infernus (from cinematic plate & raw supp 19.0-30.0) + banner boss (44.0-51.0)
-# 54.0 - 61.0s (7s): Arbër Finisher & K.O. (raw master 43.5 - 50.5) + banner finisher (55.0-59.5)
-# 61.0 - 70.0s (9s): Outro Card Steam (scratch/outro_card_steam.png with zoom/pan)
+# Segment plan (total 70.0s) WITHOUT any horse scene:
+# 0.0 - 7.0s (7s): Astral Nexus 1v1 Hook (raw master 0.0 - 7.0) + banner hook (1.0-6.6)
+# 7.0 - 18.0s (11s): Ninja vs Golem (raw master 6.0 - 17.0) + banner combos (8.0-17.2)
+# 18.0 - 30.0s (12s): 4-Player Chaos Brawl (raw master 16.0 - 28.0) + banner brawl (19.0-29.2)
+# 30.0 - 41.0s (11s): Arena Weapons & Clashes (raw supp 10.0 - 21.0) + banner arenas (31.0-40.2)
+# 41.0 - 53.0s (12s): Boss Dante Infernus (raw supp 18.0 - 30.0) + banner boss (42.0-52.2)
+# 53.0 - 61.0s (8s): Arbër Finisher & K.O. (raw master 43.5 - 51.5) + banner finisher (54.0-60.2)
+# 61.0 - 70.0s (9s): Outro Card Steam (scratch/outro_card_steam.png)
 
-# Build FFmpeg Filter Complex for Steam Trailer
 filter_complex_steam = (
-    # Extract, trim and scale each segment cleanly to 1920x1080 @ 60fps
-    "[0:v]trim=start=0:end=6,setpts=PTS-STARTPTS,scale=1920:1080:flags=lanczos,setsar=1,fps=60[v_seg1];"
-    "[0:v]trim=start=6:end=16,setpts=PTS-STARTPTS,scale=1920:1080:flags=lanczos,setsar=1,fps=60[v_seg2];"
-    "[0:v]trim=start=16:end=26,setpts=PTS-STARTPTS,scale=1920:1080:flags=lanczos,setsar=1,fps=60[v_seg3];"
-    "[0:v]trim=start=26:end=34,setpts=PTS-STARTPTS,scale=1920:1080:flags=lanczos,setsar=1,fps=60[v_seg4];"
-    "[0:v]trim=start=34:end=43,setpts=PTS-STARTPTS,scale=1920:1080:flags=lanczos,setsar=1,fps=60[v_seg5];"
-    "[1:v]trim=start=18:end=29,setpts=PTS-STARTPTS,scale=1920:1080:flags=lanczos,setsar=1,fps=60[v_seg6];"
-    "[0:v]trim=start=43.5:end=50.5,setpts=PTS-STARTPTS,scale=1920:1080:flags=lanczos,setsar=1,fps=60[v_seg7];"
-    "[2:v]loop=loop=540:size=1:start=0,scale=1920:1080,setsar=1,fps=60,trim=duration=9,setpts=PTS-STARTPTS[v_seg8];"
-    # Concatenate all 8 video segments
-    "[v_seg1][v_seg2][v_seg3][v_seg4][v_seg5][v_seg6][v_seg7][v_seg8]concat=n=8:v=1:a=0,"
-    "eq=contrast=1.06:brightness=0.01:saturation=1.12,unsharp=5:5:0.4:5:5:0.0[v_concat];"
-    # Overlay marketing banners with fade-in / fade-out
-    "[3:v]format=rgba,fade=t=in:st=0.8:d=0.4:alpha=1,fade=t=out:st=5.0:d=0.4:alpha=1[b_hook];"
-    "[4:v]format=rgba,fade=t=in:st=6.8:d=0.4:alpha=1,fade=t=out:st=14.5:d=0.4:alpha=1[b_combos];"
-    "[5:v]format=rgba,fade=t=in:st=16.8:d=0.4:alpha=1,fade=t=out:st=24.5:d=0.4:alpha=1[b_brawl];"
-    "[6:v]format=rgba,fade=t=in:st=26.8:d=0.4:alpha=1,fade=t=out:st=32.5:d=0.4:alpha=1[b_roster];"
-    "[7:v]format=rgba,fade=t=in:st=34.8:d=0.4:alpha=1,fade=t=out:st=41.5:d=0.4:alpha=1[b_fusion];"
-    "[8:v]format=rgba,fade=t=in:st=43.8:d=0.4:alpha=1,fade=t=out:st=52.5:d=0.4:alpha=1[b_boss];"
-    "[9:v]format=rgba,fade=t=in:st=54.8:d=0.4:alpha=1,fade=t=out:st=59.5:d=0.4:alpha=1[b_finisher];"
-    # Cascade overlays
-    "[v_concat][b_hook]overlay=0:0[vo1];"
-    "[vo1][b_combos]overlay=0:0[vo2];"
-    "[vo2][b_brawl]overlay=0:0[vo3];"
-    "[vo3][b_roster]overlay=0:0[vo4];"
-    "[vo4][b_fusion]overlay=0:0[vo5];"
-    "[vo5][b_boss]overlay=0:0[vo6];"
-    "[vo6][b_finisher]overlay=0:0[final_v];"
-    # Audio complex:
-    "[10:a]volume=1.1,afade=t=in:st=0:d=1.5,afade=t=out:st=68:d=2.0[a_music];"
-    "[11:a]adelay=500|500,volume=1.4[a_ready];"
-    "[12:a]adelay=1800|1800,volume=1.5[a_fight];"
-    "[13:a]adelay=12000|12000,volume=1.4[a_combo];"
-    "[14:a]adelay=61200|61200,volume=1.5[a_winner];"
-    "[0:a]volume=0.85[a_gameplay];"
+    # Video Segments with dedicated banner overlays:
+    # 1. 0-7s: Hook
+    "[0:v]trim=start=0:end=7,setpts=PTS-STARTPTS,scale=1920:1080:flags=bicubic,setsar=1,fps=60[s1_v];"
+    "[3:v]format=rgba,fade=t=in:st=1.0:d=0.3:alpha=1,fade=t=out:st=6.2:d=0.3:alpha=1[s1_b];"
+    "[s1_v][s1_b]overlay=0:0:enable='between(t,1.0,6.6)':eof_action=pass[seg1];"
+
+    # 2. 7-18s (11s): Combos
+    "[0:v]trim=start=6:end=17,setpts=PTS-STARTPTS,scale=1920:1080:flags=bicubic,setsar=1,fps=60[s2_v];"
+    "[4:v]format=rgba,fade=t=in:st=1.0:d=0.3:alpha=1,fade=t=out:st=9.8:d=0.3:alpha=1[s2_b];"
+    "[s2_v][s2_b]overlay=0:0:enable='between(t,1.0,10.2)':eof_action=pass[seg2];"
+
+    # 3. 18-30s (12s): 4-Player Brawl
+    "[0:v]trim=start=16:end=28,setpts=PTS-STARTPTS,scale=1920:1080:flags=bicubic,setsar=1,fps=60[s3_v];"
+    "[5:v]format=rgba,fade=t=in:st=1.0:d=0.3:alpha=1,fade=t=out:st=10.8:d=0.3:alpha=1[s3_b];"
+    "[s3_v][s3_b]overlay=0:0:enable='between(t,1.0,11.2)':eof_action=pass[seg3];"
+
+    # 4. 30-41s (11s): Interactive Arenas & Weapons (from raw supp, NO HORSE!)
+    "[1:v]trim=start=10:end=21,setpts=PTS-STARTPTS,scale=1920:1080:flags=bicubic,setsar=1,fps=60[s4_v];"
+    "[6:v]format=rgba,fade=t=in:st=1.0:d=0.3:alpha=1,fade=t=out:st=9.8:d=0.3:alpha=1[s4_b];"
+    "[s4_v][s4_b]overlay=0:0:enable='between(t,1.0,10.2)':eof_action=pass[seg4];"
+
+    # 5. 41-53s (12s): Boss Dante Infernus
+    "[1:v]trim=start=18:end=30,setpts=PTS-STARTPTS,scale=1920:1080:flags=bicubic,setsar=1,fps=60[s5_v];"
+    "[7:v]format=rgba,fade=t=in:st=1.0:d=0.3:alpha=1,fade=t=out:st=10.8:d=0.3:alpha=1[s5_b];"
+    "[s5_v][s5_b]overlay=0:0:enable='between(t,1.0,11.2)':eof_action=pass[seg5];"
+
+    # 6. 53-61s (8s): Cinematic Finisher & K.O.
+    "[0:v]trim=start=43.5:end=51.5,setpts=PTS-STARTPTS,scale=1920:1080:flags=bicubic,setsar=1,fps=60[s6_v];"
+    "[8:v]format=rgba,fade=t=in:st=0.5:d=0.3:alpha=1,fade=t=out:st=6.8:d=0.3:alpha=1[s6_b];"
+    "[s6_v][s6_b]overlay=0:0:enable='between(t,0.5,7.2)':eof_action=pass[seg6];"
+
+    # 7. 61-70s (9s): Outro Card Steam
+    "[2:v]loop=loop=540:size=1:start=0,scale=1920:1080:flags=bicubic,setsar=1,fps=60,trim=duration=9,setpts=PTS-STARTPTS[seg7];"
+
+    # Concatenate all 7 finished segments:
+    "[seg1][seg2][seg3][seg4][seg5][seg6][seg7]concat=n=7:v=1:a=0,"
+    "eq=contrast=1.05:brightness=0.01:saturation=1.10[final_v];"
+
+    # Audio complex - cleanly trimmed
+    "[9:a]atrim=0:70,asetpts=PTS-STARTPTS,volume=1.1,afade=t=in:st=0:d=1.5,afade=t=out:st=68:d=2.0[a_music];"
+    "[10:a]adelay=500|500,volume=1.4[a_ready];"
+    "[11:a]adelay=1800|1800,volume=1.5[a_fight];"
+    "[12:a]adelay=12000|12000,volume=1.4[a_combo];"
+    "[13:a]adelay=61200|61200,volume=1.5[a_winner];"
+    "[0:a]atrim=0:70,asetpts=PTS-STARTPTS,volume=0.85[a_gameplay];"
     "[a_music][a_ready][a_fight][a_combo][a_winner][a_gameplay]amix=inputs=6:duration=first:dropout_transition=2,"
-    "loudnorm=I=-14:LRA=7:TP=-1.0[final_a]"
+    "loudnorm=I=-14:LRA=7:TP=-1.0,atrim=0:70,asetpts=PTS-STARTPTS[final_a]"
 )
 
 cmd_steam = [
     "ffmpeg", "-y",
-    "-i", RAW_MASTER_AVI,          # 0
-    "-i", RAW_SUPP_AVI,            # 1
+    "-i", RAW_MASTER_AVI,                 # 0
+    "-i", RAW_SUPP_AVI,                   # 1
     "-i", "scratch/outro_card_steam.png", # 2
-    "-i", "scratch/banner_hook.png",      # 3
-    "-i", "scratch/banner_combos.png",    # 4
-    "-i", "scratch/banner_brawl.png",     # 5
-    "-i", "scratch/banner_roster.png",    # 6
-    "-i", "scratch/banner_fusion.png",    # 7
-    "-i", "scratch/banner_boss.png",      # 8
-    "-i", "scratch/banner_finisher.png",  # 9
-    "-i", MUSIC_VALOR,                    # 10
-    "-i", VOX_READY,                      # 11
-    "-i", VOX_FIGHT,                      # 12
-    "-i", VOX_COMBO,                      # 13
-    "-i", VOX_WINNER,                     # 14
+    "-loop", "1", "-i", "scratch/banner_hook.png",     # 3
+    "-loop", "1", "-i", "scratch/banner_combos.png",   # 4
+    "-loop", "1", "-i", "scratch/banner_brawl.png",    # 5
+    "-loop", "1", "-i", "scratch/banner_arenas.png",   # 6
+    "-loop", "1", "-i", "scratch/banner_boss.png",     # 7
+    "-loop", "1", "-i", "scratch/banner_finisher.png", # 8
+    "-i", MUSIC_VALOR,                   # 9
+    "-i", VOX_READY,                     # 10
+    "-i", VOX_FIGHT,                     # 11
+    "-i", VOX_COMBO,                     # 12
+    "-i", VOX_WINNER,                    # 13
     "-filter_complex", filter_complex_steam,
     "-map", "[final_v]",
     "-map", "[final_a]",
-    "-c:v", "libx264", "-preset", "faster", "-crf", "18",
+    "-c:v", "libx264", "-preset", "veryfast", "-crf", "18",
     "-c:a", "aac", "-b:a", "320k", "-ar", "48000",
     "-pix_fmt", "yuv420p",
     "-t", "70.0",
@@ -210,57 +222,62 @@ print(f"Steam trailer master built: {steam_mp4}")
 print("\n=== RENDERING GOOGLE PLAY TRAILER (40.0s, 1080p60) ===")
 play_mp4 = os.path.join(OUT_DIR, "trailer_playstore.mp4")
 
-# Google Play Timeline (40.0s):
-# 0.0 - 5.0s (5s): Instant Hook (Ninja vs Golem combat clash)
-# 5.0 - 14.0s (9s): 4-Player Chaos Brawl & specials
-# 14.0 - 22.0s (8s): Roster Grid & Character Selection
-# 22.0 - 31.0s (9s): Boss Dante Infernus & Finisher Execution
-# 31.0 - 40.0s (9s): Outro Card Google Play CTA
-
 filter_complex_play = (
-    # Extract, trim and scale each segment cleanly to 1920x1080 @ 60fps
-    "[0:v]trim=start=6:end=11,setpts=PTS-STARTPTS,scale=1920:1080:flags=lanczos,setsar=1,fps=60[vp_seg1];"
-    "[0:v]trim=start=16:end=25,setpts=PTS-STARTPTS,scale=1920:1080:flags=lanczos,setsar=1,fps=60[vp_seg2];"
-    "[0:v]trim=start=26:end=34,setpts=PTS-STARTPTS,scale=1920:1080:flags=lanczos,setsar=1,fps=60[vp_seg3];"
-    "[1:v]trim=start=21:end=25,setpts=PTS-STARTPTS,scale=1920:1080:flags=lanczos,setsar=1,fps=60[vp_seg4];"
-    "[0:v]trim=start=45.5:end=50.5,setpts=PTS-STARTPTS,scale=1920:1080:flags=lanczos,setsar=1,fps=60[vp_seg5];"
-    "[2:v]loop=loop=540:size=1:start=0,scale=1920:1080,setsar=1,fps=60,trim=duration=9,setpts=PTS-STARTPTS[vp_seg6];"
-    # Concatenate all 6 video segments
-    "[vp_seg1][vp_seg2][vp_seg3][vp_seg4][vp_seg5][vp_seg6]concat=n=6:v=1:a=0,"
-    "eq=contrast=1.06:brightness=0.01:saturation=1.12,unsharp=5:5:0.4:5:5:0.0[vp_concat];"
-    # Overlays
-    "[3:v]format=rgba,fade=t=in:st=0.5:d=0.3:alpha=1,fade=t=out:st=4.5:d=0.3:alpha=1[bp_hook];"
-    "[4:v]format=rgba,fade=t=in:st=5.5:d=0.3:alpha=1,fade=t=out:st=13.5:d=0.3:alpha=1[bp_brawl];"
-    "[5:v]format=rgba,fade=t=in:st=14.5:d=0.3:alpha=1,fade=t=out:st=21.5:d=0.3:alpha=1[bp_roster];"
-    "[6:v]format=rgba,fade=t=in:st=22.5:d=0.3:alpha=1,fade=t=out:st=30.5:d=0.3:alpha=1[bp_boss];"
-    "[vp_concat][bp_hook]overlay=0:0[vpo1];"
-    "[vpo1][bp_brawl]overlay=0:0[vpo2];"
-    "[vpo2][bp_roster]overlay=0:0[vpo3];"
-    "[vpo3][bp_boss]overlay=0:0[final_vp];"
-    "[7:a]volume=1.15,afade=t=in:st=0:d=1.0,afade=t=out:st=38.5:d=1.5[ap_music];"
+    # Video Segments with dedicated banner overlays:
+    # 1. 0-6s (6s): Mobile Hook
+    "[0:v]trim=start=6:end=12,setpts=PTS-STARTPTS,scale=1920:1080:flags=bicubic,setsar=1,fps=60[sp1_v];"
+    "[3:v]format=rgba,fade=t=in:st=0.8:d=0.3:alpha=1,fade=t=out:st=5.2:d=0.3:alpha=1[sp1_b];"
+    "[sp1_v][sp1_b]overlay=0:0:enable='between(t,0.8,5.6)':eof_action=pass[pseg1];"
+
+    # 2. 6-15s (9s): 4-Player Brawl
+    "[0:v]trim=start=17:end=26,setpts=PTS-STARTPTS,scale=1920:1080:flags=bicubic,setsar=1,fps=60[sp2_v];"
+    "[4:v]format=rgba,fade=t=in:st=0.8:d=0.3:alpha=1,fade=t=out:st=8.2:d=0.3:alpha=1[sp2_b];"
+    "[sp2_v][sp2_b]overlay=0:0:enable='between(t,0.8,8.6)':eof_action=pass[pseg2];"
+
+    # 3. 15-23s (8s): Specials & Weapon Drops (raw supp, NO HORSE!)
+    "[1:v]trim=start=10:end=18,setpts=PTS-STARTPTS,scale=1920:1080:flags=bicubic,setsar=1,fps=60[sp3_v];"
+    "[5:v]format=rgba,fade=t=in:st=0.8:d=0.3:alpha=1,fade=t=out:st=7.2:d=0.3:alpha=1[sp3_b];"
+    "[sp3_v][sp3_b]overlay=0:0:enable='between(t,0.8,7.6)':eof_action=pass[pseg3];"
+
+    # 4. 23-31s (8s): Boss & Finisher
+    "[1:v]trim=start=21:end=25,setpts=PTS-STARTPTS,scale=1920:1080:flags=bicubic,setsar=1,fps=60[sp4a_v];"
+    "[0:v]trim=start=46.5:end=50.5,setpts=PTS-STARTPTS,scale=1920:1080:flags=bicubic,setsar=1,fps=60[sp4b_v];"
+    "[sp4a_v][sp4b_v]concat=n=2:v=1:a=0[sp4_v];"
+    "[6:v]format=rgba,fade=t=in:st=0.8:d=0.3:alpha=1,fade=t=out:st=7.2:d=0.3:alpha=1[sp4_b];"
+    "[sp4_v][sp4_b]overlay=0:0:enable='between(t,0.8,7.6)':eof_action=pass[pseg4];"
+
+    # 5. 31-40s (9s): Outro Card Play
+    "[2:v]loop=loop=540:size=1:start=0,scale=1920:1080:flags=bicubic,setsar=1,fps=60,trim=duration=9,setpts=PTS-STARTPTS[pseg5];"
+
+    # Concatenate all 5 finished segments:
+    "[pseg1][pseg2][pseg3][pseg4][pseg5]concat=n=5:v=1:a=0,"
+    "eq=contrast=1.05:brightness=0.01:saturation=1.10[final_vp];"
+
+    # Audio complex
+    "[7:a]atrim=0:40,asetpts=PTS-STARTPTS,volume=1.15,afade=t=in:st=0:d=1.0,afade=t=out:st=38.5:d=1.5[ap_music];"
     "[8:a]adelay=400|400,volume=1.4[ap_fight];"
     "[9:a]adelay=31200|31200,volume=1.5[ap_winner];"
-    "[0:a]volume=0.85[ap_gameplay];"
+    "[0:a]atrim=0:40,asetpts=PTS-STARTPTS,volume=0.85[ap_gameplay];"
     "[ap_music][ap_fight][ap_winner][ap_gameplay]amix=inputs=4:duration=first:dropout_transition=2,"
-    "loudnorm=I=-14:LRA=7:TP=-1.0[final_ap]"
+    "loudnorm=I=-14:LRA=7:TP=-1.0,atrim=0:40,asetpts=PTS-STARTPTS[final_ap]"
 )
 
 cmd_play = [
     "ffmpeg", "-y",
-    "-i", RAW_MASTER_AVI,              # 0
-    "-i", RAW_SUPP_AVI,                # 1
-    "-i", "scratch/outro_card_play.png", # 2
-    "-i", "scratch/banner_combos.png",   # 3
-    "-i", "scratch/banner_brawl.png",    # 4
-    "-i", "scratch/banner_roster.png",   # 5
-    "-i", "scratch/banner_boss.png",     # 6
-    "-i", MUSIC_VALOR,                  # 7
-    "-i", VOX_FIGHT,                    # 8
-    "-i", VOX_WINNER,                   # 9
+    "-i", RAW_MASTER_AVI,                 # 0
+    "-i", RAW_SUPP_AVI,                   # 1
+    "-i", "scratch/outro_card_play.png",  # 2
+    "-loop", "1", "-i", "scratch/banner_play_hook.png",     # 3
+    "-loop", "1", "-i", "scratch/banner_play_brawl.png",    # 4
+    "-loop", "1", "-i", "scratch/banner_play_specials.png", # 5
+    "-loop", "1", "-i", "scratch/banner_play_boss.png",     # 6
+    "-i", MUSIC_VALOR,                   # 7
+    "-i", VOX_FIGHT,                     # 8
+    "-i", VOX_WINNER,                    # 9
     "-filter_complex", filter_complex_play,
     "-map", "[final_vp]",
     "-map", "[final_ap]",
-    "-c:v", "libx264", "-preset", "faster", "-crf", "18",
+    "-c:v", "libx264", "-preset", "veryfast", "-crf", "18",
     "-c:a", "aac", "-b:a", "320k", "-ar", "48000",
     "-pix_fmt", "yuv420p",
     "-t", "40.0",
@@ -276,10 +293,10 @@ poster_path = os.path.join(OUT_DIR, "poster_steam.jpg")
 thumb_path = os.path.join(OUT_DIR, "thumbnail_steam.jpg")
 feature_path = os.path.join(OUT_DIR, "feature_graphic_play.png")
 
-# Extract keyframe from raw combat at 10.5s for poster
+# Extract keyframe from raw combat at 11.0s for poster (showing combat with feature badge)
 subprocess.run([
     "ffmpeg", "-y",
-    "-ss", "00:00:10.500",
+    "-ss", "00:00:11.000",
     "-i", steam_mp4,
     "-vframes", "1",
     "-q:v", "2",

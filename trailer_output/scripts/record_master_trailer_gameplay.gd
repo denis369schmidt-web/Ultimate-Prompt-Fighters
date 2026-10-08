@@ -95,6 +95,12 @@ func run() -> void:
 
 	# ── SCENE 4: 15x4 ROSTER & FIGHTER SELECT (360 frames = 6.0s) ──
 	print("MASTER_CAPTURE: Scene 4 - Character Selection Screen")
+	# Despawn previous match combatants to prevent floating models/ragdolls behind UI:
+	for view in app.fighter_views:
+		if is_instance_valid(view): view.queue_free()
+	app.fighter_views.clear()
+	app.sim.fighters.clear()
+	if app.ARENAS.has("astral_nexus"): app.apply_arena("astral_nexus")
 	app.show_selection()
 	await frames(60)
 	if app.has_method("on_mk_fighter_selected"):

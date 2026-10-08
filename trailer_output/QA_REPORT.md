@@ -11,24 +11,24 @@ Geprüft mit: `ffprobe 9.0.2` & visueller Inspektion
 | Kriterium | Vorgabe (Steamworks) | Tatsächlicher Wert | Status |
 | :--- | :--- | :--- | :--- |
 | **Container** | MP4 | MP4 |  BESTANDEN |
-| **Videocodec** | H.264 (High Profile) | h264 (High) |  BESTANDEN |
+| **Videocodec** | H.264 (High Profile) | h264 |  BESTANDEN |
 | **Auflösung** | 1920x1080 (16:9) | 1920x1080 |  BESTANDEN |
-| **Bildwiederholrate** | 60 FPS (konstant) | 60/1 (60.0 FPS) |  BESTANDEN |
+| **Bildwiederholrate** | 60 FPS (konstant) | 60/1 |  BESTANDEN |
 | **Laufzeit** | 60–90 Sekunden | 70.0 s |  BESTANDEN |
-| **Videobitrate** | 5.000+ Kbps | 23.254 Kbps (23.2 Mbps) |  BESTANDEN |
-| **Audiocodec** | AAC Stereo | aac, 2 Kanäle, 48000 Hz |  BESTANDEN |
-| **Dateigröße** | Angemessen | 194.05 MB |  BESTANDEN |
+| **Videobitrate** | 5.000+ Kbps | 20515 Kbps |  BESTANDEN |
+| **Audiocodec** | AAC Stereo | aac, 2 Kanäle, None Hz |  BESTANDEN |
+| **Dateigröße** | Angemessen | 171.19 MB |  BESTANDEN |
 
 ### Google Play Trailer (`trailer_playstore.mp4`)
 | Kriterium | Vorgabe (Play Store / YouTube) | Tatsächlicher Wert | Status |
 | :--- | :--- | :--- | :--- |
 | **Container** | MP4 | MP4 |  BESTANDEN |
-| **Videocodec** | H.264 | h264 (High) |  BESTANDEN |
+| **Videocodec** | H.264 | h264 |  BESTANDEN |
 | **Auflösung** | 1920x1080 (16:9) | 1920x1080 |  BESTANDEN |
-| **Bildwiederholrate** | 60 FPS | 60/1 (60.0 FPS) |  BESTANDEN |
+| **Bildwiederholrate** | 60 FPS | 60/1 |  BESTANDEN |
 | **Laufzeit** | 30–60 Sekunden | 40.0 s |  BESTANDEN |
 | **Audiostandard** | EBU R128 (-14 LUFS) | Normalisiert mit `loudnorm` |  BESTANDEN |
-| **Dateigröße** | Leicht übertragbar | 115.44 MB |  BESTANDEN |
+| **Dateigröße** | Leicht übertragbar | 97.25 MB |  BESTANDEN |
 
 ### Begleitende Grafiken
 | Datei | Vorgabe | Tatsächlicher Wert | Status |
