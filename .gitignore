@@ -58,3 +58,4 @@ scratch/
 store/trailer/
 store/**/*.mp4
 store/**/*.webm
+trailer_output/*.mp4

@@ -1,8 +1,19 @@
 # Prompt Fighter Ultimate — Projektstatus
 
-> Letztes Update: 2026-10-07
+> Letztes Update: 2026-10-08
 
-## Aktueller Stand (2026-10-07, Store Release & Mobile & Gameplay-Juice)
+## Aktueller Stand (2026-10-08, Offizielle AAA-Gameplay-Trailer für Steam & Google Play)
+
+- **Offizielle Trailer-Suite (`trailer_output/`)**:
+  - **Steam Gameplay-Trailer (`trailer_steam.mp4`)**: 70.0s, 1920x1080 @ 60 FPS, H.264 High Profile, 23.2 Mbps, AAC Stereo 48 kHz (-14 LUFS). Unmittelbarer Gameplay-Start in den ersten 5s ohne Studio-Logos, beat-synchrone Cuts, 7 dynamische Frosted-Obsidian Text-Banner, Boss-Duelle, Finisher und 3D-Outro-Card (*„Wishlist Now on Steam · Coming 2026“*).
+  - **Google Play Trailer (`trailer_playstore.mp4`)**: 40.0s, 1920x1080 @ 60 FPS, H.264 High Profile, AAC Stereo (-14 LUFS). Optimiert für mobile Betrachtung ohne Ton (große kontraststarke Typografie), Hook in Sekunde 0–5, 4-Spieler-Brawl, Roster-Übersicht und Outro (*„Pre-Register & Play Free on Google Play“*).
+  - **Begleitgrafiken**: `poster_steam.jpg` (1920x1080), `thumbnail_steam.jpg` (232x130) und `feature_graphic_play.png` (1024x500 RGB ohne Alpha, unter 1 MB, Play-Button-sicheres Zentrum).
+  - **Lizenzen & Reproduzierbarkeit**: `LIZENZEN.md` mit vollständigen CC0/Projekt-Nachweisen sowie `trailer_output/scripts/` mit allen Capture- und Render-Skripten.
+  - **QA-Audit**: `QA_REPORT.md` bestätigt alle technischen Parameter (`ffprobe 9.0.2`) und inhaltlichen Kriterien zu 100% bestanden.
+- **Stabilität & Spielgefühl:** Alle 18 Suiten / 1591 Checks grün (100% Pass Rate).
+- **Tests:** 18 Suiten / 1591 Checks grün (`scripts/Test-Project.ps1`).
+
+## Früherer Stand (2026-10-07, Store Release & Mobile & Gameplay-Juice)
 
 - **Spezialisierte Agenten-Suite (`.agents/`)**:
   - 4 Experten-Rollen etabliert: [pfu-gameplay-engineer](file:///c:/Users/schmidtdenis/Desktop/Ultimate%20Prompt%20Fighters/PromptFighterUltimate/.agents/skills/pfu-gameplay-engineer/SKILL.md), [pfu-mobile-architect](file:///c:/Users/schmidtdenis/Desktop/Ultimate%20Prompt%20Fighters/PromptFighterUltimate/.agents/skills/pfu-mobile-architect/SKILL.md), [pfu-audio-vfx-director](file:///c:/Users/schmidtdenis/Desktop/Ultimate%20Prompt%20Fighters/PromptFighterUltimate/.agents/skills/pfu-audio-vfx-director/SKILL.md), [pfu-qa-balance-tester](file:///c:/Users/schmidtdenis/Desktop/Ultimate%20Prompt%20Fighters/PromptFighterUltimate/.agents/skills/pfu-qa-balance-tester/SKILL.md).

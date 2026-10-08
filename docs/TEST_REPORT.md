@@ -1,6 +1,33 @@
 # Testbericht – Godot-Migration
  
-## Aktueller Lauf (2026-10-07, Store Release & Haptik & Announcer)
+## Aktueller Lauf (2026-10-08, Offizielle AAA-Trailer & Kampfkern-Regressionstest)
+
+Befehl: `powershell -File scripts/Test-Project.ps1` führt alle 18 Godot-Testsuiten sequentiell und deterministisch aus. Begleitend: Automatisches Video- und Audioprobing mit `ffprobe 9.0.2` in `scripts/build_full_gameplay_trailers.py` (Dokumentation in `trailer_output/QA_REPORT.md`).
+
+| Suite | Bestanden | Fehlgeschlagen |
+|---|---|---|
+| adventure | 29 | 0 |
+| bosses | 132 | 0 |
+| combat_plus | 100 | 0 |
+| divina | 55 | 0 |
+| fun | 34 | 0 |
+| game | 42 | 0 |
+| hazards_and_destructibles | 21 | 0 |
+| kits | 514 | 0 |
+| legends | 22 | 0 |
+| mechanics | 56 | 0 |
+| progression | 32 | 0 |
+| rewards | 58 | 0 |
+| roster | 314 | 0 |
+| saga | 48 | 0 |
+| shop | 36 | 0 |
+| store | 27 | 0 |
+| story | 41 | 0 |
+| touch | 30 | 0 |
+
+**Gesamt: 18 Suiten, 1591 Checks, 0 Fehler, 0 Skriptfehler.** Neu: `test_respawn_releases_grab`, `test_coyote_jump` (mechanics).
+
+## Früherer Lauf (2026-10-07, Store Release & Haptik & Announcer)
 
 Befehl je Suite: `godot --headless --path godot -s tests/test_<suite>.gd`, Ergebnis in `PFU_TEST_SUMMARY`, alle Suiten nacheinander.
 
